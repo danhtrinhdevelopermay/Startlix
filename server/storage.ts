@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type VideoGeneration, type InsertVideoGeneration } from "@shared/schema";
+import { type User, type InsertUser, type VideoGeneration, type InsertVideoGeneration, type ApiKey, type InsertApiKey } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -12,15 +12,25 @@ export interface IStorage {
   getVideoGeneration(id: string): Promise<VideoGeneration | undefined>;
   getVideoGenerationByTaskId(taskId: string): Promise<VideoGeneration | undefined>;
   getUserVideoGenerations(userId: string): Promise<VideoGeneration[]>;
+  
+  // API Key methods
+  createApiKey(apiKey: InsertApiKey): Promise<ApiKey>;
+  updateApiKey(id: string, updates: Partial<ApiKey>): Promise<ApiKey | undefined>;
+  getApiKey(id: string): Promise<ApiKey | undefined>;
+  getAllApiKeys(): Promise<ApiKey[]>;
+  getActiveApiKeys(): Promise<ApiKey[]>;
+  deleteApiKey(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private videoGenerations: Map<string, VideoGeneration>;
+  private apiKeys: Map<string, ApiKey>;
 
   constructor() {
     this.users = new Map();
     this.videoGenerations = new Map();
+    this.apiKeys = new Map();
     
     // Create a default user for demo purposes
     const defaultUser: User = {
@@ -75,6 +85,7 @@ export class MemStorage implements IStorage {
       resultUrls: null,
       hdResultUrl: null,
       errorMessage: null,
+      apiKeyId: generation.apiKeyId || null,
       createdAt: new Date(),
       completedAt: null,
     };
@@ -106,6 +117,50 @@ export class MemStorage implements IStorage {
     return Array.from(this.videoGenerations.values())
       .filter((generation) => generation.userId === userId)
       .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+  }
+
+  // API Key methods
+  async createApiKey(insertApiKey: InsertApiKey): Promise<ApiKey> {
+    const id = randomUUID();
+    const apiKey: ApiKey = {
+      ...insertApiKey,
+      id,
+      credits: 0,
+      isActive: insertApiKey.isActive ?? true,
+      lastChecked: null,
+      createdAt: new Date(),
+    };
+    this.apiKeys.set(id, apiKey);
+    return apiKey;
+  }
+
+  async updateApiKey(id: string, updates: Partial<ApiKey>): Promise<ApiKey | undefined> {
+    const apiKey = this.apiKeys.get(id);
+    if (apiKey) {
+      const updatedApiKey = { ...apiKey, ...updates };
+      this.apiKeys.set(id, updatedApiKey);
+      return updatedApiKey;
+    }
+    return undefined;
+  }
+
+  async getApiKey(id: string): Promise<ApiKey | undefined> {
+    return this.apiKeys.get(id);
+  }
+
+  async getAllApiKeys(): Promise<ApiKey[]> {
+    return Array.from(this.apiKeys.values())
+      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+  }
+
+  async getActiveApiKeys(): Promise<ApiKey[]> {
+    return Array.from(this.apiKeys.values())
+      .filter((key) => key.isActive && key.credits > 0)
+      .sort((a, b) => b.credits - a.credits); // Sort by credits desc
+  }
+
+  async deleteApiKey(id: string): Promise<boolean> {
+    return this.apiKeys.delete(id);
   }
 }
 

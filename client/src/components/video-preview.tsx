@@ -65,8 +65,8 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
 
     const interval = setInterval(() => {
       const elapsedSeconds = (new Date().getTime() - startTime.getTime()) / 1000;
-      // Estimate 45 seconds for completion, with some variation
-      const estimatedDuration = 45;
+      // Estimate 120 seconds (2 minutes) for completion, with some variation
+      const estimatedDuration = 120;
       const calculatedProgress = Math.min((elapsedSeconds / estimatedDuration) * 85, 85); // Cap at 85% until actual completion
       setProgress(calculatedProgress);
     }, 1000);
@@ -174,7 +174,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
               
               <div className="flex justify-between items-center text-xs text-gray-500">
                 <span data-testid="progress-percentage">{Math.round(progress)}%</span>
-                <span>~{Math.max(0, 45 - Math.round((new Date().getTime() - (startTime?.getTime() || 0)) / 1000))}s remaining</span>
+                <span>~{Math.max(0, 120 - Math.round((new Date().getTime() - (startTime?.getTime() || 0)) / 1000))}s remaining</span>
               </div>
               
               {isLoading && <p className="text-xs text-gray-500 mt-2">Checking status...</p>}

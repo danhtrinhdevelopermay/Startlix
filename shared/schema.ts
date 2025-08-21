@@ -10,6 +10,16 @@ export const users = pgTable("users", {
   credits: integer("credits").notNull().default(100),
 });
 
+export const apiKeys = pgTable("api_keys", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  apiKey: text("api_key").notNull().unique(),
+  credits: integer("credits").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  lastChecked: timestamp("last_checked"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const videoGenerations = pgTable("video_generations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id),
@@ -26,6 +36,7 @@ export const videoGenerations = pgTable("video_generations", {
   hdResultUrl: text("hd_result_url"),
   errorMessage: text("error_message"),
   creditsUsed: integer("credits_used").notNull(),
+  apiKeyId: varchar("api_key_id").references(() => apiKeys.id),
   createdAt: timestamp("created_at").defaultNow(),
   completedAt: timestamp("completed_at"),
 });
@@ -33,6 +44,13 @@ export const videoGenerations = pgTable("video_generations", {
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+});
+
+export const insertApiKeySchema = createInsertSchema(apiKeys).omit({
+  id: true,
+  credits: true,
+  lastChecked: true,
+  createdAt: true,
 });
 
 export const insertVideoGenerationSchema = createInsertSchema(videoGenerations).omit({
@@ -53,5 +71,7 @@ export const insertVideoGenerationSchema = createInsertSchema(videoGenerations).
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type InsertApiKey = z.infer<typeof insertApiKeySchema>;
+export type ApiKey = typeof apiKeys.$inferSelect;
 export type InsertVideoGeneration = z.infer<typeof insertVideoGenerationSchema>;
 export type VideoGeneration = typeof videoGenerations.$inferSelect;

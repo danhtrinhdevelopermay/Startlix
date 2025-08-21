@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,6 +17,9 @@ import VideoPreview from "@/components/video-preview";
 import GenerationHistory from "@/components/generation-history";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, Upload, Sparkles, Image, FileText } from "lucide-react";
+import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
+import loadingGif from "@assets/original-568544560f6ca1076a16e3428302e329_1755778026559.gif";
 
 const textToVideoSchema = z.object({
   prompt: z.string().min(10, "Prompt must be at least 10 characters").max(500, "Prompt must be less than 500 characters"),
@@ -42,6 +45,9 @@ export default function VideoGenerator() {
   const [uploadedImageName, setUploadedImageName] = useState<string>("");
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string>("");
   const [currentTaskId, setCurrentTaskId] = useState<string>("");
+  const [isLoadingModalOpen, setIsLoadingModalOpen] = useState<boolean>(false);
+  const [loadingStartTime, setLoadingStartTime] = useState<Date | null>(null);
+  const [loadingProgress, setLoadingProgress] = useState<number>(0);
   const [popup, setPopup] = useState<{ 
     isOpen: boolean; 
     title: string; 
@@ -56,6 +62,52 @@ export default function VideoGenerator() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Progress tracking for loading modal
+  useEffect(() => {
+    if (!loadingStartTime || !isLoadingModalOpen) return;
+
+    const interval = setInterval(() => {
+      const elapsedSeconds = (new Date().getTime() - loadingStartTime.getTime()) / 1000;
+      // Estimate 120 seconds (2 minutes) for completion
+      const estimatedDuration = 120;
+      const calculatedProgress = Math.min((elapsedSeconds / estimatedDuration) * 85, 85); // Cap at 85% until actual completion
+      setLoadingProgress(calculatedProgress);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [loadingStartTime, isLoadingModalOpen]);
+
+  // Monitor video status to close modal when complete
+  const { data: videoStatus } = useQuery<any>({
+    queryKey: ["/api/video-status", currentTaskId],
+    enabled: !!currentTaskId && isLoadingModalOpen,
+    refetchInterval: (data) => {
+      if ((data as any)?.successFlag === 1 || (data as any)?.successFlag === -1) {
+        return false;
+      }
+      return 5000; // Poll every 5 seconds
+    },
+  });
+
+  useEffect(() => {
+    if (videoStatus?.successFlag === 1 && videoStatus?.response?.resultUrls?.[0]) {
+      setLoadingProgress(100);
+      setIsLoadingModalOpen(false);
+      setCurrentVideoUrl(videoStatus.response.resultUrls[0]);
+      toast({
+        title: "Tạo video thành công!",
+        description: "Video của bạn đã sẵn sàng để xem trước.",
+      });
+    } else if (videoStatus?.successFlag === -1) {
+      setIsLoadingModalOpen(false);
+      showPopup(
+        "Máy chủ quá tải", 
+        "Máy chủ đang xử lý quá nhiều yêu cầu. Vui lòng thử lại sau vài phút.", 
+        "error"
+      );
+    }
+  }, [videoStatus, toast]);
 
   const showPopup = (title: string, description: string, type: "error" | "warning" | "info" = "error") => {
     setPopup({ isOpen: true, title, description, type });
@@ -136,6 +188,9 @@ export default function VideoGenerator() {
     },
     onSuccess: (data) => {
       setCurrentTaskId(data.taskId);
+      setIsLoadingModalOpen(true);
+      setLoadingStartTime(new Date());
+      setLoadingProgress(0);
       queryClient.invalidateQueries({ queryKey: ["/api/credits"] });
       queryClient.invalidateQueries({ queryKey: ["/api/generations"] });
       toast({
@@ -171,6 +226,7 @@ export default function VideoGenerator() {
         }
       }
 
+      setIsLoadingModalOpen(false);
       showPopup(title, description, "error");
     },
   });
@@ -658,6 +714,37 @@ export default function VideoGenerator() {
           </div>
         </div>
       </footer>
+
+      {/* Loading Modal */}
+      <Dialog open={isLoadingModalOpen} onOpenChange={(open) => !open && setIsLoadingModalOpen(false)}>
+        <DialogPortal>
+          <DialogOverlay className="fixed inset-0 z-50 bg-black/90 backdrop-blur-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <DialogContent className="fixed left-[50%] top-[50%] z-50 w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] bg-dark-800/95 backdrop-blur-md border-dark-600 p-8 shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-2xl">
+            <div className="text-center text-gray-400 w-full">
+              <img 
+                src={loadingGif} 
+                alt="Loading video generation" 
+                className="w-24 h-24 mx-auto mb-6" 
+              />
+              <h2 className="text-2xl font-bold text-white mb-2">Đang tạo video...</h2>
+              <p className="text-lg mb-6 text-gray-300">Vui lòng chờ trong giây lát</p>
+              
+              <div className="mb-4">
+                <Progress 
+                  value={loadingProgress} 
+                  className="h-4 bg-dark-600"
+                  data-testid="modal-progress-bar"
+                />
+              </div>
+              
+              <div className="flex justify-between items-center text-sm text-gray-400">
+                <span data-testid="modal-progress-percentage">{Math.round(loadingProgress)}%</span>
+                <span>~{Math.max(0, 120 - Math.round((new Date().getTime() - (loadingStartTime?.getTime() || 0)) / 1000))}s còn lại</span>
+              </div>
+            </div>
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>
 
       <ErrorPopup 
         isOpen={popup.isOpen}
