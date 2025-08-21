@@ -7,7 +7,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUserCredits(userId: string, credits: number): Promise<User | undefined>;
   
-  createVideoGeneration(generation: InsertVideoGeneration): Promise<VideoGeneration>;
+  createVideoGeneration(generation: InsertVideoGeneration, creditsUsed?: number): Promise<VideoGeneration>;
   updateVideoGeneration(id: string, updates: Partial<VideoGeneration>): Promise<VideoGeneration | undefined>;
   getVideoGeneration(id: string): Promise<VideoGeneration | undefined>;
   getVideoGenerationByTaskId(taskId: string): Promise<VideoGeneration | undefined>;
@@ -59,7 +59,7 @@ export class MemStorage implements IStorage {
     return undefined;
   }
 
-  async createVideoGeneration(generation: InsertVideoGeneration): Promise<VideoGeneration> {
+  async createVideoGeneration(generation: InsertVideoGeneration, creditsUsed: number = 5): Promise<VideoGeneration> {
     const id = randomUUID();
     const taskId = randomUUID();
     const videoGeneration: VideoGeneration = {
@@ -70,6 +70,7 @@ export class MemStorage implements IStorage {
       imageUrl: generation.imageUrl || null,
       watermark: generation.watermark || null,
       hdGeneration: generation.hdGeneration || false,
+      creditsUsed,
       status: "pending",
       resultUrls: null,
       hdResultUrl: null,

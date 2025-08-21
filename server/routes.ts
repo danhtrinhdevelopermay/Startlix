@@ -87,12 +87,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Insufficient credits" });
       }
 
-      // Create video generation record
+      // Create video generation record  
       const generation = await storage.createVideoGeneration({
         ...validatedData,
         userId,
-        creditsUsed: totalCredits,
-      });
+      }, totalCredits);
 
       // Call Veo3 API
       const veoPayload: any = {

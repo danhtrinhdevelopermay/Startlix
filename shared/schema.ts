@@ -48,7 +48,7 @@ export const insertVideoGenerationSchema = createInsertSchema(videoGenerations).
 }).extend({
   prompt: z.string().min(10, "Prompt must be at least 10 characters").max(500, "Prompt must be less than 500 characters"),
   aspectRatio: z.enum(["16:9", "9:16", "1:1"]),
-  model: z.enum(["veo3", "veo3-fast"]),
+  model: z.enum(["veo3", "veo3_fast"]),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

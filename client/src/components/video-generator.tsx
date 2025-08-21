@@ -20,7 +20,7 @@ import { ChevronDown, Upload, Sparkles, Image, FileText } from "lucide-react";
 const textToVideoSchema = z.object({
   prompt: z.string().min(10, "Prompt must be at least 10 characters").max(500, "Prompt must be less than 500 characters"),
   aspectRatio: z.enum(["16:9", "9:16", "1:1"]),
-  model: z.enum(["veo3", "veo3-fast"]),
+  model: z.enum(["veo3", "veo3_fast"]),
   watermark: z.string().optional(),
   hdGeneration: z.boolean().default(false),
 });
@@ -28,7 +28,7 @@ const textToVideoSchema = z.object({
 const imageToVideoSchema = z.object({
   prompt: z.string().min(10, "Motion prompt must be at least 10 characters").max(500, "Motion prompt must be less than 500 characters"),
   aspectRatio: z.enum(["16:9", "9:16", "1:1"]),
-  model: z.enum(["veo3", "veo3-fast"]),
+  model: z.enum(["veo3", "veo3_fast"]),
   imageUrl: z.string().min(1, "Please upload an image"),
 });
 
@@ -290,7 +290,7 @@ export default function VideoGenerator() {
                                 </FormControl>
                                 <SelectContent className="bg-dark-600 border-dark-500">
                                   <SelectItem value="veo3">Veo3 (Best Quality)</SelectItem>
-                                  <SelectItem value="veo3-fast">Veo3 Fast</SelectItem>
+                                  <SelectItem value="veo3_fast">Veo3 Fast</SelectItem>
                                 </SelectContent>
                               </Select>
                               <FormMessage />
@@ -477,7 +477,7 @@ export default function VideoGenerator() {
                                 </FormControl>
                                 <SelectContent className="bg-dark-600 border-dark-500">
                                   <SelectItem value="veo3">Veo3 (Best Quality)</SelectItem>
-                                  <SelectItem value="veo3-fast">Veo3 Fast</SelectItem>
+                                  <SelectItem value="veo3_fast">Veo3 Fast</SelectItem>
                                 </SelectContent>
                               </Select>
                               <FormMessage />
