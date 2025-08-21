@@ -59,14 +59,14 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
       const url = videoStatus.response.resultUrls[0];
       onVideoLoad(url);
       toast({
-        title: "Video generated successfully!",
-        description: "Your video is ready for preview.",
+        title: "Tạo video thành công!",
+        description: "Video của bạn đã sẵn sàng để xem trước.",
       });
     } else if (videoStatus?.successFlag === -1) {
       setProgress(0);
       toast({
-        title: "Generation failed",
-        description: videoStatus.errorMessage || "Video generation failed",
+        title: "Tạo video thất bại",
+        description: videoStatus.errorMessage || "Máy chủ quá tải. Vui lòng thử lại sau vài phút.",
         variant: "destructive",
       });
     }
@@ -87,14 +87,14 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
         document.body.removeChild(link);
         
         toast({
-          title: "1080P version ready",
-          description: "High definition video download started.",
+          title: "Phiên bản 1080P sẵn sàng",
+          description: "Đã bắt đầu tải video chất lượng cao.",
         });
       }
     } catch (error) {
       toast({
-        title: "Failed to get 1080P version",
-        description: "Please try again later.",
+        title: "Không thể lấy phiên bản 1080P",
+        description: "Máy chủ quá tải. Vui lòng thử lại sau ít phút.",
         variant: "destructive",
       });
     }

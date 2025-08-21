@@ -77,15 +77,39 @@ export default function VideoGenerator() {
       setUploadedImageUrl(data.downloadUrl);
       imageForm.setValue("imageUrl", data.downloadUrl);
       toast({
-        title: "Image uploaded successfully",
-        description: "Your image is ready for video generation.",
+        title: "Tải ảnh thành công",
+        description: "Ảnh của bạn đã sẵn sàng để tạo video.",
       });
     },
     onError: (error) => {
+      let title = "Tải ảnh thất bại";
+      let description = "Không thể tải ảnh lên";
+
+      if (error instanceof Error) {
+        const errorMessage = error.message.toLowerCase();
+        
+        if (errorMessage.includes('500') || errorMessage.includes('server') || errorMessage.includes('overload')) {
+          title = "Máy chủ quá tải";
+          description = "Máy chủ đang xử lý quá nhiều yêu cầu. Vui lòng thử lại sau vài phút.";
+        }
+        else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+          title = "Lỗi kết nối";
+          description = "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối internet.";
+        }
+        else if (errorMessage.includes('size') || errorMessage.includes('large')) {
+          title = "File quá lớn";
+          description = "Ảnh của bạn quá lớn. Vui lòng chọn ảnh nhỏ hơn 10MB.";
+        }
+        else {
+          description = "Đã xảy ra lỗi khi tải ảnh. Vui lòng thử lại.";
+        }
+      }
+
       toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "Failed to upload image",
+        title,
+        description,
         variant: "destructive",
+        duration: 5000,
       });
     },
   });
@@ -100,15 +124,43 @@ export default function VideoGenerator() {
       queryClient.invalidateQueries({ queryKey: ["/api/credits"] });
       queryClient.invalidateQueries({ queryKey: ["/api/generations"] });
       toast({
-        title: "Video generation started",
-        description: `Generation started with task ID: ${data.taskId}`,
+        title: "Bắt đầu tạo video",
+        description: `Đang tạo video với ID: ${data.taskId}`,
       });
     },
     onError: (error) => {
+      let title = "Tạo video thất bại";
+      let description = "Có lỗi xảy ra khi tạo video";
+
+      if (error instanceof Error) {
+        const errorMessage = error.message.toLowerCase();
+        
+        // Check for server overload/500 errors
+        if (errorMessage.includes('500') || errorMessage.includes('server') || errorMessage.includes('overload')) {
+          title = "Máy chủ quá tải";
+          description = "Máy chủ đang xử lý quá nhiều yêu cầu. Vui lòng thử lại sau vài phút.";
+        }
+        // Check for insufficient credits  
+        else if (errorMessage.includes('insufficient') || errorMessage.includes('credits') || errorMessage.includes('top up')) {
+          title = "Không đủ credits";
+          description = "Tài khoản của bạn không đủ credits. Vui lòng nạp thêm để tiếp tục.";
+        }
+        // Check for network/connection issues
+        else if (errorMessage.includes('network') || errorMessage.includes('fetch') || errorMessage.includes('connection')) {
+          title = "Lỗi kết nối";
+          description = "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối internet và thử lại.";
+        }
+        // Other errors
+        else {
+          description = "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.";
+        }
+      }
+
       toast({
-        title: "Generation failed",
-        description: error instanceof Error ? error.message : "Failed to generate video",
+        title,
+        description,
         variant: "destructive",
+        duration: 5000, // Show for 5 seconds
       });
     },
   });
@@ -118,16 +170,16 @@ export default function VideoGenerator() {
     if (file) {
       if (!file.type.startsWith("image/")) {
         toast({
-          title: "Invalid file type",
-          description: "Please upload an image file (PNG, JPG, GIF)",
+          title: "Định dạng file không hợp lệ",
+          description: "Vui lòng tải lên file ảnh (PNG, JPG, GIF)",
           variant: "destructive",
         });
         return;
       }
       if (file.size > 10 * 1024 * 1024) {
         toast({
-          title: "File too large",
-          description: "Please upload an image smaller than 10MB",
+          title: "File quá lớn",
+          description: "Vui lòng tải lên ảnh nhỏ hơn 10MB",
           variant: "destructive",
         });
         return;
