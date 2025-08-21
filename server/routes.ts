@@ -152,6 +152,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
       }, totalCredits);
 
+      // Get API key with credits
+      const apiKeyData = await getBestApiKey();
+      if (!apiKeyData) {
+        return res.status(503).json({ message: "No API keys with credits available" });
+      }
+
       // Call Veo3 API
       const veoPayload: any = {
         prompt: validatedData.prompt,
@@ -210,6 +216,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { taskId } = req.params;
       
+      // Get API key with credits
+      const apiKeyData = await getBestApiKey();
+      if (!apiKeyData) {
+        return res.status(503).json({ message: "No API keys with credits available" });
+      }
+      
       const response = await fetch(`${VEO3_API_BASE}/veo/record-info?taskId=${taskId}`, {
         method: 'GET',
         headers: {
@@ -259,6 +271,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { taskId } = req.params;
       const { index = 0 } = req.query;
+      
+      // Get API key with credits
+      const apiKeyData = await getBestApiKey();
+      if (!apiKeyData) {
+        return res.status(503).json({ message: "No API keys with credits available" });
+      }
       
       const response = await fetch(`${VEO3_API_BASE}/veo/get-1080p-video?taskId=${taskId}&index=${index}`, {
         method: 'GET',
@@ -373,6 +391,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('API Key deletion error:', error);
       res.status(500).json({ message: "Failed to delete API key" });
+    }
+  });
+
+  // Toggle API key status
+  app.put("/api/admin/api-keys/:id/toggle", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { isActive } = req.body;
+      
+      const apiKey = await storage.updateApiKey(id, { isActive });
+      
+      if (!apiKey) {
+        return res.status(404).json({ message: "API key not found" });
+      }
+      
+      res.json(apiKey);
+    } catch (error) {
+      console.error('API Key toggle error:', error);
+      res.status(500).json({ message: "Failed to toggle API key" });
+    }
+  });
+
+  // Check credits for all API keys
+  app.post("/api/admin/check-credits", async (req, res) => {
+    try {
+      const allApiKeys = await storage.getAllApiKeys();
+      
+      for (const apiKey of allApiKeys) {
+        const credits = await checkApiCredits(apiKey.apiKey);
+        await storage.updateApiKey(apiKey.id, {
+          credits,
+          lastChecked: new Date(),
+          isActive: credits > 0 ? apiKey.isActive : false
+        });
+      }
+      
+      res.json({ success: true, message: "Credits checked for all API keys" });
+    } catch (error) {
+      console.error('Check credits error:', error);
+      res.status(500).json({ message: "Failed to check credits" });
     }
   });
 
