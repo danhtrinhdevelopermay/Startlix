@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Play, Download, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import ErrorPopup from "@/components/error-popup";
 
 interface VideoPreviewProps {
   videoUrl: string;
@@ -16,7 +17,26 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
   const [pollingTaskId, setPollingTaskId] = useState<string>("");
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [progress, setProgress] = useState<number>(0);
+  const [popup, setPopup] = useState<{ 
+    isOpen: boolean; 
+    title: string; 
+    description: string; 
+    type: "error" | "warning" | "info" 
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    type: "error"
+  });
   const { toast } = useToast();
+
+  const showPopup = (title: string, description: string, type: "error" | "warning" | "info" = "error") => {
+    setPopup({ isOpen: true, title, description, type });
+  };
+
+  const closePopup = () => {
+    setPopup({ isOpen: false, title: "", description: "", type: "error" });
+  };
 
   const { data: videoStatus, isLoading } = useQuery<any>({
     queryKey: ["/api/video-status", pollingTaskId],
@@ -64,11 +84,11 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
       });
     } else if (videoStatus?.successFlag === -1) {
       setProgress(0);
-      toast({
-        title: "Tạo video thất bại",
-        description: videoStatus.errorMessage || "Máy chủ quá tải. Vui lòng thử lại sau vài phút.",
-        variant: "destructive",
-      });
+      showPopup(
+        "Máy chủ quá tải", 
+        "Máy chủ đang xử lý quá nhiều yêu cầu. Vui lòng thử lại sau vài phút.", 
+        "error"
+      );
     }
   }, [videoStatus, onVideoLoad, toast]);
 
@@ -92,11 +112,11 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
         });
       }
     } catch (error) {
-      toast({
-        title: "Không thể lấy phiên bản 1080P",
-        description: "Máy chủ quá tải. Vui lòng thử lại sau ít phút.",
-        variant: "destructive",
-      });
+      showPopup(
+        "Không thể lấy phiên bản 1080P", 
+        "Máy chủ quá tải. Vui lòng thử lại sau ít phút.", 
+        "error"
+      );
     }
   };
 
@@ -200,6 +220,14 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
           </div>
         )}
       </div>
+
+      <ErrorPopup 
+        isOpen={popup.isOpen}
+        onClose={closePopup}
+        title={popup.title}
+        description={popup.description}
+        type={popup.type}
+      />
     </div>
   );
 }

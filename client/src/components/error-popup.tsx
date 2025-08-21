@@ -1,0 +1,55 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle, X } from "lucide-react";
+
+interface ErrorPopupProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  description: string;
+  type?: "error" | "warning" | "info";
+}
+
+export default function ErrorPopup({ isOpen, onClose, title, description, type = "error" }: ErrorPopupProps) {
+  const getIcon = () => {
+    switch (type) {
+      case "error":
+        return <AlertTriangle className="w-6 h-6 text-red-500" />;
+      case "warning":
+        return <AlertTriangle className="w-6 h-6 text-yellow-500" />;
+      case "info":
+        return <AlertTriangle className="w-6 h-6 text-blue-500" />;
+      default:
+        return <AlertTriangle className="w-6 h-6 text-red-500" />;
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="bg-dark-700 border-dark-600 text-white max-w-md">
+        <DialogHeader className="pb-4">
+          <div className="flex items-center space-x-3">
+            {getIcon()}
+            <DialogTitle className="text-lg font-semibold">
+              {title}
+            </DialogTitle>
+          </div>
+        </DialogHeader>
+        
+        <DialogDescription className="text-gray-300 text-sm leading-6 mb-6">
+          {description}
+        </DialogDescription>
+        
+        <div className="flex justify-end space-x-3">
+          <Button
+            onClick={onClose}
+            className="bg-primary-600 hover:bg-primary-700 text-white px-6"
+            data-testid="button-close-popup"
+          >
+            Đóng
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

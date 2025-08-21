@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import ErrorPopup from "@/components/error-popup";
 import CreditBalance from "@/components/credit-balance";
 import VideoPreview from "@/components/video-preview";
 import GenerationHistory from "@/components/generation-history";
@@ -41,9 +42,28 @@ export default function VideoGenerator() {
   const [uploadedImageName, setUploadedImageName] = useState<string>("");
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string>("");
   const [currentTaskId, setCurrentTaskId] = useState<string>("");
+  const [popup, setPopup] = useState<{ 
+    isOpen: boolean; 
+    title: string; 
+    description: string; 
+    type: "error" | "warning" | "info" 
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    type: "error"
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const showPopup = (title: string, description: string, type: "error" | "warning" | "info" = "error") => {
+    setPopup({ isOpen: true, title, description, type });
+  };
+
+  const closePopup = () => {
+    setPopup({ isOpen: false, title: "", description: "", type: "error" });
+  };
 
   const textForm = useForm<TextToVideoForm>({
     resolver: zodResolver(textToVideoSchema),
@@ -105,12 +125,7 @@ export default function VideoGenerator() {
         }
       }
 
-      toast({
-        title,
-        description,
-        variant: "destructive",
-        duration: 5000,
-      });
+      showPopup(title, description, "error");
     },
   });
 
@@ -156,12 +171,7 @@ export default function VideoGenerator() {
         }
       }
 
-      toast({
-        title,
-        description,
-        variant: "destructive",
-        duration: 5000, // Show for 5 seconds
-      });
+      showPopup(title, description, "error");
     },
   });
 
@@ -169,19 +179,11 @@ export default function VideoGenerator() {
     const file = event.target.files?.[0];
     if (file) {
       if (!file.type.startsWith("image/")) {
-        toast({
-          title: "Định dạng file không hợp lệ",
-          description: "Vui lòng tải lên file ảnh (PNG, JPG, GIF)",
-          variant: "destructive",
-        });
+        showPopup("Định dạng file không hợp lệ", "Vui lòng tải lên file ảnh (PNG, JPG, GIF)", "error");
         return;
       }
       if (file.size > 10 * 1024 * 1024) {
-        toast({
-          title: "File quá lớn",
-          description: "Vui lòng tải lên ảnh nhỏ hơn 10MB",
-          variant: "destructive",
-        });
+        showPopup("File quá lớn", "Vui lòng tải lên ảnh nhỏ hơn 10MB", "error");
         return;
       }
       setUploadedImageName(file.name);
@@ -656,6 +658,14 @@ export default function VideoGenerator() {
           </div>
         </div>
       </footer>
+
+      <ErrorPopup 
+        isOpen={popup.isOpen}
+        onClose={closePopup}
+        title={popup.title}
+        description={popup.description}
+        type={popup.type}
+      />
     </div>
   );
 }
