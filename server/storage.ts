@@ -218,6 +218,7 @@ export class DbStorage implements IStorage {
   async createVideoGeneration(generation: InsertVideoGeneration, creditsUsed: number = 5): Promise<VideoGeneration> {
     // Create full video generation object with all required fields
     const fullGeneration = {
+      taskId: randomUUID(),
       userId: generation.userId,
       type: generation.type,
       prompt: generation.prompt,

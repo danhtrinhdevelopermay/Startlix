@@ -34,13 +34,14 @@ async function checkApiCredits(apiKey: string): Promise<number> {
 async function getBestApiKey(): Promise<{ key: string; apiKeyId?: string } | null> {
   try {
     // First, try to get from database
-    const activeKeys = await storage.getActiveApiKeys();
+    const storageInstance = await storage();
+    const activeKeys = await storageInstance.getActiveApiKeys();
     
     for (const dbApiKey of activeKeys) {
       const credits = await checkApiCredits(dbApiKey.apiKey);
       
       // Update credits in database
-      await storage.updateApiKey(dbApiKey.id, {
+      await storageInstance.updateApiKey(dbApiKey.id, {
         credits,
         lastChecked: new Date(),
         isActive: credits > 0
@@ -72,7 +73,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/credits", async (req, res) => {
     try {
       const userId = "default-user-id"; // For demo, use default user
-      const user = await storage.getUser(userId);
+      const storageInstance = await storage();
+      const user = await storageInstance.getUser(userId);
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -129,7 +131,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/generate-video", async (req, res) => {
     try {
       const userId = "default-user-id"; // For demo, use default user
-      const user = await storage.getUser(userId);
+      const storageInstance = await storage();
+      const user = await storageInstance.getUser(userId);
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -147,7 +150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create video generation record  
-      const generation = await storage.createVideoGeneration({
+      const generation = await storageInstance.createVideoGeneration({
         ...validatedData,
         userId,
       }, totalCredits);
@@ -185,7 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = await response.json();
       
       if (data.code !== 200) {
-        await storage.updateVideoGeneration(generation.id, {
+        await storageInstance.updateVideoGeneration(generation.id, {
           status: "failed",
           errorMessage: data.msg || 'Generation failed',
         });
@@ -193,12 +196,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Update generation with task ID and deduct credits
-      await storage.updateVideoGeneration(generation.id, {
+      await storageInstance.updateVideoGeneration(generation.id, {
         taskId: data.data.taskId,
         status: "processing",
       });
 
-      await storage.updateUserCredits(userId, user.credits - totalCredits);
+      await storageInstance.updateUserCredits(userId, user.credits - totalCredits);
 
       res.json({ 
         taskId: data.data.taskId,
@@ -235,7 +238,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error(data.msg || 'Failed to check status');
       }
 
-      const generation = await storage.getVideoGenerationByTaskId(taskId);
+      const storageInstance = await storage();
+      const generation = await storageInstance.getVideoGenerationByTaskId(taskId);
       if (generation) {
         let status = "processing";
         let resultUrls = null;
@@ -251,7 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           errorMessage = data.data.errorMessage || "Generation failed";
         }
 
-        await storage.updateVideoGeneration(generation.id, {
+        await storageInstance.updateVideoGeneration(generation.id, {
           status,
           resultUrls,
           errorMessage,
@@ -291,9 +295,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error(data.msg || 'Failed to get 1080p video');
       }
 
-      const generation = await storage.getVideoGenerationByTaskId(taskId);
+      const storageInstance = await storage();
+      const generation = await storageInstance.getVideoGenerationByTaskId(taskId);
       if (generation) {
-        await storage.updateVideoGeneration(generation.id, {
+        await storageInstance.updateVideoGeneration(generation.id, {
           hdResultUrl: data.data.resultUrl,
         });
       }
@@ -309,7 +314,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/generations", async (req, res) => {
     try {
       const userId = "default-user-id"; // For demo, use default user
-      const generations = await storage.getUserVideoGenerations(userId);
+      const storageInstance = await storage();
+      const generations = await storageInstance.getUserVideoGenerations(userId);
       res.json(generations);
     } catch (error) {
       console.error('Generations fetch error:', error);
@@ -320,7 +326,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin Settings APIs
   app.get("/api/admin/settings", async (req, res) => {
     try {
-      const settings = await storage.getAllSettings();
+      const storageInstance = await storage();
+      const settings = await storageInstance.getAllSettings();
       res.json(settings);
     } catch (error) {
       console.error('Settings fetch error:', error);
@@ -331,7 +338,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/settings", async (req, res) => {
     try {
       const { key, value } = req.body;
-      const setting = await storage.setSetting(key, value);
+      const storageInstance = await storage();
+      const setting = await storageInstance.setSetting(key, value);
       res.json(setting);
     } catch (error) {
       console.error('Settings save error:', error);
@@ -342,7 +350,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin API Keys management
   app.get("/api/admin/api-keys", async (req, res) => {
     try {
-      const apiKeys = await storage.getAllApiKeys();
+      const storageInstance = await storage();
+      const apiKeys = await storageInstance.getAllApiKeys();
       res.json(apiKeys);
     } catch (error) {
       console.error('API Keys fetch error:', error);
@@ -352,17 +361,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/admin/api-keys", async (req, res) => {
     try {
+      const storageInstance = await storage();
       const apiKeyData = req.body;
       
       // Create API key first
-      const apiKey = await storage.createApiKey(apiKeyData);
+      const apiKey = await storageInstance.createApiKey(apiKeyData);
       
       // Immediately check credits for the new API key
       console.log(`Checking credits for new API key: ${apiKeyData.name}`);
       const credits = await checkApiCredits(apiKeyData.apiKey);
       
       // Update the API key with actual credits
-      const updatedApiKey = await storage.updateApiKey(apiKey.id, {
+      const updatedApiKey = await storageInstance.updateApiKey(apiKey.id, {
         credits,
         lastChecked: new Date(),
         isActive: credits > 0
@@ -378,9 +388,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/admin/api-keys/:id", async (req, res) => {
     try {
+      const storageInstance = await storage();
       const { id } = req.params;
       const updates = req.body;
-      const apiKey = await storage.updateApiKey(id, updates);
+      const apiKey = await storageInstance.updateApiKey(id, updates);
       
       if (!apiKey) {
         return res.status(404).json({ message: "API key not found" });
@@ -395,8 +406,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/admin/api-keys/:id", async (req, res) => {
     try {
+      const storageInstance = await storage();
       const { id } = req.params;
-      const success = await storage.deleteApiKey(id);
+      const success = await storageInstance.deleteApiKey(id);
       
       if (!success) {
         return res.status(404).json({ message: "API key not found" });
@@ -412,10 +424,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Toggle API key status
   app.put("/api/admin/api-keys/:id/toggle", async (req, res) => {
     try {
+      const storageInstance = await storage();
       const { id } = req.params;
       const { isActive } = req.body;
       
-      const apiKey = await storage.updateApiKey(id, { isActive });
+      const apiKey = await storageInstance.updateApiKey(id, { isActive });
       
       if (!apiKey) {
         return res.status(404).json({ message: "API key not found" });
@@ -431,11 +444,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Check credits for all API keys
   app.post("/api/admin/check-credits", async (req, res) => {
     try {
-      const allApiKeys = await storage.getAllApiKeys();
+      const storageInstance = await storage();
+      const allApiKeys = await storageInstance.getAllApiKeys();
       
       for (const apiKey of allApiKeys) {
         const credits = await checkApiCredits(apiKey.apiKey);
-        await storage.updateApiKey(apiKey.id, {
+        await storageInstance.updateApiKey(apiKey.id, {
           credits,
           lastChecked: new Date(),
           isActive: credits > 0 ? apiKey.isActive : false
