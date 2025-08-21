@@ -20,6 +20,13 @@ export const apiKeys = pgTable("api_keys", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const settings = pgTable("settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const videoGenerations = pgTable("video_generations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id),
@@ -53,6 +60,11 @@ export const insertApiKeySchema = createInsertSchema(apiKeys).omit({
   createdAt: true,
 });
 
+export const insertSettingsSchema = createInsertSchema(settings).omit({
+  id: true,
+  updatedAt: true,
+});
+
 export const insertVideoGenerationSchema = createInsertSchema(videoGenerations).omit({
   id: true,
   taskId: true,
@@ -73,5 +85,7 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertApiKey = z.infer<typeof insertApiKeySchema>;
 export type ApiKey = typeof apiKeys.$inferSelect;
+export type InsertSettings = z.infer<typeof insertSettingsSchema>;
+export type Settings = typeof settings.$inferSelect;
 export type InsertVideoGeneration = z.infer<typeof insertVideoGenerationSchema>;
 export type VideoGeneration = typeof videoGenerations.$inferSelect;

@@ -9,9 +9,63 @@ import FormData from "form-data";
 // Configure multer for file uploads
 const upload = multer({ storage: multer.memoryStorage() });
 
-const VEOAPI_KEY = process.env.VEOAPI_KEY || process.env.VEO3_API_KEY || "your-api-key";
 const VEO3_API_BASE = "https://api.veo3api.ai/api/v1";
 const VEO3_UPLOAD_BASE = "https://veo3apiai.redpandaai.co/api";
+
+// Check API key credits
+async function checkApiCredits(apiKey: string): Promise<number> {
+  try {
+    const response = await fetch('https://api.veo3api.ai/api/v1/common/credit', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`
+      }
+    });
+    const data = await response.json();
+    console.log(`Remaining credits: ${data.data}`);
+    return data.data || 0;
+  } catch (error) {
+    console.error('Failed to check API credits:', error);
+    return 0;
+  }
+}
+
+// Get best available API key with credits
+async function getBestApiKey(): Promise<{ key: string; apiKeyId?: string } | null> {
+  try {
+    // First, try to get from database
+    const activeKeys = await storage.getActiveApiKeys();
+    
+    for (const dbApiKey of activeKeys) {
+      const credits = await checkApiCredits(dbApiKey.apiKey);
+      
+      // Update credits in database
+      await storage.updateApiKey(dbApiKey.id, {
+        credits,
+        lastChecked: new Date(),
+        isActive: credits > 0
+      });
+      
+      if (credits > 0) {
+        return { key: dbApiKey.apiKey, apiKeyId: dbApiKey.id };
+      }
+    }
+    
+    // Fallback to environment variables
+    const envKey = process.env.VEOAPI_KEY || process.env.VEO3_API_KEY;
+    if (envKey && envKey !== "your-api-key") {
+      const credits = await checkApiCredits(envKey);
+      if (credits > 0) {
+        return { key: envKey };
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting API key:', error);
+    return null;
+  }
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get user credits
@@ -44,10 +98,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       formData.append('uploadPath', 'images/user-uploads');
 
+      const apiKeyData = await getBestApiKey();
+      if (!apiKeyData) {
+        return res.status(503).json({ message: "No API keys with credits available" });
+      }
+
       const response = await fetch(`${VEO3_UPLOAD_BASE}/file-stream-upload`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${VEOAPI_KEY}`,
+          'Authorization': `Bearer ${apiKeyData.key}`,
           ...formData.getHeaders(),
         },
         body: formData as any,
@@ -111,7 +170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const response = await fetch(`${VEO3_API_BASE}/veo/generate`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${VEOAPI_KEY}`,
+          'Authorization': `Bearer ${apiKeyData.key}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(veoPayload),
@@ -154,7 +213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const response = await fetch(`${VEO3_API_BASE}/veo/record-info?taskId=${taskId}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${VEOAPI_KEY}`,
+          'Authorization': `Bearer ${apiKeyData.key}`,
         },
       });
 
@@ -204,7 +263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const response = await fetch(`${VEO3_API_BASE}/veo/get-1080p-video?taskId=${taskId}&index=${index}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${VEOAPI_KEY}`,
+          'Authorization': `Bearer ${apiKeyData.key}`,
         },
       });
 
@@ -237,6 +296,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Generations fetch error:', error);
       res.status(500).json({ message: "Failed to fetch generations" });
+    }
+  });
+
+  // Admin Settings APIs
+  app.get("/api/admin/settings", async (req, res) => {
+    try {
+      const settings = await storage.getAllSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error('Settings fetch error:', error);
+      res.status(500).json({ message: "Failed to fetch settings" });
+    }
+  });
+
+  app.post("/api/admin/settings", async (req, res) => {
+    try {
+      const { key, value } = req.body;
+      const setting = await storage.setSetting(key, value);
+      res.json(setting);
+    } catch (error) {
+      console.error('Settings save error:', error);
+      res.status(500).json({ message: "Failed to save setting" });
+    }
+  });
+
+  // Admin API Keys management
+  app.get("/api/admin/api-keys", async (req, res) => {
+    try {
+      const apiKeys = await storage.getAllApiKeys();
+      res.json(apiKeys);
+    } catch (error) {
+      console.error('API Keys fetch error:', error);
+      res.status(500).json({ message: "Failed to fetch API keys" });
+    }
+  });
+
+  app.post("/api/admin/api-keys", async (req, res) => {
+    try {
+      const apiKeyData = req.body;
+      const apiKey = await storage.createApiKey(apiKeyData);
+      res.json(apiKey);
+    } catch (error) {
+      console.error('API Key creation error:', error);
+      res.status(500).json({ message: "Failed to create API key" });
+    }
+  });
+
+  app.put("/api/admin/api-keys/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const apiKey = await storage.updateApiKey(id, updates);
+      
+      if (!apiKey) {
+        return res.status(404).json({ message: "API key not found" });
+      }
+      
+      res.json(apiKey);
+    } catch (error) {
+      console.error('API Key update error:', error);
+      res.status(500).json({ message: "Failed to update API key" });
+    }
+  });
+
+  app.delete("/api/admin/api-keys/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const success = await storage.deleteApiKey(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "API key not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('API Key deletion error:', error);
+      res.status(500).json({ message: "Failed to delete API key" });
     }
   });
 

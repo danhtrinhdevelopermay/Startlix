@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type VideoGeneration, type InsertVideoGeneration, type ApiKey, type InsertApiKey } from "@shared/schema";
+import { type User, type InsertUser, type VideoGeneration, type InsertVideoGeneration, type ApiKey, type InsertApiKey, type Settings, type InsertSettings } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -20,17 +20,24 @@ export interface IStorage {
   getAllApiKeys(): Promise<ApiKey[]>;
   getActiveApiKeys(): Promise<ApiKey[]>;
   deleteApiKey(id: string): Promise<boolean>;
+  
+  // Settings methods
+  getSetting(key: string): Promise<Settings | undefined>;
+  setSetting(key: string, value: string): Promise<Settings>;
+  getAllSettings(): Promise<Settings[]>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private videoGenerations: Map<string, VideoGeneration>;
   private apiKeys: Map<string, ApiKey>;
+  private settings: Map<string, Settings>;
 
   constructor() {
     this.users = new Map();
     this.videoGenerations = new Map();
     this.apiKeys = new Map();
+    this.settings = new Map();
     
     // Create a default user for demo purposes
     const defaultUser: User = {
@@ -161,6 +168,26 @@ export class MemStorage implements IStorage {
 
   async deleteApiKey(id: string): Promise<boolean> {
     return this.apiKeys.delete(id);
+  }
+
+  // Settings methods
+  async getSetting(key: string): Promise<Settings | undefined> {
+    return this.settings.get(key);
+  }
+
+  async setSetting(key: string, value: string): Promise<Settings> {
+    const setting: Settings = {
+      id: randomUUID(),
+      key,
+      value,
+      updatedAt: new Date(),
+    };
+    this.settings.set(key, setting);
+    return setting;
+  }
+
+  async getAllSettings(): Promise<Settings[]> {
+    return Array.from(this.settings.values());
   }
 }
 
