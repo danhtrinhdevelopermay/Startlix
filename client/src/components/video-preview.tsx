@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Play, Download, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,6 +14,8 @@ interface VideoPreviewProps {
 
 export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPreviewProps) {
   const [pollingTaskId, setPollingTaskId] = useState<string>("");
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [progress, setProgress] = useState<number>(0);
   const { toast } = useToast();
 
   const { data: videoStatus, isLoading } = useQuery<any>({
@@ -30,11 +33,29 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
   useEffect(() => {
     if (taskId && taskId !== pollingTaskId) {
       setPollingTaskId(taskId);
+      setStartTime(new Date());
+      setProgress(0);
     }
   }, [taskId, pollingTaskId]);
 
+  // Update progress based on elapsed time
+  useEffect(() => {
+    if (!startTime || !pollingTaskId || videoUrl) return;
+
+    const interval = setInterval(() => {
+      const elapsedSeconds = (new Date().getTime() - startTime.getTime()) / 1000;
+      // Estimate 45 seconds for completion, with some variation
+      const estimatedDuration = 45;
+      const calculatedProgress = Math.min((elapsedSeconds / estimatedDuration) * 85, 85); // Cap at 85% until actual completion
+      setProgress(calculatedProgress);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [startTime, pollingTaskId, videoUrl]);
+
   useEffect(() => {
     if (videoStatus?.successFlag === 1 && videoStatus?.response?.resultUrls?.[0]) {
+      setProgress(100);
       const url = videoStatus.response.resultUrls[0];
       onVideoLoad(url);
       toast({
@@ -42,6 +63,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
         description: "Your video is ready for preview.",
       });
     } else if (videoStatus?.successFlag === -1) {
+      setProgress(0);
       toast({
         title: "Generation failed",
         description: videoStatus.errorMessage || "Video generation failed",
@@ -113,10 +135,24 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
             className="aspect-video bg-dark-600 rounded-lg flex items-center justify-center border border-dark-500"
             data-testid="preview-loading"
           >
-            <div className="text-center text-gray-400">
+            <div className="text-center text-gray-400 w-full max-w-md px-8">
               <Loader2 className="w-16 h-16 mx-auto mb-4 text-primary-500 animate-spin" />
-              <p className="text-sm mb-2">Generating your video...</p>
-              {isLoading && <p className="text-xs text-gray-500">Checking status...</p>}
+              <p className="text-sm mb-4">Generating your video...</p>
+              
+              <div className="mb-3">
+                <Progress 
+                  value={progress} 
+                  className="h-3 bg-dark-500"
+                  data-testid="progress-bar"
+                />
+              </div>
+              
+              <div className="flex justify-between items-center text-xs text-gray-500">
+                <span data-testid="progress-percentage">{Math.round(progress)}%</span>
+                <span>~{Math.max(0, 45 - Math.round((new Date().getTime() - (startTime?.getTime() || 0)) / 1000))}s remaining</span>
+              </div>
+              
+              {isLoading && <p className="text-xs text-gray-500 mt-2">Checking status...</p>}
             </div>
           </div>
         )}
