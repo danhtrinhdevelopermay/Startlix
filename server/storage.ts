@@ -1,5 +1,8 @@
 import { type User, type InsertUser, type VideoGeneration, type InsertVideoGeneration, type ApiKey, type InsertApiKey, type Settings, type InsertSettings } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { db } from "./db";
+import { users, videoGenerations, apiKeys, settings } from "@shared/schema";
+import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -191,4 +194,146 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DbStorage implements IStorage {
+  async getUser(id: string): Promise<User | undefined> {
+    const results = await db.select().from(users).where(eq(users.id, id));
+    return results[0];
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const results = await db.select().from(users).where(eq(users.username, username));
+    return results[0];
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const results = await db.insert(users).values({ ...insertUser, credits: 100 }).returning();
+    return results[0];
+  }
+
+  async updateUserCredits(userId: string, credits: number): Promise<User | undefined> {
+    const results = await db.update(users).set({ credits }).where(eq(users.id, userId)).returning();
+    return results[0];
+  }
+
+  async createVideoGeneration(generation: InsertVideoGeneration, creditsUsed: number = 5): Promise<VideoGeneration> {
+    // Create full video generation object with all required fields
+    const fullGeneration = {
+      userId: generation.userId,
+      type: generation.type,
+      prompt: generation.prompt,
+      imageUrl: generation.imageUrl || null,
+      aspectRatio: generation.aspectRatio || "16:9",
+      model: generation.model || "veo3",
+      watermark: generation.watermark || null,
+      hdGeneration: generation.hdGeneration || false,
+      creditsUsed,
+      apiKeyId: generation.apiKeyId || null,
+      status: "pending" as const,
+    };
+    
+    const results = await db.insert(videoGenerations).values(fullGeneration).returning();
+    return results[0];
+  }
+
+  async updateVideoGeneration(id: string, updates: Partial<VideoGeneration>): Promise<VideoGeneration | undefined> {
+    const results = await db.update(videoGenerations).set(updates).where(eq(videoGenerations.id, id)).returning();
+    return results[0];
+  }
+
+  async getVideoGeneration(id: string): Promise<VideoGeneration | undefined> {
+    const results = await db.select().from(videoGenerations).where(eq(videoGenerations.id, id));
+    return results[0];
+  }
+
+  async getVideoGenerationByTaskId(taskId: string): Promise<VideoGeneration | undefined> {
+    const results = await db.select().from(videoGenerations).where(eq(videoGenerations.taskId, taskId));
+    return results[0];
+  }
+
+  async getUserVideoGenerations(userId: string): Promise<VideoGeneration[]> {
+    return await db.select().from(videoGenerations).where(eq(videoGenerations.userId, userId)).orderBy(desc(videoGenerations.createdAt));
+  }
+
+  // API Key methods
+  async createApiKey(insertApiKey: InsertApiKey): Promise<ApiKey> {
+    const results = await db.insert(apiKeys).values(insertApiKey).returning();
+    return results[0];
+  }
+
+  async updateApiKey(id: string, updates: Partial<ApiKey>): Promise<ApiKey | undefined> {
+    const results = await db.update(apiKeys).set(updates).where(eq(apiKeys.id, id)).returning();
+    return results[0];
+  }
+
+  async getApiKey(id: string): Promise<ApiKey | undefined> {
+    const results = await db.select().from(apiKeys).where(eq(apiKeys.id, id));
+    return results[0];
+  }
+
+  async getAllApiKeys(): Promise<ApiKey[]> {
+    return await db.select().from(apiKeys).orderBy(desc(apiKeys.createdAt));
+  }
+
+  async getActiveApiKeys(): Promise<ApiKey[]> {
+    return await db.select().from(apiKeys).where(and(eq(apiKeys.isActive, true))).orderBy(desc(apiKeys.credits));
+  }
+
+  async deleteApiKey(id: string): Promise<boolean> {
+    const results = await db.delete(apiKeys).where(eq(apiKeys.id, id)).returning();
+    return results.length > 0;
+  }
+
+  // Settings methods
+  async getSetting(key: string): Promise<Settings | undefined> {
+    const results = await db.select().from(settings).where(eq(settings.key, key));
+    return results[0];
+  }
+
+  async setSetting(key: string, value: string): Promise<Settings> {
+    // Try to update first, if no rows affected, insert new
+    const updateResults = await db.update(settings).set({ value, updatedAt: new Date() }).where(eq(settings.key, key)).returning();
+    
+    if (updateResults.length > 0) {
+      return updateResults[0];
+    }
+    
+    // Insert new setting
+    const insertResults = await db.insert(settings).values({ key, value }).returning();
+    return insertResults[0];
+  }
+
+  async getAllSettings(): Promise<Settings[]> {
+    return await db.select().from(settings);
+  }
+}
+
+// Initialize storage with default user in database
+async function initializeDbStorage(): Promise<DbStorage> {
+  const storage = new DbStorage();
+  
+  // Create default user if not exists
+  const existingUser = await storage.getUser("default-user-id");
+  if (!existingUser) {
+    // Insert default user directly into database with proper typing
+    await db.insert(users).values({
+      id: "default-user-id" as const,
+      username: "demo-user" as const,
+      password: "password" as const,
+      credits: 150,
+    }).onConflictDoNothing();
+  }
+  
+  return storage;
+}
+
+// Export database storage instead of memory storage
+let storage: DbStorage;
+
+async function getStorage(): Promise<DbStorage> {
+  if (!storage) {
+    storage = await initializeDbStorage();
+  }
+  return storage;
+}
+
+export { getStorage as storage };
