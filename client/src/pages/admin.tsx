@@ -208,6 +208,108 @@ export default function Admin() {
           </Button>
         </div>
 
+        {/* Statistics Dashboard */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="bg-dark-700 border-dark-600">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Tổng API Keys</p>
+                  <p className="text-2xl font-bold" data-testid="stat-total-keys">
+                    {apiKeys.length}
+                  </p>
+                </div>
+                <Key className="w-8 h-8 text-primary-500" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-dark-700 border-dark-600">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Keys hoạt động</p>
+                  <p className="text-2xl font-bold text-green-400" data-testid="stat-active-keys">
+                    {apiKeys.filter((k: ApiKey) => k.isActive && k.credits > 0).length}
+                  </p>
+                </div>
+                <CheckCircle className="w-8 h-8 text-green-500" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-dark-700 border-dark-600">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Tổng Credits</p>
+                  <p className="text-2xl font-bold text-blue-400" data-testid="stat-total-credits">
+                    {apiKeys.reduce((sum: number, k: ApiKey) => sum + k.credits, 0).toLocaleString()}
+                  </p>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+                  C
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-dark-700 border-dark-600">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Keys hết credit</p>
+                  <p className="text-2xl font-bold text-red-400" data-testid="stat-empty-keys">
+                    {apiKeys.filter((k: ApiKey) => k.credits === 0).length}
+                  </p>
+                </div>
+                <AlertCircle className="w-8 h-8 text-red-500" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* API Key with Most Credits */}
+        {apiKeys.length > 0 && apiKeys.some((k: ApiKey) => k.credits > 0) && (
+          <Card className="bg-dark-700 border-dark-600">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <div className="w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center">
+                  <span className="text-xs font-bold text-black">★</span>
+                </div>
+                <span>API Key nhiều credits nhất</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                const topApiKey = apiKeys.reduce((max: ApiKey | null, current: ApiKey) => 
+                  (!max || current.credits > max.credits) ? current : max, null);
+                
+                return topApiKey ? (
+                  <div className="flex items-center justify-between p-4 bg-dark-600 rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3">
+                        <div>
+                          <p className="font-semibold">{topApiKey.name}</p>
+                          <p className="text-sm text-gray-400">
+                            Kiểm tra lần cuối: {formatDate(topApiKey.lastChecked)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-green-400">
+                        {topApiKey.credits.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-gray-400">credits</p>
+                    </div>
+                  </div>
+                ) : null;
+              })()}
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Veo3 API Key Configuration */}
           <Card className="bg-dark-700 border-dark-600">
