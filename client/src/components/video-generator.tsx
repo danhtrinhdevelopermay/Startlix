@@ -1,0 +1,609 @@
+import { useState, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { apiRequest } from "@/lib/queryClient";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import CreditBalance from "@/components/credit-balance";
+import VideoPreview from "@/components/video-preview";
+import GenerationHistory from "@/components/generation-history";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, Upload, Sparkles, Image, FileText } from "lucide-react";
+
+const textToVideoSchema = z.object({
+  prompt: z.string().min(10, "Prompt must be at least 10 characters").max(500, "Prompt must be less than 500 characters"),
+  aspectRatio: z.enum(["16:9", "9:16", "1:1"]),
+  model: z.enum(["veo3", "veo3-fast"]),
+  watermark: z.string().optional(),
+  hdGeneration: z.boolean().default(false),
+});
+
+const imageToVideoSchema = z.object({
+  prompt: z.string().min(10, "Motion prompt must be at least 10 characters").max(500, "Motion prompt must be less than 500 characters"),
+  aspectRatio: z.enum(["16:9", "9:16", "1:1"]),
+  model: z.enum(["veo3", "veo3-fast"]),
+  imageUrl: z.string().min(1, "Please upload an image"),
+});
+
+type TextToVideoForm = z.infer<typeof textToVideoSchema>;
+type ImageToVideoForm = z.infer<typeof imageToVideoSchema>;
+
+export default function VideoGenerator() {
+  const [activeTab, setActiveTab] = useState<"text-to-video" | "image-to-video">("text-to-video");
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
+  const [uploadedImageName, setUploadedImageName] = useState<string>("");
+  const [currentVideoUrl, setCurrentVideoUrl] = useState<string>("");
+  const [currentTaskId, setCurrentTaskId] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const textForm = useForm<TextToVideoForm>({
+    resolver: zodResolver(textToVideoSchema),
+    defaultValues: {
+      prompt: "",
+      aspectRatio: "16:9",
+      model: "veo3",
+      watermark: "",
+      hdGeneration: false,
+    },
+  });
+
+  const imageForm = useForm<ImageToVideoForm>({
+    resolver: zodResolver(imageToVideoSchema),
+    defaultValues: {
+      prompt: "",
+      aspectRatio: "16:9",
+      model: "veo3",
+      imageUrl: "",
+    },
+  });
+
+  const uploadImageMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await apiRequest("POST", "/api/upload-image", formData);
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      setUploadedImageUrl(data.downloadUrl);
+      imageForm.setValue("imageUrl", data.downloadUrl);
+      toast({
+        title: "Image uploaded successfully",
+        description: "Your image is ready for video generation.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : "Failed to upload image",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const generateVideoMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", "/api/generate-video", data);
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      setCurrentTaskId(data.taskId);
+      queryClient.invalidateQueries({ queryKey: ["/api/credits"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/generations"] });
+      toast({
+        title: "Video generation started",
+        description: `Generation started with task ID: ${data.taskId}`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Generation failed",
+        description: error instanceof Error ? error.message : "Failed to generate video",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload an image file (PNG, JPG, GIF)",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please upload an image smaller than 10MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      setUploadedImageName(file.name);
+      uploadImageMutation.mutate(file);
+    }
+  };
+
+  const onTextToVideoSubmit = (data: TextToVideoForm) => {
+    generateVideoMutation.mutate({
+      ...data,
+      type: "text-to-video",
+      userId: "default-user-id",
+    });
+  };
+
+  const onImageToVideoSubmit = (data: ImageToVideoForm) => {
+    generateVideoMutation.mutate({
+      ...data,
+      type: "image-to-video",
+      userId: "default-user-id",
+    });
+  };
+
+  return (
+    <div>
+      {/* Header */}
+      <header className="border-b border-dark-600 bg-dark-700/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <img src="https://veo3api.ai/logo.png" alt="Veo3 API Logo" className="h-8 w-auto" />
+              <h1 className="text-xl font-bold bg-gradient-to-r from-primary-500 to-purple-400 bg-clip-text text-transparent">
+                Video Generator
+              </h1>
+            </div>
+            
+            <div className="flex items-center space-x-6">
+              <CreditBalance />
+              <Button 
+                className="bg-primary-600 hover:bg-primary-700 text-white font-medium"
+                data-testid="button-get-credits"
+              >
+                Get More Credits
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Generation Controls */}
+          <div className="lg:col-span-2">
+            <div className="bg-dark-700 rounded-xl border border-dark-600 overflow-hidden">
+              {/* Tab Navigation */}
+              <div className="flex border-b border-dark-600">
+                <Button
+                  variant="ghost"
+                  className={`flex-1 px-6 py-4 rounded-none border-b-2 transition-colors ${
+                    activeTab === "text-to-video"
+                      ? "bg-primary-600 text-white border-primary-500"
+                      : "text-gray-400 hover:text-white hover:bg-dark-600 border-transparent"
+                  }`}
+                  onClick={() => setActiveTab("text-to-video")}
+                  data-testid="tab-text-to-video"
+                >
+                  <div className="flex items-center space-x-2">
+                    <FileText className="w-5 h-5" />
+                    <span>Text to Video</span>
+                  </div>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className={`flex-1 px-6 py-4 rounded-none border-b-2 transition-colors ${
+                    activeTab === "image-to-video"
+                      ? "bg-primary-600 text-white border-primary-500"
+                      : "text-gray-400 hover:text-white hover:bg-dark-600 border-transparent"
+                  }`}
+                  onClick={() => setActiveTab("image-to-video")}
+                  data-testid="tab-image-to-video"
+                >
+                  <div className="flex items-center space-x-2">
+                    <Image className="w-5 h-5" />
+                    <span>Image to Video</span>
+                  </div>
+                </Button>
+              </div>
+
+              {/* Text to Video Panel */}
+              {activeTab === "text-to-video" && (
+                <div className="p-6">
+                  <Form {...textForm}>
+                    <form onSubmit={textForm.handleSubmit(onTextToVideoSubmit)} className="space-y-6">
+                      <FormField
+                        control={textForm.control}
+                        name="prompt"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-300">Video Prompt</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe your video... (e.g., 'A golden retriever playing fetch in a sunny park, slow motion, cinematic lighting')"
+                                className="h-32 bg-dark-600 border-dark-500 text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                                data-testid="input-text-prompt"
+                                {...field}
+                              />
+                            </FormControl>
+                            <div className="flex justify-between text-xs text-gray-400">
+                              <span>Be specific about lighting, camera angles, and style</span>
+                              <span data-testid="text-prompt-length">{field.value.length}/500</span>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={textForm.control}
+                          name="aspectRatio"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-gray-300">Aspect Ratio</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger 
+                                    className="bg-dark-600 border-dark-500 text-white focus:ring-2 focus:ring-primary-500"
+                                    data-testid="select-aspect-ratio"
+                                  >
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="bg-dark-600 border-dark-500">
+                                  <SelectItem value="16:9">16:9 (Landscape)</SelectItem>
+                                  <SelectItem value="9:16">9:16 (Portrait)</SelectItem>
+                                  <SelectItem value="1:1">1:1 (Square)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={textForm.control}
+                          name="model"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-gray-300">Model</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger 
+                                    className="bg-dark-600 border-dark-500 text-white focus:ring-2 focus:ring-primary-500"
+                                    data-testid="select-model"
+                                  >
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="bg-dark-600 border-dark-500">
+                                  <SelectItem value="veo3">Veo3 (Best Quality)</SelectItem>
+                                  <SelectItem value="veo3-fast">Veo3 Fast</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <Collapsible>
+                        <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-gray-300 hover:text-white transition-colors">
+                          Advanced Options
+                          <ChevronDown className="w-5 h-5 transform transition-transform data-[state=open]:rotate-180" />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="mt-4 space-y-4 pl-4">
+                          <FormField
+                            control={textForm.control}
+                            name="watermark"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-gray-300">Watermark (Optional)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Your brand name"
+                                    className="bg-dark-600 border-dark-500 text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500"
+                                    data-testid="input-watermark"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={textForm.control}
+                            name="hdGeneration"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    className="border-dark-500 text-primary-500 focus:ring-primary-500"
+                                    data-testid="checkbox-hd-generation"
+                                  />
+                                </FormControl>
+                                <FormLabel className="text-sm text-gray-300">
+                                  Generate 1080P HD version (+2 credits)
+                                </FormLabel>
+                              </FormItem>
+                            )}
+                          />
+                        </CollapsibleContent>
+                      </Collapsible>
+
+                      <Button
+                        type="submit"
+                        disabled={generateVideoMutation.isPending}
+                        className="w-full bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-700"
+                        data-testid="button-generate-text-video"
+                      >
+                        <div className="flex items-center justify-center space-x-2">
+                          <Sparkles className="w-5 h-5" />
+                          <span>
+                            {generateVideoMutation.isPending ? "Generating..." : "Generate Video"}
+                          </span>
+                          <span className="text-xs bg-black/20 px-2 py-1 rounded">5 credits</span>
+                        </div>
+                      </Button>
+                    </form>
+                  </Form>
+                </div>
+              )}
+
+              {/* Image to Video Panel */}
+              {activeTab === "image-to-video" && (
+                <div className="p-6">
+                  <Form {...imageForm}>
+                    <form onSubmit={imageForm.handleSubmit(onImageToVideoSubmit)} className="space-y-6">
+                      <FormField
+                        control={imageForm.control}
+                        name="imageUrl"
+                        render={() => (
+                          <FormItem>
+                            <FormLabel className="text-gray-300">Upload Image</FormLabel>
+                            <FormControl>
+                              <div 
+                                className="border-2 border-dashed border-dark-500 rounded-lg p-8 text-center hover:border-primary-500 transition-colors cursor-pointer bg-dark-600/50"
+                                onClick={() => fileInputRef.current?.click()}
+                                data-testid="upload-area"
+                              >
+                                <input
+                                  ref={fileInputRef}
+                                  type="file"
+                                  className="hidden"
+                                  accept="image/*"
+                                  onChange={handleFileUpload}
+                                  data-testid="input-file-upload"
+                                />
+                                {uploadedImageName ? (
+                                  <div className="space-y-2">
+                                    <Upload className="w-12 h-12 text-green-400 mx-auto" />
+                                    <div className="text-sm text-green-400">
+                                      <span className="font-medium">Uploaded: {uploadedImageName}</span>
+                                    </div>
+                                    <p className="text-xs text-gray-400">Click to upload a different image</p>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                                    <div className="text-sm text-gray-400">
+                                      <span className="text-primary-400 font-medium">Click to upload</span> or drag and drop
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-2">PNG, JPG, GIF up to 10MB</p>
+                                  </div>
+                                )}
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={imageForm.control}
+                        name="prompt"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-300">Motion Prompt</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe how the image should animate... (e.g., 'The person starts walking forward with confident steps')"
+                                className="h-24 bg-dark-600 border-dark-500 text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 resize-none"
+                                data-testid="input-motion-prompt"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={imageForm.control}
+                          name="aspectRatio"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-gray-300">Aspect Ratio</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger 
+                                    className="bg-dark-600 border-dark-500 text-white focus:ring-2 focus:ring-primary-500"
+                                    data-testid="select-image-aspect-ratio"
+                                  >
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="bg-dark-600 border-dark-500">
+                                  <SelectItem value="16:9">16:9 (Landscape)</SelectItem>
+                                  <SelectItem value="9:16">9:16 (Portrait)</SelectItem>
+                                  <SelectItem value="1:1">1:1 (Square)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={imageForm.control}
+                          name="model"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-gray-300">Model</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger 
+                                    className="bg-dark-600 border-dark-500 text-white focus:ring-2 focus:ring-primary-500"
+                                    data-testid="select-image-model"
+                                  >
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="bg-dark-600 border-dark-500">
+                                  <SelectItem value="veo3">Veo3 (Best Quality)</SelectItem>
+                                  <SelectItem value="veo3-fast">Veo3 Fast</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <Button
+                        type="submit"
+                        disabled={generateVideoMutation.isPending || !uploadedImageUrl}
+                        className="w-full bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02]"
+                        data-testid="button-generate-image-video"
+                      >
+                        <div className="flex items-center justify-center space-x-2">
+                          <Image className="w-5 h-5" />
+                          <span>
+                            {generateVideoMutation.isPending ? "Animating..." : "Animate Image"}
+                          </span>
+                          <span className="text-xs bg-black/20 px-2 py-1 rounded">7 credits</span>
+                        </div>
+                      </Button>
+                    </form>
+                  </Form>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column - Video Preview & History */}
+          <div className="space-y-6">
+            <VideoPreview 
+              videoUrl={currentVideoUrl} 
+              taskId={currentTaskId} 
+              onVideoLoad={setCurrentVideoUrl}
+            />
+            <GenerationHistory onSelectVideo={setCurrentVideoUrl} />
+          </div>
+        </div>
+
+        {/* Feature Showcase */}
+        <div className="mt-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              Powered by Veo3 AI
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Generate stunning, high-quality videos from text prompts or animate your images with state-of-the-art AI technology.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-dark-700 rounded-xl p-6 border border-dark-600 text-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-primary-500 to-purple-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Lightning Fast</h3>
+              <p className="text-gray-400 text-sm">Generate videos in minutes with our optimized Veo3 API integration</p>
+            </div>
+            
+            <div className="bg-dark-700 rounded-xl p-6 border border-dark-600 text-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold mb-2">High Quality</h3>
+              <p className="text-gray-400 text-sm">Professional-grade 1080P video generation with cinematic quality</p>
+            </div>
+            
+            <div className="bg-dark-700 rounded-xl p-6 border border-dark-600 text-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Easy to Use</h3>
+              <p className="text-gray-400 text-sm">Intuitive interface designed for creators of all skill levels</p>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-dark-600 bg-dark-700 mt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="flex items-center space-x-2 mb-4 md:mb-0">
+              <span className="text-sm text-gray-400">
+                Powered by{" "}
+                <a 
+                  href="https://veo3api.ai" 
+                  className="text-primary-400 hover:text-primary-300 transition-colors"
+                  data-testid="link-veo3api"
+                >
+                  Veo3 API
+                </a>
+              </span>
+            </div>
+            
+            <div className="flex space-x-6 text-sm text-gray-400">
+              <a 
+                href="https://docs.veo3api.ai" 
+                className="hover:text-white transition-colors"
+                data-testid="link-documentation"
+              >
+                Documentation
+              </a>
+              <a 
+                href="https://veo3api.ai/api-key" 
+                className="hover:text-white transition-colors"
+                data-testid="link-api-key"
+              >
+                Get API Key
+              </a>
+              <a 
+                href="#" 
+                className="hover:text-white transition-colors"
+                data-testid="link-support"
+              >
+                Support
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
