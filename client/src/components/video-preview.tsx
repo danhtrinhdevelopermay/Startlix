@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Play, Download, Loader2 } from "lucide-react";
+import { Play, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ErrorPopup from "@/components/error-popup";
+import loadingGif from "@assets/original-568544560f6ca1076a16e3428302e329_1755778026559.gif";
 
 interface VideoPreviewProps {
   videoUrl: string;
@@ -156,7 +157,11 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
             data-testid="preview-loading"
           >
             <div className="text-center text-gray-400 w-full max-w-md px-8">
-              <Loader2 className="w-16 h-16 mx-auto mb-4 text-primary-500 animate-spin" />
+              <img 
+                src={loadingGif} 
+                alt="Loading video generation" 
+                className="w-20 h-20 mx-auto mb-4" 
+              />
               <p className="text-sm mb-4">Generating your video...</p>
               
               <div className="mb-3">
