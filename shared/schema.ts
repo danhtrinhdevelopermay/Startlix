@@ -44,6 +44,7 @@ export const insertVideoGenerationSchema = createInsertSchema(videoGenerations).
   errorMessage: true,
   createdAt: true,
   completedAt: true,
+  creditsUsed: true,
 }).extend({
   prompt: z.string().min(10, "Prompt must be at least 10 characters").max(500, "Prompt must be less than 500 characters"),
   aspectRatio: z.enum(["16:9", "9:16", "1:1"]),
