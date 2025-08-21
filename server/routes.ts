@@ -353,8 +353,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/api-keys", async (req, res) => {
     try {
       const apiKeyData = req.body;
+      
+      // Create API key first
       const apiKey = await storage.createApiKey(apiKeyData);
-      res.json(apiKey);
+      
+      // Immediately check credits for the new API key
+      console.log(`Checking credits for new API key: ${apiKeyData.name}`);
+      const credits = await checkApiCredits(apiKeyData.apiKey);
+      
+      // Update the API key with actual credits
+      const updatedApiKey = await storage.updateApiKey(apiKey.id, {
+        credits,
+        lastChecked: new Date(),
+        isActive: credits > 0
+      });
+      
+      console.log(`New API key "${apiKeyData.name}" has ${credits} credits`);
+      res.json(updatedApiKey || apiKey);
     } catch (error) {
       console.error('API Key creation error:', error);
       res.status(500).json({ message: "Failed to create API key" });
