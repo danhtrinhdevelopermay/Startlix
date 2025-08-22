@@ -481,7 +481,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const hdCredits = validatedData.hdGeneration ? 2 : 0;
       const totalCredits = baseCredits + hdCredits;
 
-      if (user.credits < totalCredits) {
+      // Get API key with credits - this will check VEO3 API credits, not local credits
+      const apiKeyData = await getBestApiKey();
+      if (!apiKeyData) {
         return res.status(400).json({ message: "Insufficient credits" });
       }
 
@@ -490,12 +492,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...validatedData,
         userId: user.id,
       }, totalCredits);
-
-      // Get API key with credits
-      const apiKeyData = await getBestApiKey();
-      if (!apiKeyData) {
-        return res.status(503).json({ message: "No API keys with credits available" });
-      }
 
       // Call Veo3 API
       const veoPayload: any = {
@@ -531,13 +527,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error(data.msg || 'Generation failed');
       }
 
-      // Update generation with task ID and deduct credits
+      // Update generation with task ID (VEO3 API automatically deducts credits)
       await storageInstance.updateVideoGeneration(generation.id, {
         taskId: data.data.taskId,
         status: "processing",
       });
-
-      await storageInstance.updateUserCredits(user.id, user.credits - totalCredits);
 
       res.json({ 
         taskId: data.data.taskId,
