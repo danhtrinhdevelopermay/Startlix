@@ -887,7 +887,7 @@ export default function VideoGenerator() {
       <Dialog open={aspectRatioModalOpen} onOpenChange={setAspectRatioModalOpen}>
         <DialogPortal>
           <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
-          <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-dark-700 border border-dark-600 rounded-xl p-6 w-[90vw] max-w-md z-50">
+          <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-dark-700 border border-dark-600 rounded-xl p-4 w-[95vw] max-w-sm max-h-[85vh] overflow-y-auto z-50">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-white mb-4">Choose Aspect Ratio</DialogTitle>
             </DialogHeader>
@@ -902,7 +902,7 @@ export default function VideoGenerator() {
                 return (
                   <button
                     key={option.value}
-                    className={`w-full p-4 rounded-lg border transition-all ${
+                    className={`w-full p-3 rounded-lg border transition-all ${
                       isSelected 
                         ? 'border-primary-500 bg-primary-500/20 text-white' 
                         : 'border-dark-500 bg-dark-600 text-gray-300 hover:border-primary-400 hover:bg-primary-400/10'
@@ -917,17 +917,17 @@ export default function VideoGenerator() {
                     }}
                     data-testid={`option-aspect-ratio-${option.value}`}
                   >
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-3">
                       <div className="flex-shrink-0">
-                        <IconComponent className="w-8 h-8 text-primary-400" />
+                        <IconComponent className="w-6 h-6 text-primary-400" />
                       </div>
-                      <div className="flex-1 text-left">
+                      <div className="flex-1 text-left min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <h3 className="font-semibold">{option.label}</h3>
-                          <span className="text-xs text-gray-400">{option.dimensions}</span>
+                          <h3 className="font-semibold text-sm truncate">{option.label}</h3>
+                          <span className="text-xs text-gray-400 ml-2 flex-shrink-0">{option.dimensions}</span>
                         </div>
-                        <p className="text-sm text-gray-400">{option.description}</p>
-                        <div className="mt-2 text-xs font-mono text-primary-300">
+                        <p className="text-xs text-gray-400 leading-tight">{option.description}</p>
+                        <div className="mt-1 text-xs font-mono text-primary-300">
                           {option.value}
                         </div>
                       </div>
@@ -944,7 +944,7 @@ export default function VideoGenerator() {
       <Dialog open={modelModalOpen} onOpenChange={setModelModalOpen}>
         <DialogPortal>
           <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
-          <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-dark-700 border border-dark-600 rounded-xl p-6 w-[90vw] max-w-lg z-50">
+          <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-dark-700 border border-dark-600 rounded-xl p-4 w-[95vw] max-w-sm max-h-[85vh] overflow-y-auto z-50">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-white mb-4">Choose AI Model</DialogTitle>
             </DialogHeader>
@@ -959,7 +959,7 @@ export default function VideoGenerator() {
                 return (
                   <button
                     key={option.value}
-                    className={`w-full p-4 rounded-lg border transition-all ${
+                    className={`w-full p-3 rounded-lg border transition-all ${
                       isSelected 
                         ? 'border-primary-500 bg-primary-500/20 text-white' 
                         : 'border-dark-500 bg-dark-600 text-gray-300 hover:border-primary-400 hover:bg-primary-400/10'
@@ -974,24 +974,24 @@ export default function VideoGenerator() {
                     }}
                     data-testid={`option-model-${option.value}`}
                   >
-                    <div className="flex items-start space-x-4">
-                      <div className="flex-shrink-0 mt-1">
-                        <IconComponent className="w-8 h-8 text-primary-400" />
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0 mt-0.5">
+                        <IconComponent className="w-6 h-6 text-primary-400" />
                       </div>
-                      <div className="flex-1 text-left">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold">{option.label}</h3>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs bg-primary-600 px-2 py-1 rounded-full">{option.badge}</span>
-                            <span className="text-xs text-primary-400">{option.credits} credits</span>
+                      <div className="flex-1 text-left min-w-0">
+                        <div className="flex items-start justify-between mb-1 gap-2">
+                          <h3 className="font-semibold text-sm truncate">{option.label}</h3>
+                          <div className="flex items-center space-x-1 flex-shrink-0">
+                            <span className="text-xs bg-primary-600 px-1.5 py-0.5 rounded-full">{option.badge}</span>
+                            <span className="text-xs text-primary-400">{option.credits}c</span>
                           </div>
                         </div>
-                        <p className="text-sm text-gray-400 mb-3">{option.description}</p>
-                        <div className="flex flex-wrap gap-2">
+                        <p className="text-xs text-gray-400 leading-tight mb-2">{option.description}</p>
+                        <div className="flex flex-wrap gap-1">
                           {option.features.map((feature, index) => (
                             <span 
                               key={index}
-                              className="text-xs bg-dark-500 px-2 py-1 rounded text-gray-300"
+                              className="text-xs bg-dark-500 px-1.5 py-0.5 rounded text-gray-300"
                             >
                               {feature}
                             </span>
