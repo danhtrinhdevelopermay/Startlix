@@ -117,6 +117,9 @@ export default function VideoGenerator() {
   const [croppedImageUrl, setCroppedImageUrl] = useState<string>("");
   const imgRef = useRef<HTMLImageElement>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
+  // Prompt expansion states
+  const [isExpandingPrompt, setIsExpandingPrompt] = useState<boolean>(false);
+  const [expandingPromptType, setExpandingPromptType] = useState<'text' | 'image' | null>(null);
   const [popup, setPopup] = useState<{ 
     isOpen: boolean; 
     title: string; 
@@ -131,6 +134,97 @@ export default function VideoGenerator() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Prompt expansion function with WebSocket
+  const expandPrompt = (currentPrompt: string, promptType: 'text' | 'image') => {
+    if (!currentPrompt.trim() || isExpandingPrompt) return;
+    
+    setIsExpandingPrompt(true);
+    setExpandingPromptType(promptType);
+    
+    const url = "wss://backend.buildpicoapps.com/api/chatbot/chat";
+    const websocket = new WebSocket(url);
+    
+    const chatId = Date.now().toString();
+    const systemPrompt = `Bạn là một AI assistant chuyên viết lại prompt tạo video để chi tiết và đầy đủ hơn. Hãy viết lại prompt sau đây để:
+- Thêm chi tiết về góc quay, ánh sáng, phong cách
+- Mô tả cảnh quan, bối cảnh rõ ràng hơn
+- Thêm thông tin về chuyển động, cảm xúc
+- Giữ nguyên ý nghĩa gốc nhưng làm cho sinh động và chuyên nghiệp hơn
+- Chỉ trả về prompt đã được mở rộng, không thêm giải thích`;
+
+    websocket.addEventListener("open", () => {
+      websocket.send(
+        JSON.stringify({
+          chatId: chatId,
+          appId: "for-few",
+          systemPrompt: systemPrompt,
+          message: `Viết lại prompt này chi tiết hơn: "${currentPrompt}"`
+        })
+      );
+    });
+
+    let expandedPrompt = "";
+    
+    websocket.addEventListener("message", (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.message) {
+          expandedPrompt += data.message;
+        }
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
+      }
+    });
+
+    websocket.addEventListener("close", () => {
+      if (expandedPrompt.trim()) {
+        // Clean up the expanded prompt
+        const cleanedPrompt = expandedPrompt
+          .replace(/^"|"$/g, '') // Remove quotes
+          .replace(/^Prompt mở rộng:\s*/i, '') // Remove prefix
+          .trim();
+        
+        if (promptType === 'text') {
+          textForm.setValue('prompt', cleanedPrompt);
+        } else {
+          imageForm.setValue('prompt', cleanedPrompt);
+        }
+        
+        toast({
+          title: "Prompt đã được mở rộng!",
+          description: "Prompt của bạn đã được viết lại chi tiết hơn.",
+        });
+      } else {
+        toast({
+          title: "Không thể mở rộng prompt",
+          description: "Có lỗi xảy ra khi mở rộng prompt. Vui lòng thử lại.",
+          variant: "destructive",
+        });
+      }
+      
+      setIsExpandingPrompt(false);
+      setExpandingPromptType(null);
+    });
+
+    websocket.addEventListener("error", (error) => {
+      console.error("WebSocket error:", error);
+      toast({
+        title: "Lỗi kết nối",
+        description: "Không thể kết nối đến dịch vụ mở rộng prompt.",
+        variant: "destructive",
+      });
+      setIsExpandingPrompt(false);
+      setExpandingPromptType(null);
+    });
+
+    // Timeout after 30 seconds
+    setTimeout(() => {
+      if (websocket.readyState === WebSocket.OPEN) {
+        websocket.close();
+      }
+    }, 30000);
+  };
 
   const handleLogout = async () => {
     try {
@@ -596,11 +690,27 @@ export default function VideoGenerator() {
                           <FormItem>
                             <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-4 block">Video Prompt</FormLabel>
                             <FormControl>
-                              <Textarea
-                                placeholder="Describe your video... (e.g., 'A golden retriever playing fetch in a sunny park, slow motion, cinematic lighting')"
-                                data-testid="input-text-prompt"
-                                {...field}
-                              />
+                              <div className="relative">
+                                <Textarea
+                                  placeholder="Describe your video... (e.g., 'A golden retriever playing fetch in a sunny park, slow motion, cinematic lighting')"
+                                  data-testid="input-text-prompt"
+                                  {...field}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => expandPrompt(field.value, 'text')}
+                                  disabled={isExpandingPrompt || !field.value.trim()}
+                                  className="absolute bottom-2 right-2 p-2 rounded-full bg-[var(--fluent-brand-primary)] text-white hover:bg-[var(--fluent-brand-secondary)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  data-testid="button-expand-text-prompt"
+                                  title="Mở rộng prompt chi tiết hơn"
+                                >
+                                  {isExpandingPrompt && expandingPromptType === 'text' ? (
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                  ) : (
+                                    <EditRegular className="w-4 h-4" />
+                                  )}
+                                </button>
+                              </div>
                             </FormControl>
                             <div className="flex justify-between text-xs text-[var(--fluent-neutral-foreground-3)]">
                               <span>Be specific about lighting, camera angles, and style</span>
@@ -816,7 +926,7 @@ export default function VideoGenerator() {
                                       className="bg-red-600/20 border-red-500 text-red-400 hover:bg-red-600/30"
                                       data-testid="button-remove-image"
                                     >
-                                      <X className="w-4 h-4 mr-2" />
+                                      <DismissRegular className="w-4 h-4 mr-2" />
                                       Hủy ảnh
                                     </Button>
                                   </div>
@@ -844,12 +954,28 @@ export default function VideoGenerator() {
                           <FormItem>
                             <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-4 block">Motion Prompt</FormLabel>
                             <FormControl>
-                              <Textarea
-                                placeholder="Describe how the image should animate... (e.g., 'The person starts walking forward with confident steps')"
-                                style={{minHeight: '100px'}}
-                                data-testid="input-motion-prompt"
-                                {...field}
-                              />
+                              <div className="relative">
+                                <Textarea
+                                  placeholder="Describe how the image should animate... (e.g., 'The person starts walking forward with confident steps')"
+                                  style={{minHeight: '100px'}}
+                                  data-testid="input-motion-prompt"
+                                  {...field}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => expandPrompt(field.value, 'image')}
+                                  disabled={isExpandingPrompt || !field.value.trim()}
+                                  className="absolute bottom-2 right-2 p-2 rounded-full bg-[var(--fluent-brand-primary)] text-white hover:bg-[var(--fluent-brand-secondary)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  data-testid="button-expand-motion-prompt"
+                                  title="Mở rộng prompt chi tiết hơn"
+                                >
+                                  {isExpandingPrompt && expandingPromptType === 'image' ? (
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                  ) : (
+                                    <EditRegular className="w-4 h-4" />
+                                  )}
+                                </button>
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
