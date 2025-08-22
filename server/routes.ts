@@ -21,7 +21,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const VEO3_API_BASE = "https://api.veo3api.ai/api/v1";
 const VEO3_UPLOAD_BASE = "https://veo3apiai.redpandaai.co/api";
-const SEGMIND_API_BASE = "https://api.segmind.com/v1/ai-video-enhancer";
+const SEGMIND_API_BASE = "https://api.segmind.com/v1/topaz-video-upscale";
 
 // Check API key credits
 async function checkApiCredits(apiKey: string): Promise<number> {
@@ -138,9 +138,9 @@ async function enhanceVideo(generationId: string, videoUrl: string, storageInsta
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        video_url: videoUrl,
-        scale: 2, // 2x upscaling
-        version: "v1.4", // Use latest version
+        video: videoUrl,
+        target_fps: 60,
+        target_resolution: "1080p"
       }),
     });
 
@@ -919,9 +919,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          video_url: videoUrl,
-          scale: 2, // 2x upscaling
-          version: "v1.4", // Use latest version
+          video: videoUrl,
+          target_fps: 60,
+          target_resolution: "1080p"
         }),
       });
 
