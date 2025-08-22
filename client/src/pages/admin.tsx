@@ -610,10 +610,10 @@ export default function Admin() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ErrorCircleRegular className="w-5 h-5 text-blue-400" />
-              Test Segmind API
+              Test FFmpeg Enhancement
             </CardTitle>
             <CardDescription>
-              Kiểm tra tính năng nâng cao chất lượng video bằng Segmind API
+              Kiểm tra tính năng nâng cao chất lượng video bằng FFmpeg (miễn phí, local processing)
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -634,7 +634,7 @@ export default function Admin() {
                         />
                       </FormControl>
                       <FormDescription className="text-gray-400">
-                        Nhập URL video hợp lệ để test khả năng nâng cao chất lượng qua Segmind API
+                        Nhập URL video hợp lệ để test khả năng nâng cao chất lượng qua FFmpeg
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -648,13 +648,13 @@ export default function Admin() {
                 >
                   {testSegmindMutation.isPending ? (
                     <MD3ButtonLoading 
-                      label="Testing Segmind API" 
-                      data-testid="loading-test-segmind"
+                      label="Testing FFmpeg Enhancement" 
+                      data-testid="loading-test-ffmpeg"
                     />
                   ) : (
                     <>
                       <CheckmarkCircleRegular className="w-4 h-4 mr-2" />
-                      Test Segmind API
+                      Test FFmpeg Enhancement
                     </>
                   )}
                 </Button>

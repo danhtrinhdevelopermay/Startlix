@@ -8,6 +8,7 @@ import multer from "multer";
 import FormData from "form-data";
 import fs from "fs";
 import path from "path";
+import { exec } from "child_process";
 
 // Extend session interface
 declare module "express-session" {
@@ -119,54 +120,64 @@ async function getBestApiKey(): Promise<{ key: string; apiKeyId?: string } | nul
   }
 }
 
-// Enhance video quality using Segmind API
+// Enhance video quality using FFmpeg
 async function enhanceVideo(generationId: string, videoUrl: string, storageInstance: any) {
   try {
-    console.log(`🎯 Starting video enhancement for generation ${generationId} with video: ${videoUrl}`);
+    console.log(`🎯 Starting FFmpeg video enhancement for generation ${generationId} with video: ${videoUrl}`);
     
-    // Check if we have Segmind API key
-    const segmindApiKey = process.env.SEGMIND_API_KEY;
-    if (!segmindApiKey) {
-      throw new Error("Segmind API key not configured");
+    // Create unique filename for enhanced video
+    const timestamp = Date.now();
+    const inputFile = `/tmp/input_${timestamp}.mp4`;
+    const outputFile = `/tmp/enhanced_${timestamp}.mp4`;
+    const outputUrl = `/uploads/enhanced_${timestamp}.mp4`;
+    const finalPath = path.join(process.cwd(), 'client', 'public', 'uploads', `enhanced_${timestamp}.mp4`);
+    
+    // Ensure uploads directory exists
+    const uploadsDir = path.join(process.cwd(), 'client', 'public', 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
     }
-
-    // Call Segmind Video Enhancer API
-    const response = await fetch(SEGMIND_API_BASE, {
-      method: 'POST',
-      headers: {
-        'x-api-key': segmindApiKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        video: videoUrl,
-        target_fps: 60,
-        target_resolution: "1080p"
-      }),
+    
+    // Download input video
+    console.log(`📥 Downloading video from: ${videoUrl}`);
+    const videoResponse = await fetch(videoUrl);
+    if (!videoResponse.ok) {
+      throw new Error(`Failed to download video: ${videoResponse.status}`);
+    }
+    const videoBuffer = await videoResponse.arrayBuffer();
+    fs.writeFileSync(inputFile, Buffer.from(videoBuffer));
+    
+    // Enhance video using FFmpeg with Lanczos upscaling and sharpening
+    console.log(`🚀 Processing video with FFmpeg...`);
+    const ffmpegCommand = `ffmpeg -i "${inputFile}" -vf "scale=iw*2:ih*2:flags=lanczos,unsharp=5:5:1.0:5:5:0.0" -preset slow -crf 18 -c:v libx264 -c:a aac "${finalPath}"`;
+    
+    await new Promise((resolve, reject) => {
+      exec(ffmpegCommand, (error: any, stdout: any, stderr: any) => {
+        if (error) {
+          console.error(`FFmpeg error: ${error}`);
+          reject(error);
+        } else {
+          console.log(`✅ FFmpeg processing completed`);
+          resolve(stdout);
+        }
+      });
     });
-
-    const data = await response.json();
-    console.log(`🎯 Segmind API Response:`, JSON.stringify(data, null, 2));
-
-    if (!response.ok) {
-      throw new Error(data.detail || data.error || `Enhancement failed with status ${response.status}`);
+    
+    // Clean up input file
+    if (fs.existsSync(inputFile)) {
+      fs.unlinkSync(inputFile);
     }
-
-    // Segmind returns enhanced video URL directly
-    const enhancedVideoUrl = data.image || data.video_url || data.url;
-    if (!enhancedVideoUrl) {
-      throw new Error("No enhanced video URL returned from Segmind API");
-    }
-
+    
     // Update generation with enhanced video
     await storageInstance.updateVideoGeneration(generationId, {
       status: "completed",
       enhancementStatus: "completed",
-      enhancedResultUrls: [enhancedVideoUrl],
+      enhancedResultUrls: [outputUrl],
       enhancementCompletedAt: new Date(),
     });
 
     console.log(`✨ Video enhancement completed successfully for generation ${generationId}`);
-    console.log(`Enhanced video URL: ${enhancedVideoUrl}`);
+    console.log(`Enhanced video URL: ${outputUrl}`);
 
   } catch (error) {
     console.error(`❌ Video enhancement failed for generation ${generationId}:`, error);
@@ -891,7 +902,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Test Segmind API endpoint
+  // Test FFmpeg Enhancement endpoint
   app.post("/api/admin/test-segmind", async (req, res) => {
     try {
       const { videoUrl } = req.body;
@@ -899,62 +910,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!videoUrl) {
         return res.status(400).json({ message: "Video URL is required" });
       }
+
+      console.log(`🎯 Testing FFmpeg enhancement with video: ${videoUrl}`);
+
+      // Create unique filename for test
+      const timestamp = Date.now();
+      const inputFile = `/tmp/test_input_${timestamp}.mp4`;
+      const outputFile = `/tmp/test_enhanced_${timestamp}.mp4`;
+      const outputUrl = `/uploads/test_enhanced_${timestamp}.mp4`;
+      const finalPath = path.join(process.cwd(), 'client', 'public', 'uploads', `test_enhanced_${timestamp}.mp4`);
       
-      // Check if we have Segmind API key
-      const segmindApiKey = process.env.SEGMIND_API_KEY;
-      if (!segmindApiKey) {
-        return res.status(503).json({ 
-          message: "Segmind API key not configured",
-          error: "NO_SEGMIND_KEY" 
-        });
+      // Ensure uploads directory exists
+      const uploadsDir = path.join(process.cwd(), 'client', 'public', 'uploads');
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
       }
-
-      console.log(`🎯 Testing Segmind API with video: ${videoUrl}`);
-
-      // Call Segmind Video Enhancer API
-      const response = await fetch(SEGMIND_API_BASE, {
-        method: 'POST',
-        headers: {
-          'x-api-key': segmindApiKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          video: videoUrl,
-          target_fps: 60,
-          target_resolution: "1080p"
-        }),
-      });
-
-      const data = await response.json();
-      console.log(`🎯 Segmind API Test Response:`, JSON.stringify(data, null, 2));
-
-      if (!response.ok) {
-        return res.status(response.status).json({
-          success: false,
-          message: "Segmind API test failed",
-          error: data.detail || data.error || `API returned status ${response.status}`,
-          statusCode: response.status,
-          apiResponse: data
-        });
-      }
-
-      // Check if enhanced video URL is returned
-      const enhancedVideoUrl = data.image || data.video_url || data.url;
       
-      res.json({
-        success: true,
-        message: "Segmind API test successful",
-        originalVideoUrl: videoUrl,
-        enhancedVideoUrl,
-        apiResponse: data,
-        timestamp: new Date().toISOString()
-      });
+      try {
+        // Download input video
+        console.log(`📥 Downloading test video from: ${videoUrl}`);
+        const videoResponse = await fetch(videoUrl);
+        if (!videoResponse.ok) {
+          throw new Error(`Failed to download video: ${videoResponse.status}`);
+        }
+        const videoBuffer = await videoResponse.arrayBuffer();
+        fs.writeFileSync(inputFile, Buffer.from(videoBuffer));
+        
+        // Enhance video using FFmpeg
+        console.log(`🚀 Processing test video with FFmpeg...`);
+        const ffmpegCommand = `ffmpeg -i "${inputFile}" -vf "scale=iw*2:ih*2:flags=lanczos,unsharp=5:5:1.0:5:5:0.0" -preset ultrafast -crf 23 -c:v libx264 -c:a aac -t 10 "${finalPath}"`;
+        
+        await new Promise((resolve, reject) => {
+          exec(ffmpegCommand, { timeout: 30000 }, (error: any, stdout: any, stderr: any) => {
+            if (error) {
+              console.error(`FFmpeg test error: ${error}`);
+              reject(error);
+            } else {
+              console.log(`✅ FFmpeg test processing completed`);
+              resolve(stdout);
+            }
+          });
+        });
+        
+        // Clean up input file
+        if (fs.existsSync(inputFile)) {
+          fs.unlinkSync(inputFile);
+        }
+        
+        res.json({
+          success: true,
+          message: "FFmpeg enhancement test successful",
+          originalVideoUrl: videoUrl,
+          enhancedVideoUrl: outputUrl,
+          timestamp: new Date().toISOString(),
+          enhancement: "2x upscale with Lanczos + sharpening"
+        });
+        
+      } catch (processError: any) {
+        // Clean up files on error
+        if (fs.existsSync(inputFile)) {
+          fs.unlinkSync(inputFile);
+        }
+        if (fs.existsSync(finalPath)) {
+          fs.unlinkSync(finalPath);
+        }
+        
+        throw processError;
+      }
 
     } catch (error) {
-      console.error('Segmind API test error:', error);
+      console.error('FFmpeg test error:', error);
       res.status(500).json({ 
         success: false,
-        message: "Test failed with error",
+        message: "FFmpeg enhancement test failed",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
