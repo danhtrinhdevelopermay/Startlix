@@ -41,7 +41,7 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative z-10">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md fluent-glass-strong">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Đăng ký</CardTitle>
           <CardDescription className="text-center">
@@ -60,21 +60,16 @@ export default function Register() {
             
             <div className="space-y-2">
               <Label htmlFor="username" className="mb-4 block">Tên đăng nhập</Label>
-              <div className="premium-input-container">
-                <div className="premium-input-wrapper">
-                  <input
-                    id="username"
-                    data-testid="input-username"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                    placeholder="Nhập tên đăng nhập (tối thiểu 3 ký tự)"
-                    minLength={3}
-                    className="premium-input"
-                  />
-                </div>
-              </div>
+              <Input
+                id="username"
+                data-testid="input-username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                placeholder="Nhập tên đăng nhập (tối thiểu 3 ký tự)"
+                minLength={3}
+              />
               {username.length > 0 && username.length < 3 && (
                 <p className="text-sm text-red-500">Tên đăng nhập phải có ít nhất 3 ký tự</p>
               )}
@@ -82,21 +77,16 @@ export default function Register() {
             
             <div className="space-y-2">
               <Label htmlFor="password" className="mb-4 block">Mật khẩu</Label>
-              <div className="premium-input-container">
-                <div className="premium-input-wrapper">
-                  <input
-                    id="password"
-                    data-testid="input-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
-                    minLength={6}
-                    className="premium-input"
-                  />
-                </div>
-              </div>
+              <Input
+                id="password"
+                data-testid="input-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
+                minLength={6}
+              />
               {password.length > 0 && password.length < 6 && (
                 <p className="text-sm text-red-500">Mật khẩu phải có ít nhất 6 ký tự</p>
               )}
@@ -104,20 +94,15 @@ export default function Register() {
             
             <div className="space-y-2">
               <Label htmlFor="confirmPassword" className="mb-4 block">Xác nhận mật khẩu</Label>
-              <div className="premium-input-container">
-                <div className="premium-input-wrapper">
-                  <input
-                    id="confirmPassword"
-                    data-testid="input-confirm-password"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    placeholder="Nhập lại mật khẩu"
-                    className="premium-input"
-                  />
-                </div>
-              </div>
+              <Input
+                id="confirmPassword"
+                data-testid="input-confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                placeholder="Nhập lại mật khẩu"
+              />
               {confirmPassword.length > 0 && password !== confirmPassword && (
                 <p className="text-sm text-red-500">Mật khẩu xác nhận không khớp</p>
               )}
@@ -154,7 +139,7 @@ export default function Register() {
           <div className="mt-4 text-center text-sm">
             Đã có tài khoản?{" "}
             <Link to="/login" data-testid="link-login">
-              <span className="text-blue-600 hover:underline cursor-pointer">
+              <span className="text-[var(--fluent-brand-primary)] hover:underline cursor-pointer transition-colors duration-200">
                 Đăng nhập ngay
               </span>
             </Link>

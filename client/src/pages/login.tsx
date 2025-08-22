@@ -27,7 +27,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative z-10">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md fluent-glass-strong">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Đăng nhập</CardTitle>
           <CardDescription className="text-center">
@@ -46,38 +46,28 @@ export default function Login() {
             
             <div className="space-y-2">
               <Label htmlFor="username" className="mb-4 block">Tên đăng nhập</Label>
-              <div className="premium-input-container">
-                <div className="premium-input-wrapper">
-                  <input
-                    id="username"
-                    data-testid="input-username"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                    placeholder="Nhập tên đăng nhập"
-                    className="premium-input"
-                  />
-                </div>
-              </div>
+              <Input
+                id="username"
+                data-testid="input-username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                placeholder="Nhập tên đăng nhập"
+              />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="password" className="mb-4 block">Mật khẩu</Label>
-              <div className="premium-input-container">
-                <div className="premium-input-wrapper">
-                  <input
-                    id="password"
-                    data-testid="input-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    placeholder="Nhập mật khẩu"
-                    className="premium-input"
-                  />
-                </div>
-              </div>
+              <Input
+                id="password"
+                data-testid="input-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="Nhập mật khẩu"
+              />
             </div>
             
             <Button 
@@ -106,7 +96,7 @@ export default function Login() {
           <div className="mt-4 text-center text-sm">
             Chưa có tài khoản?{" "}
             <Link to="/register" data-testid="link-register">
-              <span className="text-blue-600 hover:underline cursor-pointer">
+              <span className="text-[var(--fluent-brand-primary)] hover:underline cursor-pointer transition-colors duration-200">
                 Đăng ký ngay
               </span>
             </Link>

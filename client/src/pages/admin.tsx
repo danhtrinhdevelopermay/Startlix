@@ -194,8 +194,8 @@ export default function Admin() {
   };
 
   return (
-    <div className="min-h-screen text-white p-6 relative z-10">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen text-[var(--fluent-neutral-foreground-1)] p-6 relative z-10">
+      <div className="max-w-6xl mx-auto space-y-6 relative z-10">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-3">
@@ -208,7 +208,7 @@ export default function Admin() {
           <Button
             onClick={() => checkCreditsMutation.mutate()}
             disabled={checkCreditsMutation.isPending}
-            className="bg-primary-600 hover:bg-primary-700"
+            className="fluent-button-primary"
             data-testid="button-check-all-credits"
           >
             {checkCreditsMutation.isPending ? (
@@ -224,7 +224,7 @@ export default function Admin() {
         </div>
 
         {/* System Status */}
-        <Card className="bg-gradient-to-r from-primary-900/50 to-primary-800/50 border-primary-600">
+        <Card className="fluent-glass-strong">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -253,7 +253,7 @@ export default function Admin() {
 
         {/* Statistics Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-[var(--md-sys-color-surface-container)] border-[var(--md-sys-color-outline-variant)]">
+          <Card className="fluent-glass">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -267,7 +267,7 @@ export default function Admin() {
             </CardContent>
           </Card>
 
-          <Card className="bg-[var(--md-sys-color-surface-container)] border-[var(--md-sys-color-outline-variant)]">
+          <Card className="fluent-glass">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -281,7 +281,7 @@ export default function Admin() {
             </CardContent>
           </Card>
 
-          <Card className="bg-[var(--md-sys-color-surface-container)] border-[var(--md-sys-color-outline-variant)]">
+          <Card className="fluent-glass">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -297,7 +297,7 @@ export default function Admin() {
             </CardContent>
           </Card>
 
-          <Card className="bg-[var(--md-sys-color-surface-container)] border-[var(--md-sys-color-outline-variant)]">
+          <Card className="fluent-glass">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -314,7 +314,7 @@ export default function Admin() {
 
         {/* API Key with Most Credits */}
         {apiKeys.length > 0 && apiKeys.some((k: ApiKey) => k.credits > 0) && (
-          <Card className="bg-[var(--md-sys-color-surface-container)] border-[var(--md-sys-color-outline-variant)]">
+          <Card className="fluent-glass">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <div className="w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center">
@@ -355,7 +355,7 @@ export default function Admin() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Veo3 API Key Configuration */}
-          <Card className="bg-[var(--md-sys-color-surface-container)] border-[var(--md-sys-color-outline-variant)]">
+          <Card className="fluent-glass">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Key className="w-5 h-5" />
@@ -379,7 +379,7 @@ export default function Admin() {
                             {...field}
                             type="password"
                             placeholder="Nhập Veo3 API Key..."
-                            className="bg-dark-600 border-dark-500 text-white"
+                            className="fluent-glass-subtle text-[var(--fluent-neutral-foreground-1)]"
                             data-testid="input-veo3-api-key"
                           />
                         </FormControl>
@@ -404,7 +404,7 @@ export default function Admin() {
           </Card>
 
           {/* Add New API Key */}
-          <Card className="bg-[var(--md-sys-color-surface-container)] border-[var(--md-sys-color-outline-variant)]">
+          <Card className="fluent-glass">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Plus className="w-5 h-5" />
@@ -427,7 +427,7 @@ export default function Admin() {
                           <Input
                             {...field}
                             placeholder="Ví dụ: Backup Key 1"
-                            className="bg-dark-600 border-dark-500 text-white"
+                            className="fluent-glass-subtle text-[var(--fluent-neutral-foreground-1)]"
                             data-testid="input-api-key-name"
                           />
                         </FormControl>
@@ -446,7 +446,7 @@ export default function Admin() {
                             {...field}
                             type="password"
                             placeholder="Nhập API Key..."
-                            className="bg-dark-600 border-dark-500 text-white"
+                            className="fluent-glass-subtle text-[var(--fluent-neutral-foreground-1)]"
                             data-testid="input-new-api-key"
                           />
                         </FormControl>
@@ -469,7 +469,7 @@ export default function Admin() {
         </div>
 
         {/* API Keys List */}
-        <Card className="bg-dark-700 border-dark-600">
+        <Card className="fluent-glass-strong">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>

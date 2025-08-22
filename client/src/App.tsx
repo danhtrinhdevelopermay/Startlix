@@ -27,7 +27,7 @@ function Router() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--md-sys-color-background)]">
+    <div className="min-h-screen relative z-10">
       <Switch>
         {isAuthenticated ? (
           // Authenticated routes
@@ -60,7 +60,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <div className="relative min-h-screen bg-[var(--md-sys-color-background)] text-[var(--md-sys-color-on-background)]">
+        <div className="relative min-h-screen bg-[var(--fluent-neutral-background-canvas)] text-[var(--fluent-neutral-foreground-1)]">
+          <GradientBackground />
           <Toaster />
           <Router />
         </div>
