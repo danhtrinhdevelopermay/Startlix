@@ -403,20 +403,12 @@ export default function VideoGenerator() {
                             <FormControl>
                               <div className="premium-input-container">
                                 <div className="premium-input-wrapper">
-                                  <div className="premium-input-glow"></div>
-                                  <div className="premium-input-darkBorderBg"></div>
-                                  <div className="premium-input-darkBorderBg"></div>
-                                  <div className="premium-input-darkBorderBg"></div>
-                                  <div className="premium-input-white"></div>
-                                  <div className="premium-input-border"></div>
                                   <textarea
                                     placeholder="Describe your video... (e.g., 'A golden retriever playing fetch in a sunny park, slow motion, cinematic lighting')"
                                     className="premium-textarea"
                                     data-testid="input-text-prompt"
                                     {...field}
                                   />
-                                  <div className="premium-input-mask"></div>
-                                  <div className="premium-input-pink-mask"></div>
                                 </div>
                               </div>
                             </FormControl>
@@ -497,20 +489,12 @@ export default function VideoGenerator() {
                                 <FormControl>
                                   <div className="premium-input-container">
                                     <div className="premium-input-wrapper">
-                                      <div className="premium-input-glow"></div>
-                                      <div className="premium-input-darkBorderBg"></div>
-                                      <div className="premium-input-darkBorderBg"></div>
-                                      <div className="premium-input-darkBorderBg"></div>
-                                      <div className="premium-input-white"></div>
-                                      <div className="premium-input-border"></div>
                                       <input
                                         placeholder="Your brand name"
                                         className="premium-input"
                                         data-testid="input-watermark"
                                         {...field}
                                       />
-                                      <div className="premium-input-mask"></div>
-                                      <div className="premium-input-pink-mask"></div>
                                     </div>
                                   </div>
                                 </FormControl>
@@ -622,12 +606,6 @@ export default function VideoGenerator() {
                             <FormControl>
                               <div className="premium-input-container">
                                 <div className="premium-input-wrapper">
-                                  <div className="premium-input-glow"></div>
-                                  <div className="premium-input-darkBorderBg"></div>
-                                  <div className="premium-input-darkBorderBg"></div>
-                                  <div className="premium-input-darkBorderBg"></div>
-                                  <div className="premium-input-white"></div>
-                                  <div className="premium-input-border"></div>
                                   <textarea
                                     placeholder="Describe how the image should animate... (e.g., 'The person starts walking forward with confident steps')"
                                     className="premium-textarea"
@@ -635,8 +613,6 @@ export default function VideoGenerator() {
                                     data-testid="input-motion-prompt"
                                     {...field}
                                   />
-                                  <div className="premium-input-mask"></div>
-                                  <div className="premium-input-pink-mask"></div>
                                 </div>
                               </div>
                             </FormControl>

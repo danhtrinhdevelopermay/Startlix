@@ -47,12 +47,6 @@ export default function Login() {
               <Label htmlFor="username" className="mb-4 block">Tên đăng nhập</Label>
               <div className="premium-input-container">
                 <div className="premium-input-wrapper">
-                  <div className="premium-input-glow"></div>
-                  <div className="premium-input-darkBorderBg"></div>
-                  <div className="premium-input-darkBorderBg"></div>
-                  <div className="premium-input-darkBorderBg"></div>
-                  <div className="premium-input-white"></div>
-                  <div className="premium-input-border"></div>
                   <input
                     id="username"
                     data-testid="input-username"
@@ -63,8 +57,6 @@ export default function Login() {
                     placeholder="Nhập tên đăng nhập"
                     className="premium-input"
                   />
-                  <div className="premium-input-mask"></div>
-                  <div className="premium-input-pink-mask"></div>
                 </div>
               </div>
             </div>
@@ -73,12 +65,6 @@ export default function Login() {
               <Label htmlFor="password" className="mb-4 block">Mật khẩu</Label>
               <div className="premium-input-container">
                 <div className="premium-input-wrapper">
-                  <div className="premium-input-glow"></div>
-                  <div className="premium-input-darkBorderBg"></div>
-                  <div className="premium-input-darkBorderBg"></div>
-                  <div className="premium-input-darkBorderBg"></div>
-                  <div className="premium-input-white"></div>
-                  <div className="premium-input-border"></div>
                   <input
                     id="password"
                     data-testid="input-password"
@@ -89,8 +75,6 @@ export default function Login() {
                     placeholder="Nhập mật khẩu"
                     className="premium-input"
                   />
-                  <div className="premium-input-mask"></div>
-                  <div className="premium-input-pink-mask"></div>
                 </div>
               </div>
             </div>
