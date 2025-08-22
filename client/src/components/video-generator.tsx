@@ -497,29 +497,28 @@ export default function VideoGenerator() {
 
   return (
     <div>
-      {/* Header */}
-      <header className="border-b border-dark-600 bg-dark-700/50 backdrop-blur-sm sticky top-0 z-50">
+      {/* Header - Material Design 3 Top App Bar */}
+      <header className="border-b border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container)] sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <img src={starlixLogo} alt="Starlix Logo" className="h-8 w-auto" />
-              <h1 className="text-xl font-bold bg-gradient-to-r from-primary-500 to-purple-400 bg-clip-text text-transparent">
+              <h1 className="md-typescale-title-large text-[var(--md-sys-color-primary)]">
                 Starlix
               </h1>
             </div>
             
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-3 text-sm">
-                <User className="w-4 h-4 text-purple-400" />
-                <span className="text-gray-300">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                <User className="w-4 h-4 text-[var(--md-sys-color-primary)]" />
+                <span className="md-typescale-body-medium text-[var(--md-sys-color-on-surface)]">
                   {user?.username}
                 </span>
               </div>
               <Link href="/reward-videos">
                 <Button 
-                  variant="outline"
+                  variant="outlined"
                   size="sm"
-                  className="text-gray-300 border-gray-600 hover:bg-gray-700"
                   data-testid="nav-reward-videos"
                 >
                   <Trophy className="w-4 h-4 mr-2" />
@@ -527,11 +526,10 @@ export default function VideoGenerator() {
                 </Button>
               </Link>
               <Button 
-                variant="outline"
+                variant="text"
                 size="sm"
                 onClick={handleLogout}
                 disabled={logoutMutation.isPending}
-                className="text-gray-300 border-gray-600 hover:bg-gray-700"
                 data-testid="button-logout"
               >
                 <LogOut className="w-4 h-4 mr-2" />
@@ -543,42 +541,40 @@ export default function VideoGenerator() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Generation Controls */}
           <div className="lg:col-span-2">
-            <div className="bg-dark-700 rounded-xl border border-dark-600 overflow-hidden">
-              {/* Tab Navigation */}
-              <div className="flex border-b border-dark-600">
-                <Button
-                  variant="ghost"
-                  className={`flex-1 px-6 py-4 rounded-none border-b-2 transition-colors ${
+            <div className="bg-[var(--md-sys-color-surface-container-low)] rounded-[var(--md-sys-shape-corner-large)] border border-[var(--md-sys-color-outline-variant)] overflow-hidden shadow-sm">
+              {/* Tab Navigation - Material Design 3 Secondary Navigation */}
+              <div className="flex border-b border-[var(--md-sys-color-outline-variant)]">
+                <button
+                  className={`flex-1 px-6 py-4 border-b-2 transition-all duration-200 md-typescale-title-small ${
                     activeTab === "text-to-video"
-                      ? "bg-primary-600 text-white border-primary-500"
-                      : "text-gray-400 hover:text-white hover:bg-dark-600 border-transparent"
+                      ? "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] border-[var(--md-sys-color-primary)]"
+                      : "text-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-on-surface)] hover:bg-[var(--md-sys-color-surface-variant)] border-transparent"
                   }`}
                   onClick={() => setActiveTab("text-to-video")}
                   data-testid="tab-text-to-video"
                 >
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-center space-x-2">
                     <FileText className="w-5 h-5" />
                     <span>Text to Video</span>
                   </div>
-                </Button>
-                <Button
-                  variant="ghost"
-                  className={`flex-1 px-6 py-4 rounded-none border-b-2 transition-colors ${
+                </button>
+                <button
+                  className={`flex-1 px-6 py-4 border-b-2 transition-all duration-200 md-typescale-title-small ${
                     activeTab === "image-to-video"
-                      ? "bg-primary-600 text-white border-primary-500"
-                      : "text-gray-400 hover:text-white hover:bg-dark-600 border-transparent"
+                      ? "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] border-[var(--md-sys-color-primary)]"
+                      : "text-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-on-surface)] hover:bg-[var(--md-sys-color-surface-variant)] border-transparent"
                   }`}
                   onClick={() => setActiveTab("image-to-video")}
                   data-testid="tab-image-to-video"
                 >
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-center space-x-2">
                     <Image className="w-5 h-5" />
                     <span>Image to Video</span>
                   </div>
-                </Button>
+                </button>
               </div>
 
               {/* Text to Video Panel */}
@@ -619,19 +615,21 @@ export default function VideoGenerator() {
                           name="aspectRatio"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-gray-300">Aspect Ratio</FormLabel>
+                              <FormLabel className="md-typescale-body-large text-[var(--md-sys-color-on-surface)] mb-2 block">Aspect Ratio</FormLabel>
                               <FormControl>
                                 <Button
                                   type="button"
-                                  variant="outline"
-                                  className="w-full justify-between bg-dark-600 border-dark-500 text-white hover:bg-dark-500"
+                                  variant="outlined"
+                                  className="w-full justify-between h-14"
                                   onClick={() => {
                                     setCurrentFormType("text");
                                     setAspectRatioModalOpen(true);
                                   }}
                                   data-testid="button-select-aspect-ratio"
                                 >
-                                  {field.value ? aspectRatioOptions.find(opt => opt.value === field.value)?.label : "Choose aspect ratio"}
+                                  <span className="md-typescale-body-large">
+                                    {field.value ? aspectRatioOptions.find(opt => opt.value === field.value)?.label : "Choose aspect ratio"}
+                                  </span>
                                   <ChevronDown className="h-4 w-4" />
                                 </Button>
                               </FormControl>
@@ -645,19 +643,21 @@ export default function VideoGenerator() {
                           name="model"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-gray-300">Model</FormLabel>
+                              <FormLabel className="md-typescale-body-large text-[var(--md-sys-color-on-surface)] mb-2 block">Model</FormLabel>
                               <FormControl>
                                 <Button
                                   type="button"
-                                  variant="outline"
-                                  className="w-full justify-between bg-dark-600 border-dark-500 text-white hover:bg-dark-500"
+                                  variant="outlined"
+                                  className="w-full justify-between h-14"
                                   onClick={() => {
                                     setCurrentFormType("text");
                                     setModelModalOpen(true);
                                   }}
                                   data-testid="button-select-model"
                                 >
-                                  {field.value ? modelOptions.find(opt => opt.value === field.value)?.label : "Choose model"}
+                                  <span className="md-typescale-body-large">
+                                    {field.value ? modelOptions.find(opt => opt.value === field.value)?.label : "Choose model"}
+                                  </span>
                                   <ChevronDown className="h-4 w-4" />
                                 </Button>
                               </FormControl>
@@ -700,16 +700,16 @@ export default function VideoGenerator() {
                             control={textForm.control}
                             name="hdGeneration"
                             render={({ field }) => (
-                              <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4 rounded-[var(--md-sys-shape-corner-medium)] border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-highest)]">
                                 <FormControl>
                                   <Checkbox
                                     checked={field.value}
                                     onCheckedChange={field.onChange}
-                                    className="border-dark-500 text-primary-500 focus:ring-primary-500"
+                                    className="mt-1"
                                     data-testid="checkbox-hd-generation"
                                   />
                                 </FormControl>
-                                <FormLabel className="text-sm text-gray-300">
+                                <FormLabel className="md-typescale-body-medium text-[var(--md-sys-color-on-surface)] cursor-pointer">
                                   Generate 1080P HD version (+2 credits)
                                 </FormLabel>
                               </FormItem>
@@ -718,24 +718,20 @@ export default function VideoGenerator() {
                         </CollapsibleContent>
                       </Collapsible>
 
-                      <button
+                      <Button
                         type="submit"
                         disabled={generateVideoMutation.isPending}
-                        className="premium-gen-button w-full"
+                        className="w-full h-14 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] hover:shadow-lg hover:shadow-[var(--md-sys-color-primary)]/25 md-typescale-label-large"
                         data-testid="button-generate-text-video"
                       >
-                        <div className="wrap">
-                          <div className="content">
-                            <span className="star">✧</span>
-                            <span className="star">✦</span>
-                            <Sparkles className="w-5 h-5" />
-                            <span>
-                              {generateVideoMutation.isPending ? "Generating..." : "Generate Video"}
-                            </span>
-                            <span className="text-xs bg-black/30 px-2 py-1 rounded-full">5 credits</span>
-                          </div>
-                        </div>
-                      </button>
+                        <Sparkles className="w-5 h-5 mr-2" />
+                        <span>
+                          {generateVideoMutation.isPending ? "Generating..." : "Generate Video"}
+                        </span>
+                        <span className="ml-2 px-2 py-1 bg-[var(--md-sys-color-on-primary)]/20 rounded-full md-typescale-label-small">
+                          5 credits
+                        </span>
+                      </Button>
                     </form>
                   </Form>
                 </div>

@@ -19,18 +19,17 @@ function Router() {
   // Show loading spinner while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center relative">
-        <GradientBackground />
-        <div className="flex flex-col items-center space-y-4 relative z-10">
-          <Loader2 className="h-8 w-8 animate-spin text-white" />
-          <p className="text-white">Đang tải...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--md-sys-color-background)]">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--md-sys-color-primary)]" />
+          <p className="md-typescale-body-large text-[var(--md-sys-color-on-background)]">Đang tải...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[var(--md-sys-color-background)]">
       <Switch>
         {isAuthenticated ? (
           // Authenticated routes
@@ -63,8 +62,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <div className="relative min-h-screen">
-          <GradientBackground />
+        <div className="relative min-h-screen bg-[var(--md-sys-color-background)] text-[var(--md-sys-color-on-background)]">
           <Toaster />
           <Router />
         </div>

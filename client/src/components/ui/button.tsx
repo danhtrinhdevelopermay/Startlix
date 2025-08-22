@@ -5,29 +5,38 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 ripple-container",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-all duration-200 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 ripple-container md-typescale-label-large",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        // Material Design 3 Filled Button
+        filled: "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] hover:shadow-md hover:shadow-[var(--md-sys-color-primary)]/25 active:shadow-sm",
+        // Material Design 3 Outlined Button  
+        outlined:
+          "border border-[var(--md-sys-color-outline)] bg-transparent text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary)]/12 active:bg-[var(--md-sys-color-primary)]/20",
+        // Material Design 3 Text Button
+        text: "bg-transparent text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary)]/12 active:bg-[var(--md-sys-color-primary)]/20",
+        // Material Design 3 Tonal Button
+        tonal:
+          "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:shadow-md hover:shadow-[var(--md-sys-color-secondary-container)]/25 active:shadow-sm",
+        // Legacy variants for compatibility
+        default: "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] hover:shadow-md hover:shadow-[var(--md-sys-color-primary)]/25",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+          "bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] hover:shadow-md hover:shadow-[var(--md-sys-color-error)]/25",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:shadow-md",
+        ghost: "bg-transparent hover:bg-[var(--md-sys-color-surface-variant)]/50",
+        link: "text-[var(--md-sys-color-primary)] underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        default: "h-10 px-6 rounded-[var(--md-sys-shape-corner-large)]",
+        sm: "h-8 px-4 rounded-[var(--md-sys-shape-corner-medium)] md-typescale-label-medium",
+        lg: "h-12 px-8 rounded-[var(--md-sys-shape-corner-large)]",
+        icon: "h-10 w-10 rounded-[var(--md-sys-shape-corner-medium)]",
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "filled",
       size: "default",
     },
   }

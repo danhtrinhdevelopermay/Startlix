@@ -288,98 +288,268 @@
 }
 
 :root {
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(210 25% 7.8431%);
-  --card: hsl(180 6.6667% 97.0588%);
-  --card-foreground: hsl(210 25% 7.8431%);
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(210 25% 7.8431%);
-  --primary: hsl(262.1 83.3% 57.8%);
-  --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(210 25% 7.8431%);
-  --secondary-foreground: hsl(0 0% 100%);
-  --muted: hsl(240 1.9608% 90%);
-  --muted-foreground: hsl(210 25% 7.8431%);
-  --accent: hsl(261.4 51.8% 92.2%);
-  --accent-foreground: hsl(262.1 83.3% 57.8%);
-  --destructive: hsl(356.3033 90.5579% 54.3137%);
-  --destructive-foreground: hsl(0 0% 100%);
-  --border: hsl(261.4 21.1% 85.5%);
-  --input: hsl(261.4 15.4% 94.9%);
-  --ring: hsl(262.1 83.3% 57.8%);
-  --chart-1: hsl(262.1 83.3% 57.8%);
-  --chart-2: hsl(159.7826 100% 36.0784%);
-  --chart-3: hsl(42.0290 92.8251% 56.2745%);
-  --chart-4: hsl(147.1429 78.5047% 41.9608%);
-  --chart-5: hsl(341.4894 75.2000% 50.9804%);
-  --sidebar: hsl(180 6.6667% 97.0588%);
-  --sidebar-foreground: hsl(210 25% 7.8431%);
-  --sidebar-primary: hsl(262.1 83.3% 57.8%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(261.4 51.8% 92.2%);
-  --sidebar-accent-foreground: hsl(262.1 83.3% 57.8%);
-  --sidebar-border: hsl(261.4 21.1% 85.5%);
-  --sidebar-ring: hsl(262.1 83.3% 57.8%);
-  --font-sans: Inter, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: Menlo, monospace;
-  --radius: 0.5rem;
+  /* Material Design 3 Light Theme Color Tokens */
+  --md-sys-color-primary: #6750A4;
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: #EADDFF;
+  --md-sys-color-on-primary-container: #21005D;
+  --md-sys-color-secondary: #625B71;
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #E8DEF8;
+  --md-sys-color-on-secondary-container: #1D192B;
+  --md-sys-color-tertiary: #7D5260;
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: #FFD8E4;
+  --md-sys-color-on-tertiary-container: #31111D;
+  --md-sys-color-error: #BA1A1A;
+  --md-sys-color-on-error: #FFFFFF;
+  --md-sys-color-error-container: #FFDAD6;
+  --md-sys-color-on-error-container: #410002;
+  --md-sys-color-background: #FFFBFE;
+  --md-sys-color-on-background: #1C1B1F;
+  --md-sys-color-surface: #FFFBFE;
+  --md-sys-color-on-surface: #1C1B1F;
+  --md-sys-color-surface-variant: #E7E0EC;
+  --md-sys-color-on-surface-variant: #49454F;
+  --md-sys-color-outline: #79747E;
+  --md-sys-color-outline-variant: #CAC4D0;
+  --md-sys-color-shadow: #000000;
+  --md-sys-color-scrim: #000000;
+  --md-sys-color-inverse-surface: #313033;
+  --md-sys-color-inverse-on-surface: #F4EFF4;
+  --md-sys-color-inverse-primary: #D0BCFF;
+  --md-sys-color-surface-dim: #DDD8DD;
+  --md-sys-color-surface-bright: #FFFBFE;
+  --md-sys-color-surface-container-lowest: #FFFFFF;
+  --md-sys-color-surface-container-low: #F7F2F7;
+  --md-sys-color-surface-container: #F1ECF1;
+  --md-sys-color-surface-container-high: #ECE6EB;
+  --md-sys-color-surface-container-highest: #E6E0E5;
   
-  /* Custom dark theme colors */
-  --dark-800: hsl(240 20% 5%);
-  --dark-700: hsl(240 15% 8%);
-  --dark-600: hsl(240 10% 12%);
-  --dark-500: hsl(240 8% 18%);
-  --primary-500: hsl(262.1 83.3% 57.8%);
-  --primary-600: hsl(262.1 83.3% 47.8%);
-  --primary-700: hsl(262.1 83.3% 37.8%);
-  --purple-400: hsl(270 75% 65%);
+  /* Legacy mappings for compatibility */
+  --background: var(--md-sys-color-background);
+  --foreground: var(--md-sys-color-on-background);
+  --card: var(--md-sys-color-surface-container-low);
+  --card-foreground: var(--md-sys-color-on-surface);
+  --popover: var(--md-sys-color-surface-container);
+  --popover-foreground: var(--md-sys-color-on-surface);
+  --primary: var(--md-sys-color-primary);
+  --primary-foreground: var(--md-sys-color-on-primary);
+  --secondary: var(--md-sys-color-secondary);
+  --secondary-foreground: var(--md-sys-color-on-secondary);
+  --muted: var(--md-sys-color-surface-variant);
+  --muted-foreground: var(--md-sys-color-on-surface-variant);
+  --accent: var(--md-sys-color-secondary-container);
+  --accent-foreground: var(--md-sys-color-on-secondary-container);
+  --destructive: var(--md-sys-color-error);
+  --destructive-foreground: var(--md-sys-color-on-error);
+  --border: var(--md-sys-color-outline-variant);
+  --input: var(--md-sys-color-surface-container-highest);
+  --ring: var(--md-sys-color-primary);
+  
+  /* Material Design 3 Typography */
+  --md-ref-typeface-brand: 'Roboto', sans-serif;
+  --md-ref-typeface-plain: 'Roboto', sans-serif;
+  --font-sans: var(--md-ref-typeface-plain);
+  --font-serif: 'Roboto Serif', serif;
+  --font-mono: 'Roboto Mono', monospace;
+  
+  /* Material Design 3 Shape */
+  --md-sys-shape-corner-none: 0px;
+  --md-sys-shape-corner-extra-small: 4px;
+  --md-sys-shape-corner-small: 8px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-large: 16px;
+  --md-sys-shape-corner-extra-large: 28px;
+  --radius: var(--md-sys-shape-corner-medium);
 }
 
 .dark {
-  --background: hsl(240 20% 5%);
-  --foreground: hsl(200 6.6667% 91.1765%);
-  --card: hsl(240 15% 8%);
-  --card-foreground: hsl(0 0% 85.0980%);
-  --popover: hsl(240 20% 5%);
-  --popover-foreground: hsl(200 6.6667% 91.1765%);
-  --primary: hsl(262.1 83.3% 57.8%);
-  --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(195.0000 15.3846% 94.9020%);
-  --secondary-foreground: hsl(210 25% 7.8431%);
-  --muted: hsl(0 0% 9.4118%);
-  --muted-foreground: hsl(210 3.3898% 46.2745%);
-  --accent: hsl(240 8% 18%);
-  --accent-foreground: hsl(262.1 83.3% 57.8%);
-  --destructive: hsl(356.3033 90.5579% 54.3137%);
-  --destructive-foreground: hsl(0 0% 100%);
-  --border: hsl(240 10% 12%);
-  --input: hsl(240 8% 18%);
-  --ring: hsl(262.1 83.3% 57.8%);
-  --chart-1: hsl(262.1 83.3% 57.8%);
-  --chart-2: hsl(159.7826 100% 36.0784%);
-  --chart-3: hsl(42.0290 92.8251% 56.2745%);
-  --chart-4: hsl(147.1429 78.5047% 41.9608%);
-  --chart-5: hsl(341.4894 75.2000% 50.9804%);
-  --sidebar: hsl(240 15% 8%);
-  --sidebar-foreground: hsl(0 0% 85.0980%);
-  --sidebar-primary: hsl(262.1 83.3% 57.8%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 8% 18%);
-  --sidebar-accent-foreground: hsl(262.1 83.3% 57.8%);
-  --sidebar-border: hsl(240 10% 12%);
-  --sidebar-ring: hsl(262.1 83.3% 57.8%);
+  /* Material Design 3 Dark Theme Color Tokens */
+  --md-sys-color-primary: #D0BCFF;
+  --md-sys-color-on-primary: #381E72;
+  --md-sys-color-primary-container: #4F378B;
+  --md-sys-color-on-primary-container: #EADDFF;
+  --md-sys-color-secondary: #CCC2DC;
+  --md-sys-color-on-secondary: #332D41;
+  --md-sys-color-secondary-container: #4A4458;
+  --md-sys-color-on-secondary-container: #E8DEF8;
+  --md-sys-color-tertiary: #EFB8C8;
+  --md-sys-color-on-tertiary: #492532;
+  --md-sys-color-tertiary-container: #633B48;
+  --md-sys-color-on-tertiary-container: #FFD8E4;
+  --md-sys-color-error: #FFB4AB;
+  --md-sys-color-on-error: #690005;
+  --md-sys-color-error-container: #93000A;
+  --md-sys-color-on-error-container: #FFDAD6;
+  --md-sys-color-background: #141218;
+  --md-sys-color-on-background: #E6E0E9;
+  --md-sys-color-surface: #141218;
+  --md-sys-color-on-surface: #E6E0E9;
+  --md-sys-color-surface-variant: #49454F;
+  --md-sys-color-on-surface-variant: #CAC4D0;
+  --md-sys-color-outline: #938F99;
+  --md-sys-color-outline-variant: #49454F;
+  --md-sys-color-shadow: #000000;
+  --md-sys-color-scrim: #000000;
+  --md-sys-color-inverse-surface: #E6E0E9;
+  --md-sys-color-inverse-on-surface: #322F35;
+  --md-sys-color-inverse-primary: #6750A4;
+  --md-sys-color-surface-dim: #141218;
+  --md-sys-color-surface-bright: #3B383E;
+  --md-sys-color-surface-container-lowest: #0F0D13;
+  --md-sys-color-surface-container-low: #1D1B20;
+  --md-sys-color-surface-container: #211F26;
+  --md-sys-color-surface-container-high: #2B2930;
+  --md-sys-color-surface-container-highest: #36343B;
+  
+  /* Legacy mappings for compatibility */
+  --background: var(--md-sys-color-background);
+  --foreground: var(--md-sys-color-on-background);
+  --card: var(--md-sys-color-surface-container-low);
+  --card-foreground: var(--md-sys-color-on-surface);
+  --popover: var(--md-sys-color-surface-container);
+  --popover-foreground: var(--md-sys-color-on-surface);
+  --primary: var(--md-sys-color-primary);
+  --primary-foreground: var(--md-sys-color-on-primary);
+  --secondary: var(--md-sys-color-secondary);
+  --secondary-foreground: var(--md-sys-color-on-secondary);
+  --muted: var(--md-sys-color-surface-variant);
+  --muted-foreground: var(--md-sys-color-on-surface-variant);
+  --accent: var(--md-sys-color-secondary-container);
+  --accent-foreground: var(--md-sys-color-on-secondary-container);
+  --destructive: var(--md-sys-color-error);
+  --destructive-foreground: var(--md-sys-color-on-error);
+  --border: var(--md-sys-color-outline-variant);
+  --input: var(--md-sys-color-surface-container-highest);
+  --ring: var(--md-sys-color-primary);
 }
 
 @layer base {
   * {
     @apply border-border;
   }
+  
+  /* Material Design 3 Typography Scale */
+  .md-typescale-display-large {
+    font-family: var(--md-ref-typeface-brand);
+    font-size: 57px;
+    line-height: 64px;
+    font-weight: 400;
+    letter-spacing: -0.25px;
+  }
+  
+  .md-typescale-display-medium {
+    font-family: var(--md-ref-typeface-brand);
+    font-size: 45px;
+    line-height: 52px;
+    font-weight: 400;
+  }
+  
+  .md-typescale-display-small {
+    font-family: var(--md-ref-typeface-brand);
+    font-size: 36px;
+    line-height: 44px;
+    font-weight: 400;
+  }
+  
+  .md-typescale-headline-large {
+    font-family: var(--md-ref-typeface-brand);
+    font-size: 32px;
+    line-height: 40px;
+    font-weight: 400;
+  }
+  
+  .md-typescale-headline-medium {
+    font-family: var(--md-ref-typeface-brand);
+    font-size: 28px;
+    line-height: 36px;
+    font-weight: 400;
+  }
+  
+  .md-typescale-headline-small {
+    font-family: var(--md-ref-typeface-brand);
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: 400;
+  }
+  
+  .md-typescale-title-large {
+    font-family: var(--md-ref-typeface-brand);
+    font-size: 22px;
+    line-height: 28px;
+    font-weight: 400;
+  }
+  
+  .md-typescale-title-medium {
+    font-family: var(--md-ref-typeface-plain);
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 500;
+    letter-spacing: 0.15px;
+  }
+  
+  .md-typescale-title-small {
+    font-family: var(--md-ref-typeface-plain);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    letter-spacing: 0.1px;
+  }
+  
+  .md-typescale-body-large {
+    font-family: var(--md-ref-typeface-plain);
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+  }
+  
+  .md-typescale-body-medium {
+    font-family: var(--md-ref-typeface-plain);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+    letter-spacing: 0.25px;
+  }
+  
+  .md-typescale-body-small {
+    font-family: var(--md-ref-typeface-plain);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 400;
+    letter-spacing: 0.4px;
+  }
+  
+  .md-typescale-label-large {
+    font-family: var(--md-ref-typeface-plain);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    letter-spacing: 0.1px;
+  }
+  
+  .md-typescale-label-medium {
+    font-family: var(--md-ref-typeface-plain);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+  
+  .md-typescale-label-small {
+    font-family: var(--md-ref-typeface-plain);
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
 
   body {
-    @apply font-sans antialiased text-foreground;
+    @apply font-sans antialiased;
     font-family: var(--font-sans);
-    background: transparent;
+    background: var(--md-sys-color-background);
+    color: var(--md-sys-color-on-background);
     min-height: 100vh;
     position: relative;
   }
