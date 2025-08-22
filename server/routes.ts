@@ -297,17 +297,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file provided" });
       }
 
+      const apiKeyData = await getBestApiKey();
+      
+      // If no API keys available, work in demo mode - save file locally
+      if (!apiKeyData) {
+        console.log('No API keys available, working in demo mode for image upload');
+        
+        // Create uploads directory if it doesn't exist
+        const fs = require('fs');
+        const path = require('path');
+        const uploadsDir = path.join(process.cwd(), 'client', 'public', 'uploads');
+        
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        
+        // Generate unique filename
+        const timestamp = Date.now();
+        const ext = path.extname(req.file.originalname);
+        const filename = `image_${timestamp}${ext}`;
+        const filePath = path.join(uploadsDir, filename);
+        
+        // Write file to local storage
+        fs.writeFileSync(filePath, req.file.buffer);
+        
+        // Return local URL
+        const downloadUrl = `/uploads/${filename}`;
+        console.log(`Image saved locally: ${downloadUrl}`);
+        
+        return res.json({ downloadUrl });
+      }
+
+      // Use VEO3 API if keys are available
       const formData = new FormData();
       formData.append('file', req.file.buffer, {
         filename: req.file.originalname,
         contentType: req.file.mimetype,
       });
       formData.append('uploadPath', 'images/user-uploads');
-
-      const apiKeyData = await getBestApiKey();
-      if (!apiKeyData) {
-        return res.status(503).json({ message: "No API keys with credits available" });
-      }
 
       const response = await fetch(`${VEO3_UPLOAD_BASE}/file-stream-upload`, {
         method: 'POST',
