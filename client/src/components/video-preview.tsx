@@ -166,7 +166,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
   return (
     <div className="bg-[var(--md-sys-color-surface-container)] rounded-[var(--md-sys-shape-corner-large)] border border-[var(--md-sys-color-outline-variant)] overflow-hidden shadow-sm transition-shadow hover:shadow-md">
       <div className="p-4 border-b border-[var(--md-sys-color-outline-variant)]">
-        <h3 className="font-semibold text-lg">Preview</h3>
+        <h3 className="font-semibold text-lg">Xem trước</h3>
       </div>
       
       <div className="p-4">
@@ -177,7 +177,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
           >
             <div className="text-center text-gray-400">
               <PlayRegular className="w-16 h-16 mx-auto mb-4 text-gray-500" />
-              <p className="text-sm">Your generated video will appear here</p>
+              <p className="text-sm">Video đã tạo sẽ hiển thị ở đây</p>
             </div>
           </div>
         )}
@@ -191,7 +191,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
               <div className="mb-4">
                 <MD3LoadingIndicator 
                   size="medium" 
-                  label="Creating video" 
+                  label="Đang tạo video" 
                   data-testid="loading-video-creation"
                 />
               </div>
@@ -210,7 +210,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
                 <span>~{Math.max(0, 120 - Math.round((new Date().getTime() - (startTime?.getTime() || 0)) / 1000))}s còn lại</span>
               </div>
               
-              {isLoading && <p className="text-xs text-gray-500 mt-2">Checking status...</p>}
+              {isLoading && <p className="text-xs text-gray-500 mt-2">Đang kiểm tra trạng thái...</p>}
             </div>
           </div>
         )}
@@ -223,13 +223,13 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
               data-testid="video-element"
             >
               <source src={videoUrl} type="video/mp4" />
-              Your browser does not support the video tag.
+              Trình duyệt của bạn không hỗ trợ video.
             </video>
             
             <div className="flex justify-between items-center mt-4">
               <div className="flex items-center space-x-2">
                 <Badge className="bg-green-100 text-green-800" data-testid="status-completed">
-                  ✓ Generated
+                  ✓ Đã tạo
                 </Badge>
               </div>
               
@@ -251,7 +251,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
                     className="bg-primary-600 hover:bg-primary-700 text-white"
                     data-testid="button-get-1080p"
                   >
-                    Get 1080P
+                    Tải 1080P
                   </Button>
                 )}
               </div>

@@ -74,7 +74,7 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
   return (
     <div className="bg-[var(--md-sys-color-surface-container)] rounded-[var(--md-sys-shape-corner-large)] border border-[var(--md-sys-color-outline-variant)] overflow-hidden shadow-sm">
       <div className="p-4 border-b border-dark-600">
-        <h3 className="font-semibold text-lg">Recent Generations</h3>
+        <h3 className="font-semibold text-lg">Video đã tạo gần đây</h3>
       </div>
       
       <div className="p-4 space-y-3" data-testid="generation-list">

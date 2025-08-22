@@ -780,7 +780,7 @@ export default function VideoGenerator() {
                         name="prompt"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-4 block">Prompt Video</FormLabel>
+                            <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-4 block">Mô tả Video</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Textarea
