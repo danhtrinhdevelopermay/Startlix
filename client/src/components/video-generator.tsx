@@ -143,8 +143,6 @@ export default function VideoGenerator() {
     gcTime: 0, // Don't cache the result (updated from cacheTime)
   });
 
-  // Debug log
-  console.log("VEO3 Premium Status:", veo3PremiumStatus);
 
   // Test connection to WebSocket service
   const testConnection = async () => {
@@ -424,7 +422,7 @@ export default function VideoGenerator() {
     defaultValues: {
       prompt: "",
       aspectRatio: "16:9",
-      model: "veo3",
+      model: "veo3_fast",
       watermark: "",
       hdGeneration: false,
     },
@@ -435,7 +433,7 @@ export default function VideoGenerator() {
     defaultValues: {
       prompt: "",
       aspectRatio: "16:9",
-      model: "veo3",
+      model: "veo3_fast",
       imageUrl: "",
     },
   });
