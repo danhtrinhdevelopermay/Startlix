@@ -1235,42 +1235,94 @@ export default function VideoGenerator() {
       {/* Footer */}
       <footer className="border-t border-[var(--fluent-neutral-stroke-1)] fluent-glass-strong mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <span className="fluent-body-small text-[var(--fluent-neutral-foreground-3)]">
-                Được hỗ trợ bởi{" "}
-                <a 
-                  href="https://veo3api.ai" 
-                  className="text-[var(--fluent-brand-primary)] hover:text-[var(--fluent-brand-secondary)] transition-colors"
-                  data-testid="link-veo3api"
-                >
-                  Veo3 API
-                </a>
-              </span>
+          {/* Producer Information */}
+          <div className="text-center mb-6">
+            <div className="flex items-center justify-center space-x-3 mb-3">
+              <img src={starlixLogo} alt="Starlix Logo" className="h-6 w-auto" />
+              <span className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)]">Starlix</span>
             </div>
+            <p className="fluent-body-small text-[var(--fluent-neutral-foreground-3)] mb-3">
+              Được phát triển bởi <span className="text-[var(--fluent-brand-primary)] font-medium">Danh Trình</span>
+            </p>
             
-            <div className="flex space-x-6 fluent-body-small text-[var(--fluent-neutral-foreground-3)]">
+            {/* Social Media Links */}
+            <div className="flex justify-center items-center space-x-4">
               <a 
-                href="https://docs.veo3api.ai" 
-                className="hover:text-[var(--fluent-neutral-foreground-1)] transition-colors"
-                data-testid="link-documentation"
+                href="https://www.facebook.com/danhtrinh.official"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--fluent-neutral-foreground-3)] hover:text-[var(--fluent-brand-primary)] transition-colors"
+                data-testid="link-facebook"
+                title="Facebook"
               >
-                Tài liệu
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
               </a>
               <a 
-                href="https://veo3api.ai/api-key" 
-                className="hover:text-[var(--fluent-neutral-foreground-1)] transition-colors"
-                data-testid="link-api-key"
+                href="https://www.tiktok.com/@trinz_ofc"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--fluent-neutral-foreground-3)] hover:text-[var(--fluent-brand-primary)] transition-colors"
+                data-testid="link-tiktok"
+                title="TikTok"
               >
-                Lấy API Key
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                </svg>
               </a>
               <a 
-                href="#" 
-                className="hover:text-[var(--fluent-neutral-foreground-1)] transition-colors"
-                data-testid="link-support"
+                href="tel:0786831513"
+                className="text-[var(--fluent-neutral-foreground-3)] hover:text-[var(--fluent-brand-primary)] transition-colors"
+                data-testid="link-zalo"
+                title="Zalo: 0786831513"
               >
-                Hỗ trợ
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M7.33 2h9.34c2.94 0 5.33 2.39 5.33 5.33v9.34c0 2.94-2.39 5.33-5.33 5.33H7.33C4.39 22 2 19.61 2 16.67V7.33C2 4.39 4.39 2 7.33 2zm4.67 4.67c-2.21 0-4 1.79-4 4 0 .74.2 1.43.55 2.02L7.33 14l1.31-1.22c.59.35 1.28.55 2.02.55 2.21 0 4-1.79 4-4s-1.79-4-4-4z"/>
+                </svg>
               </a>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-[var(--fluent-neutral-stroke-1)] pt-6">
+            <div className="flex flex-col md:flex-row items-center justify-between">
+              <div className="flex items-center space-x-2 mb-4 md:mb-0">
+                <span className="fluent-body-small text-[var(--fluent-neutral-foreground-3)]">
+                  Được hỗ trợ bởi{" "}
+                  <a 
+                    href="https://veo3api.ai" 
+                    className="text-[var(--fluent-brand-primary)] hover:text-[var(--fluent-brand-secondary)] transition-colors"
+                    data-testid="link-veo3api"
+                  >
+                    Veo3 API
+                  </a>
+                </span>
+              </div>
+              
+              <div className="flex space-x-6 fluent-body-small text-[var(--fluent-neutral-foreground-3)]">
+                <a 
+                  href="https://docs.veo3api.ai" 
+                  className="hover:text-[var(--fluent-neutral-foreground-1)] transition-colors"
+                  data-testid="link-documentation"
+                >
+                  Tài liệu
+                </a>
+                <a 
+                  href="https://veo3api.ai/api-key" 
+                  className="hover:text-[var(--fluent-neutral-foreground-1)] transition-colors"
+                  data-testid="link-api-key"
+                >
+                  Lấy API Key
+                </a>
+                <a 
+                  href="#" 
+                  className="hover:text-[var(--fluent-neutral-foreground-1)] transition-colors"
+                  data-testid="link-support"
+                >
+                  Hỗ trợ
+                </a>
+              </div>
             </div>
           </div>
         </div>
