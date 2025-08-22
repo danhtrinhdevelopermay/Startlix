@@ -1250,44 +1250,42 @@ export default function VideoGenerator() {
       {/* Loading Modal */}
       <Dialog open={isLoadingModalOpen} onOpenChange={(open) => !open && setIsLoadingModalOpen(false)}>
         <DialogPortal>
-          <DialogOverlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-          <DialogContent className="fixed inset-0 z-50 fluent-glass-ultra backdrop-blur-2xl border-0 p-0 shadow-none duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
-            <div className="flex flex-col items-center justify-center h-full text-center text-[var(--fluent-neutral-foreground-3)] px-8">
+          <DialogOverlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto border-0 p-0 shadow-none duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]">
+            <div className="fluent-glass-ultra backdrop-blur-2xl rounded-[var(--fluent-border-radius-large)] p-6 md:p-8 text-center text-[var(--fluent-neutral-foreground-3)] fluent-shadow-ultra">
               {/* Header */}
-              <div className="mb-8">
-                <h1 className="fluent-display-large text-[var(--fluent-neutral-foreground-1)] mb-2">Xem trước</h1>
+              <div className="mb-6">
+                <h1 className="fluent-title-large md:fluent-display-large text-[var(--fluent-neutral-foreground-1)] mb-2">Đang tạo video</h1>
               </div>
               
               {/* Loading Container */}
-              <div className="fluent-glass-strong backdrop-blur-md rounded-[var(--fluent-border-radius-large)] p-8 md:p-12 max-w-2xl w-full fluent-shadow-large">
-                <div className="mb-8">
-                  <MD3VideoProcessingLoading 
-                    progress={loadingProgress / 100}
-                    data-testid="loading-video-processing"
-                  />
-                </div>
-                
-                <h2 className="fluent-title-large text-[var(--fluent-neutral-foreground-2)] mb-8">
-                  {loadingProgress >= 90 ? "Đang nâng cao chất lượng video..." : "Đang tạo video của bạn..."}
-                </h2>
-                
-                <div className="mb-6">
-                  <Progress 
-                    value={loadingProgress} 
-                    className="h-3 md:h-4 fluent-glass-subtle"
-                    data-testid="modal-progress-bar"
-                  />
-                </div>
-                
-                <div className="flex justify-between items-center fluent-body-medium text-[var(--fluent-neutral-foreground-3)]">
-                  <span data-testid="modal-progress-percentage" className="font-medium">{Math.round(loadingProgress)}%</span>
-                  <span>
-                    {loadingProgress >= 90 
-                      ? "Đang nâng cao chất lượng..." 
-                      : `~${Math.max(0, 120 - Math.round((new Date().getTime() - (loadingStartTime?.getTime() || 0)) / 1000))}s còn lại`
-                    }
-                  </span>
-                </div>
+              <div className="mb-8">
+                <MD3VideoProcessingLoading 
+                  progress={loadingProgress / 100}
+                  data-testid="loading-video-processing"
+                />
+              </div>
+              
+              <h2 className="fluent-body-large md:fluent-title-large text-[var(--fluent-neutral-foreground-2)] mb-6">
+                {loadingProgress >= 90 ? "Đang nâng cao chất lượng video..." : "Đang tạo video của bạn..."}
+              </h2>
+              
+              <div className="mb-6">
+                <Progress 
+                  value={loadingProgress} 
+                  className="h-3 md:h-4 fluent-glass-subtle"
+                  data-testid="modal-progress-bar"
+                />
+              </div>
+              
+              <div className="flex justify-between items-center fluent-body-medium text-[var(--fluent-neutral-foreground-3)]">
+                <span data-testid="modal-progress-percentage" className="font-semibold text-[var(--fluent-brand-primary)]">{Math.round(loadingProgress)}%</span>
+                <span>
+                  {loadingProgress >= 90 
+                    ? "Đang nâng cao chất lượng..." 
+                    : `~${Math.max(0, 120 - Math.round((new Date().getTime() - (loadingStartTime?.getTime() || 0)) / 1000))}s còn lại`
+                  }
+                </span>
               </div>
             </div>
           </DialogContent>
