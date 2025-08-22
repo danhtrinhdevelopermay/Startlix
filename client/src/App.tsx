@@ -8,6 +8,7 @@ import Home from "@/pages/home";
 import Admin from "@/pages/admin";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import RewardVideos from "@/pages/reward-videos";
 import NotFound from "@/pages/not-found";
 import GradientBackground from "@/components/GradientBackground";
 import { Loader2 } from "lucide-react";
@@ -36,6 +37,7 @@ function Router() {
           <>
             <Route path="/" component={Home} />
             <Route path="/admin" component={Admin} />
+            <Route path="/reward-videos" component={RewardVideos} />
             {/* Redirect to home if trying to access login/register while authenticated */}
             <Route path="/login" component={Home} />
             <Route path="/register" component={Home} />

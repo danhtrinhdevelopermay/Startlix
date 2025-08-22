@@ -393,6 +393,17 @@ export default function VideoGenerator() {
                   {user?.username}
                 </span>
               </div>
+              <Link href="/reward-videos">
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  className="text-gray-300 border-gray-600 hover:bg-gray-700"
+                  data-testid="nav-reward-videos"
+                >
+                  <Trophy className="w-4 h-4 mr-2" />
+                  Video Thưởng
+                </Button>
+              </Link>
               <Button 
                 variant="outline"
                 size="sm"

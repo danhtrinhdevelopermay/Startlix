@@ -7,7 +7,7 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  credits: integer("credits").notNull().default(100),
+  credits: integer("credits").notNull().default(1),
 });
 
 export const apiKeys = pgTable("api_keys", {
@@ -48,6 +48,29 @@ export const videoGenerations = pgTable("video_generations", {
   completedAt: timestamp("completed_at"),
 });
 
+export const rewardVideos = pgTable("reward_videos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description"),
+  videoUrl: text("video_url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  duration: integer("duration").notNull(), // duration in seconds
+  creditsReward: integer("credits_reward").notNull().default(1),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const videoWatchHistory = pgTable("video_watch_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  rewardVideoId: varchar("reward_video_id").notNull().references(() => rewardVideos.id),
+  watchedSeconds: integer("watched_seconds").notNull().default(0),
+  isCompleted: boolean("is_completed").notNull().default(false),
+  rewardClaimed: boolean("reward_claimed").notNull().default(false),
+  startedAt: timestamp("started_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -81,6 +104,17 @@ export const insertVideoGenerationSchema = createInsertSchema(videoGenerations).
   model: z.enum(["veo3", "veo3_fast"]),
 });
 
+export const insertRewardVideoSchema = createInsertSchema(rewardVideos).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertVideoWatchHistorySchema = createInsertSchema(videoWatchHistory).omit({
+  id: true,
+  startedAt: true,
+  completedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertApiKey = z.infer<typeof insertApiKeySchema>;
@@ -89,3 +123,7 @@ export type InsertSettings = z.infer<typeof insertSettingsSchema>;
 export type Settings = typeof settings.$inferSelect;
 export type InsertVideoGeneration = z.infer<typeof insertVideoGenerationSchema>;
 export type VideoGeneration = typeof videoGenerations.$inferSelect;
+export type InsertRewardVideo = z.infer<typeof insertRewardVideoSchema>;
+export type RewardVideo = typeof rewardVideos.$inferSelect;
+export type InsertVideoWatchHistory = z.infer<typeof insertVideoWatchHistorySchema>;
+export type VideoWatchHistory = typeof videoWatchHistory.$inferSelect;

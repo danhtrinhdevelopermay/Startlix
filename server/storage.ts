@@ -1,7 +1,7 @@
-import { type User, type InsertUser, type VideoGeneration, type InsertVideoGeneration, type ApiKey, type InsertApiKey, type Settings, type InsertSettings } from "@shared/schema";
+import { type User, type InsertUser, type VideoGeneration, type InsertVideoGeneration, type ApiKey, type InsertApiKey, type Settings, type InsertSettings, type RewardVideo, type InsertRewardVideo, type VideoWatchHistory, type InsertVideoWatchHistory } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { users, videoGenerations, apiKeys, settings } from "@shared/schema";
+import { users, videoGenerations, apiKeys, settings, rewardVideos, videoWatchHistory } from "@shared/schema";
 import { eq, desc, and } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -30,6 +30,18 @@ export interface IStorage {
   getSetting(key: string): Promise<Settings | undefined>;
   setSetting(key: string, value: string): Promise<Settings>;
   getAllSettings(): Promise<Settings[]>;
+  
+  // Reward Video methods
+  createRewardVideo(rewardVideo: InsertRewardVideo): Promise<RewardVideo>;
+  getRewardVideo(id: string): Promise<RewardVideo | undefined>;
+  getAllActiveRewardVideos(): Promise<RewardVideo[]>;
+  updateRewardVideo(id: string, updates: Partial<RewardVideo>): Promise<RewardVideo | undefined>;
+  
+  // Video Watch History methods
+  createVideoWatchHistory(watchHistory: InsertVideoWatchHistory): Promise<VideoWatchHistory>;
+  updateVideoWatchHistory(id: string, updates: Partial<VideoWatchHistory>): Promise<VideoWatchHistory | undefined>;
+  getVideoWatchHistory(userId: string, rewardVideoId: string): Promise<VideoWatchHistory | undefined>;
+  getUserWatchHistories(userId: string): Promise<VideoWatchHistory[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -37,19 +49,23 @@ export class MemStorage implements IStorage {
   private videoGenerations: Map<string, VideoGeneration>;
   private apiKeys: Map<string, ApiKey>;
   private settings: Map<string, Settings>;
+  private rewardVideos: Map<string, RewardVideo>;
+  private videoWatchHistories: Map<string, VideoWatchHistory>;
 
   constructor() {
     this.users = new Map();
     this.videoGenerations = new Map();
     this.apiKeys = new Map();
     this.settings = new Map();
+    this.rewardVideos = new Map();
+    this.videoWatchHistories = new Map();
     
     // Create a default user for demo purposes
     const defaultUser: User = {
       id: "default-user-id",
       username: "demo-user",
       password: "password",
-      credits: 150,
+      credits: 1,
     };
     this.users.set(defaultUser.id, defaultUser);
   }
@@ -67,7 +83,7 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
     const hashedPassword = await bcrypt.hash(insertUser.password, 10);
-    const user: User = { ...insertUser, id, password: hashedPassword, credits: 100 };
+    const user: User = { ...insertUser, id, password: hashedPassword, credits: 1 };
     this.users.set(id, user);
     return user;
   }
@@ -203,6 +219,80 @@ export class MemStorage implements IStorage {
   async getAllSettings(): Promise<Settings[]> {
     return Array.from(this.settings.values());
   }
+
+  // Reward Video methods
+  async createRewardVideo(insertRewardVideo: InsertRewardVideo): Promise<RewardVideo> {
+    const id = randomUUID();
+    const rewardVideo: RewardVideo = {
+      ...insertRewardVideo,
+      id,
+      description: insertRewardVideo.description || null,
+      thumbnailUrl: insertRewardVideo.thumbnailUrl || null,
+      creditsReward: insertRewardVideo.creditsReward ?? 1,
+      isActive: insertRewardVideo.isActive ?? true,
+      createdAt: new Date(),
+    };
+    this.rewardVideos.set(id, rewardVideo);
+    return rewardVideo;
+  }
+
+  async getRewardVideo(id: string): Promise<RewardVideo | undefined> {
+    return this.rewardVideos.get(id);
+  }
+
+  async getAllActiveRewardVideos(): Promise<RewardVideo[]> {
+    return Array.from(this.rewardVideos.values())
+      .filter((video) => video.isActive)
+      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+  }
+
+  async updateRewardVideo(id: string, updates: Partial<RewardVideo>): Promise<RewardVideo | undefined> {
+    const rewardVideo = this.rewardVideos.get(id);
+    if (rewardVideo) {
+      const updatedVideo = { ...rewardVideo, ...updates };
+      this.rewardVideos.set(id, updatedVideo);
+      return updatedVideo;
+    }
+    return undefined;
+  }
+
+  // Video Watch History methods
+  async createVideoWatchHistory(insertWatchHistory: InsertVideoWatchHistory): Promise<VideoWatchHistory> {
+    const id = randomUUID();
+    const watchHistory: VideoWatchHistory = {
+      ...insertWatchHistory,
+      id,
+      watchedSeconds: insertWatchHistory.watchedSeconds ?? 0,
+      isCompleted: insertWatchHistory.isCompleted ?? false,
+      rewardClaimed: insertWatchHistory.rewardClaimed ?? false,
+      startedAt: new Date(),
+      completedAt: null,
+    };
+    this.videoWatchHistories.set(id, watchHistory);
+    return watchHistory;
+  }
+
+  async updateVideoWatchHistory(id: string, updates: Partial<VideoWatchHistory>): Promise<VideoWatchHistory | undefined> {
+    const watchHistory = this.videoWatchHistories.get(id);
+    if (watchHistory) {
+      const updatedHistory = { ...watchHistory, ...updates };
+      this.videoWatchHistories.set(id, updatedHistory);
+      return updatedHistory;
+    }
+    return undefined;
+  }
+
+  async getVideoWatchHistory(userId: string, rewardVideoId: string): Promise<VideoWatchHistory | undefined> {
+    return Array.from(this.videoWatchHistories.values()).find(
+      (history) => history.userId === userId && history.rewardVideoId === rewardVideoId,
+    );
+  }
+
+  async getUserWatchHistories(userId: string): Promise<VideoWatchHistory[]> {
+    return Array.from(this.videoWatchHistories.values())
+      .filter((history) => history.userId === userId)
+      .sort((a, b) => new Date(b.startedAt!).getTime() - new Date(a.startedAt!).getTime());
+  }
 }
 
 export class DbStorage implements IStorage {
@@ -221,7 +311,7 @@ export class DbStorage implements IStorage {
     const results = await db.insert(users).values({ 
       ...insertUser, 
       password: hashedPassword,
-      credits: 100 
+      credits: 1 
     }).returning();
     return results[0];
   }
@@ -330,6 +420,48 @@ export class DbStorage implements IStorage {
   async getAllSettings(): Promise<Settings[]> {
     return await db.select().from(settings);
   }
+
+  // Reward Video methods
+  async createRewardVideo(insertRewardVideo: InsertRewardVideo): Promise<RewardVideo> {
+    const results = await db.insert(rewardVideos).values(insertRewardVideo).returning();
+    return results[0];
+  }
+
+  async getRewardVideo(id: string): Promise<RewardVideo | undefined> {
+    const results = await db.select().from(rewardVideos).where(eq(rewardVideos.id, id));
+    return results[0];
+  }
+
+  async getAllActiveRewardVideos(): Promise<RewardVideo[]> {
+    return await db.select().from(rewardVideos).where(eq(rewardVideos.isActive, true)).orderBy(desc(rewardVideos.createdAt));
+  }
+
+  async updateRewardVideo(id: string, updates: Partial<RewardVideo>): Promise<RewardVideo | undefined> {
+    const results = await db.update(rewardVideos).set(updates).where(eq(rewardVideos.id, id)).returning();
+    return results[0];
+  }
+
+  // Video Watch History methods
+  async createVideoWatchHistory(insertWatchHistory: InsertVideoWatchHistory): Promise<VideoWatchHistory> {
+    const results = await db.insert(videoWatchHistory).values(insertWatchHistory).returning();
+    return results[0];
+  }
+
+  async updateVideoWatchHistory(id: string, updates: Partial<VideoWatchHistory>): Promise<VideoWatchHistory | undefined> {
+    const results = await db.update(videoWatchHistory).set(updates).where(eq(videoWatchHistory.id, id)).returning();
+    return results[0];
+  }
+
+  async getVideoWatchHistory(userId: string, rewardVideoId: string): Promise<VideoWatchHistory | undefined> {
+    const results = await db.select().from(videoWatchHistory).where(
+      and(eq(videoWatchHistory.userId, userId), eq(videoWatchHistory.rewardVideoId, rewardVideoId))
+    );
+    return results[0];
+  }
+
+  async getUserWatchHistories(userId: string): Promise<VideoWatchHistory[]> {
+    return await db.select().from(videoWatchHistory).where(eq(videoWatchHistory.userId, userId)).orderBy(desc(videoWatchHistory.startedAt));
+  }
 }
 
 // Initialize storage with default user in database
@@ -345,7 +477,7 @@ async function initializeDbStorage(): Promise<DbStorage> {
       id: "default-user-id" as const,
       username: "demo-user" as const,
       password: hashedPassword,
-      credits: 150,
+      credits: 1,
     }).onConflictDoNothing();
   }
   
