@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,12 +16,14 @@ import CreditBalance from "@/components/credit-balance";
 import VideoPreview from "@/components/video-preview";
 import GenerationHistory from "@/components/generation-history";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Upload, Sparkles, Image, FileText, LogOut, User, Monitor, Smartphone, Square, Zap, Trophy } from "lucide-react";
+import { ChevronDown, Upload, Sparkles, Image, FileText, LogOut, User, Monitor, Smartphone, Square, Zap, Trophy, X, Edit, Scissors } from "lucide-react";
 import { useAuth, useLogout } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import starlixLogo from "@assets/Dự án mới 32 [6F4A9A3]_1755821175424.png";
+import ReactCrop, { centerCrop, makeAspectCrop, type Crop, type PixelCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
 // 3D Sphere Loading Component
 const LoadingSphere = ({ size = "normal" }: { size?: "normal" | "small" }) => {
@@ -122,6 +124,14 @@ export default function VideoGenerator() {
   const [isLoadingModalOpen, setIsLoadingModalOpen] = useState<boolean>(false);
   const [loadingStartTime, setLoadingStartTime] = useState<Date | null>(null);
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
+  // Image cropping states
+  const [showCropper, setShowCropper] = useState<boolean>(false);
+  const [crop, setCrop] = useState<Crop>();
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+  const [originalImageUrl, setOriginalImageUrl] = useState<string>("");
+  const [croppedImageUrl, setCroppedImageUrl] = useState<string>("");
+  const imgRef = useRef<HTMLImageElement>(null);
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const [popup, setPopup] = useState<{ 
     isOpen: boolean; 
     title: string; 
@@ -248,6 +258,70 @@ export default function VideoGenerator() {
     },
   });
 
+  // Helper function to create image from URL
+  const createImage = (url: string): Promise<HTMLImageElement> =>
+    new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.addEventListener('load', () => resolve(image));
+      image.addEventListener('error', (error: any) => reject(error));
+      image.src = url;
+    });
+
+  // Helper function to get cropped image
+  const getCroppedImg = useCallback(
+    async (imageSrc: string, pixelCrop: PixelCrop): Promise<string> => {
+      const image = await createImage(imageSrc);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) {
+        throw new Error('No 2d context');
+      }
+
+      canvas.width = pixelCrop.width;
+      canvas.height = pixelCrop.height;
+
+      ctx.drawImage(
+        image,
+        pixelCrop.x,
+        pixelCrop.y,
+        pixelCrop.width,
+        pixelCrop.height,
+        0,
+        0,
+        pixelCrop.width,
+        pixelCrop.height
+      );
+
+      return new Promise((resolve) => {
+        canvas.toBlob((file) => {
+          if (file) {
+            resolve(URL.createObjectURL(file));
+          }
+        }, 'image/jpeg');
+      });
+    },
+    []
+  );
+
+  // Handle image load for cropper
+  const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { width, height } = e.currentTarget;
+    setCrop(centerCrop(
+      makeAspectCrop(
+        {
+          unit: '%',
+          width: 90,
+        },
+        1,
+        width,
+        height
+      ),
+      width,
+      height
+    ));
+  }, []);
+
   const uploadImageMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
@@ -256,6 +330,7 @@ export default function VideoGenerator() {
       return await response.json();
     },
     onSuccess: (data) => {
+      setOriginalImageUrl(data.downloadUrl);
       setUploadedImageUrl(data.downloadUrl);
       imageForm.setValue("imageUrl", data.downloadUrl);
       toast({
@@ -355,6 +430,53 @@ export default function VideoGenerator() {
       setUploadedImageName(file.name);
       uploadImageMutation.mutate(file);
     }
+    // Reset input value to allow re-uploading the same file
+    if (event.target) {
+      event.target.value = '';
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setUploadedImageUrl("");
+    setOriginalImageUrl("");
+    setCroppedImageUrl("");
+    setUploadedImageName("");
+    imageForm.setValue("imageUrl", "");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleChangeImage = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleCropImage = () => {
+    setShowCropper(true);
+  };
+
+  const handleCropComplete = async () => {
+    if (completedCrop && originalImageUrl) {
+      try {
+        const croppedImage = await getCroppedImg(originalImageUrl, completedCrop);
+        setCroppedImageUrl(croppedImage);
+        setUploadedImageUrl(croppedImage);
+        imageForm.setValue("imageUrl", croppedImage);
+        setShowCropper(false);
+        toast({
+          title: "Cắt ảnh thành công",
+          description: "Ảnh đã được cắt theo ý muốn của bạn.",
+        });
+      } catch (error) {
+        showPopup("Lỗi cắt ảnh", "Không thể cắt ảnh. Vui lòng thử lại.", "error");
+      }
+    }
+  };
+
+  const handleCropCancel = () => {
+    setShowCropper(false);
+    setCrop(undefined);
+    setCompletedCrop(undefined);
   };
 
   const onTextToVideoSubmit = (data: TextToVideoForm) => {
@@ -631,37 +753,91 @@ export default function VideoGenerator() {
                           <FormItem>
                             <FormLabel className="text-gray-300">Upload Image</FormLabel>
                             <FormControl>
-                              <div 
-                                className="border-2 border-dashed border-dark-500 rounded-lg p-8 text-center hover:border-primary-500 transition-colors cursor-pointer bg-dark-600/50"
-                                onClick={() => fileInputRef.current?.click()}
-                                data-testid="upload-area"
-                              >
-                                <input
-                                  ref={fileInputRef}
-                                  type="file"
-                                  className="hidden"
-                                  accept="image/*"
-                                  onChange={handleFileUpload}
-                                  data-testid="input-file-upload"
-                                />
-                                {uploadedImageName ? (
-                                  <div className="space-y-2">
-                                    <Upload className="w-12 h-12 text-green-400 mx-auto" />
-                                    <div className="text-sm text-green-400">
-                                      <span className="font-medium">Uploaded: {uploadedImageName}</span>
-                                    </div>
-                                    <p className="text-xs text-gray-400">Click to upload a different image</p>
+                              {!uploadedImageUrl ? (
+                                <div 
+                                  className="border-2 border-dashed border-dark-500 rounded-lg p-8 text-center hover:border-primary-500 transition-colors cursor-pointer bg-dark-600/50"
+                                  onClick={() => fileInputRef.current?.click()}
+                                  data-testid="upload-area"
+                                >
+                                  <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleFileUpload}
+                                    data-testid="input-file-upload"
+                                  />
+                                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                                  <div className="text-sm text-gray-400">
+                                    <span className="text-primary-400 font-medium">Click to upload</span> or drag and drop
                                   </div>
-                                ) : (
-                                  <div>
-                                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                                    <div className="text-sm text-gray-400">
-                                      <span className="text-primary-400 font-medium">Click to upload</span> or drag and drop
+                                  <p className="text-xs text-gray-500 mt-2">PNG, JPG, GIF up to 10MB</p>
+                                </div>
+                              ) : (
+                                <div className="space-y-4">
+                                  {/* Image Preview */}
+                                  <div className="relative rounded-lg overflow-hidden bg-dark-600">
+                                    <img 
+                                      src={uploadedImageUrl} 
+                                      alt="Uploaded preview" 
+                                      className="w-full h-48 object-cover"
+                                      data-testid="image-preview"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                                    <div className="absolute bottom-2 left-2 right-2">
+                                      <p className="text-sm text-white font-medium truncate">{uploadedImageName}</p>
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-2">PNG, JPG, GIF up to 10MB</p>
                                   </div>
-                                )}
-                              </div>
+                                  
+                                  {/* Action Buttons */}
+                                  <div className="flex flex-wrap gap-2">
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={handleChangeImage}
+                                      className="bg-dark-600 border-dark-500 text-gray-300 hover:bg-dark-500"
+                                      data-testid="button-change-image"
+                                    >
+                                      <Edit className="w-4 h-4 mr-2" />
+                                      Thay đổi ảnh
+                                    </Button>
+                                    
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={handleCropImage}
+                                      className="bg-dark-600 border-dark-500 text-gray-300 hover:bg-dark-500"
+                                      data-testid="button-crop-image"
+                                    >
+                                      <Scissors className="w-4 h-4 mr-2" />
+                                      Cắt ảnh
+                                    </Button>
+                                    
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={handleRemoveImage}
+                                      className="bg-red-600/20 border-red-500 text-red-400 hover:bg-red-600/30"
+                                      data-testid="button-remove-image"
+                                    >
+                                      <X className="w-4 h-4 mr-2" />
+                                      Hủy ảnh
+                                    </Button>
+                                  </div>
+                                  
+                                  <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleFileUpload}
+                                    data-testid="input-file-upload"
+                                  />
+                                </div>
+                              )}
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1025,6 +1201,62 @@ export default function VideoGenerator() {
                   </button>
                 );
               })}
+            </div>
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>
+
+      {/* Image Crop Modal */}
+      <Dialog open={showCropper} onOpenChange={setShowCropper}>
+        <DialogPortal>
+          <DialogOverlay className="fixed inset-0 bg-black/80 z-50" />
+          <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-dark-800 border border-dark-600 rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-auto z-50">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold mb-4">Cắt ảnh</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {originalImageUrl && (
+                <div className="flex justify-center">
+                  <ReactCrop
+                    crop={crop}
+                    onChange={(_, percentCrop) => setCrop(percentCrop)}
+                    onComplete={(c) => setCompletedCrop(c)}
+                    aspect={1}
+                    className="max-w-full"
+                  >
+                    <img
+                      ref={imgRef}
+                      alt="Crop me"
+                      src={originalImageUrl}
+                      style={{ transform: `scale(1) rotate(0deg)` }}
+                      onLoad={onImageLoad}
+                      className="max-h-96 max-w-full object-contain"
+                    />
+                  </ReactCrop>
+                </div>
+              )}
+              
+              <div className="flex justify-end space-x-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCropCancel}
+                  className="bg-dark-600 border-dark-500 text-gray-300 hover:bg-dark-500"
+                  data-testid="button-crop-cancel"
+                >
+                  Hủy
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleCropComplete}
+                  disabled={!completedCrop}
+                  className="bg-primary-600 hover:bg-primary-700 text-white"
+                  data-testid="button-crop-complete"
+                >
+                  Áp dụng cắt ảnh
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </DialogPortal>
