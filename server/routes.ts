@@ -30,45 +30,131 @@ async function checkApiCredits(apiKey: string): Promise<number> {
   }
 }
 
-// Get best available API key with credits
+// Cache to avoid checking credits too frequently (cache for 5 minutes)
+const creditCache = new Map<string, { credits: number; lastChecked: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Check API credits with caching
+async function checkApiCreditsWithCache(apiKey: string): Promise<number> {
+  const cacheKey = apiKey;
+  const cached = creditCache.get(cacheKey);
+  const now = Date.now();
+  
+  // Return cached value if still valid
+  if (cached && (now - cached.lastChecked) < CACHE_DURATION) {
+    return cached.credits;
+  }
+  
+  // Check fresh credits
+  const credits = await checkApiCredits(apiKey);
+  creditCache.set(cacheKey, { credits, lastChecked: now });
+  
+  return credits;
+}
+
+// Get best available API key with credits using round-robin load balancing
+let lastUsedApiKeyIndex = -1;
 async function getBestApiKey(): Promise<{ key: string; apiKeyId?: string } | null> {
   try {
-    // First, try to get from database
     const storageInstance = await storage();
     const activeKeys = await storageInstance.getActiveApiKeys();
     
+    // If no active keys in database, check environment variables
+    if (activeKeys.length === 0) {
+      const envKey = process.env.VEOAPI_KEY || process.env.VEO3_API_KEY;
+      if (envKey && envKey !== "your-api-key") {
+        const credits = await checkApiCreditsWithCache(envKey);
+        if (credits > 0) {
+          return { key: envKey };
+        }
+      }
+      return null;
+    }
+    
+    // Check all keys and filter out those with 0 credits
+    const validKeys = [];
     for (const dbApiKey of activeKeys) {
-      const credits = await checkApiCredits(dbApiKey.apiKey);
+      const credits = await checkApiCreditsWithCache(dbApiKey.apiKey);
       
-      // Update credits in database
-      await storageInstance.updateApiKey(dbApiKey.id, {
-        credits,
-        lastChecked: new Date(),
-        isActive: credits > 0
-      });
+      // Update credits in database if cache was refreshed
+      const cached = creditCache.get(dbApiKey.apiKey);
+      if (cached && (Date.now() - cached.lastChecked) < 1000) { // Recently updated
+        await storageInstance.updateApiKey(dbApiKey.id, {
+          credits,
+          lastChecked: new Date(),
+          isActive: credits > 0
+        });
+      }
       
       if (credits > 0) {
-        return { key: dbApiKey.apiKey, apiKeyId: dbApiKey.id };
+        validKeys.push({ ...dbApiKey, currentCredits: credits });
       }
     }
     
-    // Fallback to environment variables
-    const envKey = process.env.VEOAPI_KEY || process.env.VEO3_API_KEY;
-    if (envKey && envKey !== "your-api-key") {
-      const credits = await checkApiCredits(envKey);
-      if (credits > 0) {
-        return { key: envKey };
-      }
+    if (validKeys.length === 0) {
+      return null;
     }
     
-    return null;
+    // Round-robin load balancing among valid keys
+    lastUsedApiKeyIndex = (lastUsedApiKeyIndex + 1) % validKeys.length;
+    const selectedKey = validKeys[lastUsedApiKeyIndex];
+    
+    console.log(`Selected API key "${selectedKey.name}" with ${selectedKey.currentCredits} credits (${lastUsedApiKeyIndex + 1}/${validKeys.length})`);
+    
+    return { key: selectedKey.apiKey, apiKeyId: selectedKey.id };
   } catch (error) {
     console.error('Error getting API key:', error);
     return null;
   }
 }
 
+// Auto refresh credits every 30 minutes for all API keys
+let autoRefreshInterval: NodeJS.Timeout | null = null;
+
+async function startAutoRefresh() {
+  if (autoRefreshInterval) {
+    clearInterval(autoRefreshInterval);
+  }
+  
+  const refreshCredits = async () => {
+    try {
+      console.log('🔄 Auto-refreshing API key credits...');
+      const storageInstance = await storage();
+      const allApiKeys = await storageInstance.getAllApiKeys();
+      
+      for (const apiKey of allApiKeys) {
+        try {
+          const credits = await checkApiCredits(apiKey.apiKey);
+          await storageInstance.updateApiKey(apiKey.id, {
+            credits,
+            lastChecked: new Date(),
+            isActive: credits > 0 ? apiKey.isActive : false
+          });
+          
+          // Clear cache
+          creditCache.delete(apiKey.apiKey);
+          
+          console.log(`📊 "${apiKey.name}": ${credits} credits`);
+        } catch (error) {
+          console.error(`❌ Failed to check credits for "${apiKey.name}":`, error);
+        }
+      }
+      
+      const activeCount = allApiKeys.filter(k => k.credits > 0).length;
+      console.log(`✅ Auto-refresh complete: ${activeCount}/${allApiKeys.length} keys active`);
+    } catch (error) {
+      console.error('❌ Auto-refresh failed:', error);
+    }
+  };
+  
+  // Run immediately, then every 30 minutes
+  await refreshCredits();
+  autoRefreshInterval = setInterval(refreshCredits, 30 * 60 * 1000);
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Start auto refresh on server start
+  startAutoRefresh();
   // Get user credits
   app.get("/api/credits", async (req, res) => {
     try {
@@ -445,25 +531,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Check credits for all API keys
+  // Check credits for all API keys and update database
   app.post("/api/admin/check-credits", async (req, res) => {
     try {
       const storageInstance = await storage();
       const allApiKeys = await storageInstance.getAllApiKeys();
+      const results = [];
       
       for (const apiKey of allApiKeys) {
         const credits = await checkApiCredits(apiKey.apiKey);
-        await storageInstance.updateApiKey(apiKey.id, {
+        const updatedApiKey = await storageInstance.updateApiKey(apiKey.id, {
           credits,
           lastChecked: new Date(),
           isActive: credits > 0 ? apiKey.isActive : false
         });
+        
+        // Clear cache to force fresh check next time
+        creditCache.delete(apiKey.apiKey);
+        
+        results.push({
+          id: apiKey.id,
+          name: apiKey.name,
+          credits,
+          previousCredits: apiKey.credits,
+          isActive: credits > 0 ? apiKey.isActive : false,
+          status: credits > 0 ? 'active' : 'no_credits'
+        });
+        
+        console.log(`API key "${apiKey.name}": ${apiKey.credits} → ${credits} credits`);
       }
       
-      res.json({ success: true, message: "Credits checked for all API keys" });
+      const activeKeys = results.filter(k => k.status === 'active').length;
+      const totalCredits = results.reduce((sum, k) => sum + k.credits, 0);
+      
+      res.json({ 
+        success: true, 
+        message: `Credits updated for ${allApiKeys.length} API keys`,
+        summary: {
+          totalKeys: allApiKeys.length,
+          activeKeys,
+          totalCredits
+        },
+        results 
+      });
     } catch (error) {
       console.error('Check credits error:', error);
       res.status(500).json({ message: "Failed to check credits" });
+    }
+  });
+  
+  // Get API keys summary for dashboard
+  app.get("/api/admin/api-keys-summary", async (req, res) => {
+    try {
+      const storageInstance = await storage();
+      const allApiKeys = await storageInstance.getAllApiKeys();
+      
+      const summary = {
+        totalKeys: allApiKeys.length,
+        activeKeys: allApiKeys.filter(k => k.isActive && k.credits > 0).length,
+        inactiveKeys: allApiKeys.filter(k => !k.isActive).length,
+        emptyKeys: allApiKeys.filter(k => k.credits === 0).length,
+        totalCredits: allApiKeys.reduce((sum, k) => sum + k.credits, 0),
+        lastChecked: allApiKeys.length > 0 ? Math.max(...allApiKeys.map(k => k.lastChecked ? new Date(k.lastChecked).getTime() : 0)) : null
+      };
+      
+      res.json(summary);
+    } catch (error) {
+      console.error('API keys summary error:', error);
+      res.status(500).json({ message: "Failed to get API keys summary" });
     }
   });
 

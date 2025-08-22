@@ -27,6 +27,13 @@ export default function Admin() {
   // Get API keys
   const { data: apiKeys = [] } = useQuery<ApiKey[]>({
     queryKey: ["/api/admin/api-keys"],
+    refetchInterval: 60000, // Refresh every minute
+  });
+
+  // Get API keys summary
+  const { data: summary } = useQuery<any>({
+    queryKey: ["/api/admin/api-keys-summary"],
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   // Veo3 API key setting form
@@ -208,6 +215,34 @@ export default function Admin() {
           </Button>
         </div>
 
+        {/* System Status */}
+        <Card className="bg-gradient-to-r from-primary-900/50 to-primary-800/50 border-primary-600">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">Hệ thống Load Balancing hoạt động</h3>
+                  <p className="text-sm text-gray-300">
+                    Round-robin tự động giữa {summary?.activeKeys || apiKeys.filter((k: ApiKey) => k.isActive && k.credits > 0).length} API keys khả dụng
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Tự động refresh credits mỗi 30 phút • Cache credits 5 phút
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-gray-300">Kiểm tra cuối:</div>
+                <div className="text-xs text-gray-400">
+                  {summary?.lastChecked ? new Date(summary.lastChecked).toLocaleString("vi-VN") : "Chưa có dữ liệu"}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Statistics Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-dark-700 border-dark-600">
@@ -216,7 +251,7 @@ export default function Admin() {
                 <div>
                   <p className="text-sm text-gray-400">Tổng API Keys</p>
                   <p className="text-2xl font-bold" data-testid="stat-total-keys">
-                    {apiKeys.length}
+                    {summary?.totalKeys || apiKeys.length}
                   </p>
                 </div>
                 <Key className="w-8 h-8 text-primary-500" />
@@ -230,7 +265,7 @@ export default function Admin() {
                 <div>
                   <p className="text-sm text-gray-400">Keys hoạt động</p>
                   <p className="text-2xl font-bold text-green-400" data-testid="stat-active-keys">
-                    {apiKeys.filter((k: ApiKey) => k.isActive && k.credits > 0).length}
+                    {summary?.activeKeys || apiKeys.filter((k: ApiKey) => k.isActive && k.credits > 0).length}
                   </p>
                 </div>
                 <CheckCircle className="w-8 h-8 text-green-500" />
@@ -244,7 +279,7 @@ export default function Admin() {
                 <div>
                   <p className="text-sm text-gray-400">Tổng Credits</p>
                   <p className="text-2xl font-bold text-blue-400" data-testid="stat-total-credits">
-                    {apiKeys.reduce((sum: number, k: ApiKey) => sum + k.credits, 0).toLocaleString()}
+                    {(summary?.totalCredits || apiKeys.reduce((sum: number, k: ApiKey) => sum + k.credits, 0)).toLocaleString()}
                   </p>
                 </div>
                 <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
@@ -260,7 +295,7 @@ export default function Admin() {
                 <div>
                   <p className="text-sm text-gray-400">Keys hết credit</p>
                   <p className="text-2xl font-bold text-red-400" data-testid="stat-empty-keys">
-                    {apiKeys.filter((k: ApiKey) => k.credits === 0).length}
+                    {summary?.emptyKeys || apiKeys.filter((k: ApiKey) => k.credits === 0).length}
                   </p>
                 </div>
                 <AlertCircle className="w-8 h-8 text-red-500" />
@@ -430,14 +465,22 @@ export default function Admin() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Danh sách API Keys</CardTitle>
+                <CardTitle className="flex items-center space-x-2">
+                  <span>Danh sách API Keys</span>
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                </CardTitle>
                 <CardDescription>
-                  Quản lý tất cả API Keys với theo dõi credits tự động
+                  Quản lý tất cả API Keys với Load Balancing và theo dõi credits tự động
                 </CardDescription>
               </div>
-              <Badge variant="outline" className="text-primary-400 border-primary-600">
-                {apiKeys.filter((k: ApiKey) => k.isActive && k.credits > 0).length} / {apiKeys.length} keys khả dụng
-              </Badge>
+              <div className="text-right space-y-1">
+                <Badge variant="outline" className="text-primary-400 border-primary-600">
+                  {summary?.activeKeys || apiKeys.filter((k: ApiKey) => k.isActive && k.credits > 0).length} / {summary?.totalKeys || apiKeys.length} keys khả dụng
+                </Badge>
+                <div className="text-xs text-gray-400">
+                  Round-robin load balancing
+                </div>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
