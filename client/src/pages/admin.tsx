@@ -199,6 +199,7 @@ export default function Admin() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/settings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/model-status/veo3-premium"] });
       toast({
         title: "Cập nhật thành công",
         description: "Đã thay đổi trạng thái mô hình Veo3 Cao Cấp",

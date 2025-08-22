@@ -138,8 +138,13 @@ export default function VideoGenerator() {
   // Check VEO3 Premium model status
   const { data: veo3PremiumStatus } = useQuery({
     queryKey: ["/api/model-status/veo3-premium"],
-    refetchInterval: 30000, // Check every 30 seconds
+    refetchInterval: 10000, // Check every 10 seconds
+    staleTime: 0, // Always consider data stale
+    gcTime: 0, // Don't cache the result (updated from cacheTime)
   });
+
+  // Debug log
+  console.log("VEO3 Premium Status:", veo3PremiumStatus);
 
   // Test connection to WebSocket service
   const testConnection = async () => {
@@ -658,7 +663,7 @@ export default function VideoGenerator() {
 
   const onTextToVideoSubmit = (data: TextToVideoForm) => {
     // Check if Veo3 Premium is disabled
-    if (data.model === "veo3" && (veo3PremiumStatus as any)?.enabled === false) {
+    if (data.model === "veo3" && (!veo3PremiumStatus || (veo3PremiumStatus as any)?.enabled !== true)) {
       toast({
         title: "Mô hình đang bảo trì",
         description: "Mô hình Veo3 Cao Cấp hiện đang bảo trì. Vui lòng chọn mô hình khác.",
@@ -676,7 +681,7 @@ export default function VideoGenerator() {
 
   const onImageToVideoSubmit = (data: ImageToVideoForm) => {
     // Check if Veo3 Premium is disabled
-    if (data.model === "veo3" && (veo3PremiumStatus as any)?.enabled === false) {
+    if (data.model === "veo3" && (!veo3PremiumStatus || (veo3PremiumStatus as any)?.enabled !== true)) {
       toast({
         title: "Mô hình đang bảo trì",
         description: "Mô hình Veo3 Cao Cấp hiện đang bảo trì. Vui lòng chọn mô hình khác.",
@@ -1391,7 +1396,7 @@ export default function VideoGenerator() {
                   : imageForm.getValues().model;
                 const isSelected = currentValue === option.value;
                 const isVeo3Premium = option.value === "veo3";
-                const isVeo3PremiumDisabled = isVeo3Premium && (veo3PremiumStatus as any)?.enabled === false;
+                const isVeo3PremiumDisabled = isVeo3Premium && (!veo3PremiumStatus || (veo3PremiumStatus as any)?.enabled !== true);
                 
                 return (
                   <button
