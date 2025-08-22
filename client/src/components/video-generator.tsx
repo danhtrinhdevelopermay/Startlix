@@ -861,26 +861,34 @@ export default function VideoGenerator() {
       {/* Loading Modal */}
       <Dialog open={isLoadingModalOpen} onOpenChange={(open) => !open && setIsLoadingModalOpen(false)}>
         <DialogPortal>
-          <DialogOverlay className="fixed inset-0 z-50 bg-black/90 backdrop-blur-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-          <DialogContent className="fixed left-[50%] top-[50%] z-50 w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] bg-dark-800/95 backdrop-blur-md border-dark-600 p-8 shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-2xl">
-            <div className="text-center text-gray-400 w-full">
-              <div className="mb-6">
-                <LoadingSphere />
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Đang tạo video...</h2>
-              <p className="text-lg mb-6 text-gray-300">Vui lòng chờ trong giây lát</p>
-              
-              <div className="mb-4">
-                <Progress 
-                  value={loadingProgress} 
-                  className="h-4 bg-dark-600"
-                  data-testid="modal-progress-bar"
-                />
+          <DialogOverlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <DialogContent className="fixed inset-0 z-50 bg-dark-900/90 backdrop-blur-2xl border-0 p-0 shadow-none duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
+            <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 px-8">
+              {/* Header */}
+              <div className="mb-8">
+                <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Preview</h1>
               </div>
               
-              <div className="flex justify-between items-center text-sm text-gray-400">
-                <span data-testid="modal-progress-percentage">{Math.round(loadingProgress)}%</span>
-                <span>~{Math.max(0, 120 - Math.round((new Date().getTime() - (loadingStartTime?.getTime() || 0)) / 1000))}s còn lại</span>
+              {/* Loading Container */}
+              <div className="bg-dark-800/60 backdrop-blur-md rounded-3xl p-8 md:p-12 border border-dark-600/50 max-w-2xl w-full">
+                <div className="mb-8">
+                  <LoadingSphere />
+                </div>
+                
+                <h2 className="text-xl md:text-2xl font-semibold text-gray-300 mb-8">Generating your video...</h2>
+                
+                <div className="mb-6">
+                  <Progress 
+                    value={loadingProgress} 
+                    className="h-3 md:h-4 bg-dark-700/80"
+                    data-testid="modal-progress-bar"
+                  />
+                </div>
+                
+                <div className="flex justify-between items-center text-sm md:text-base text-gray-400">
+                  <span data-testid="modal-progress-percentage" className="font-medium">{Math.round(loadingProgress)}%</span>
+                  <span>~{Math.max(0, 120 - Math.round((new Date().getTime() - (loadingStartTime?.getTime() || 0)) / 1000))}s remaining</span>
+                </div>
               </div>
             </div>
           </DialogContent>
