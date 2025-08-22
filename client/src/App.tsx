@@ -38,7 +38,8 @@ function Router() {
           {/* Redirect to home if trying to access login/register while authenticated */}
           <Route path="/login" component={Home} />
           <Route path="/register" component={Home} />
-          <Route component={NotFound} />
+          {/* 404 page for unmatched routes */}
+          <Route path="*" component={NotFound} />
         </>
       ) : (
         // Non-authenticated routes
@@ -48,7 +49,8 @@ function Router() {
           {/* Redirect to login for all other routes when not authenticated */}
           <Route path="/" component={Login} />
           <Route path="/admin" component={Login} />
-          <Route component={Login} />
+          {/* Redirect all unmatched routes to login */}
+          <Route path="*" component={Login} />
         </>
       )}
     </Switch>
