@@ -142,6 +142,9 @@ export default function VideoGenerator() {
     setIsExpandingPrompt(true);
     setExpandingPromptType(promptType);
     
+    console.log('Starting prompt expansion for:', currentPrompt);
+    
+    let receiving = true;
     const url = "wss://backend.buildpicoapps.com/api/chatbot/chat";
     const websocket = new WebSocket(url);
     
@@ -153,7 +156,11 @@ export default function VideoGenerator() {
 - Giữ nguyên ý nghĩa gốc nhưng làm cho sinh động và chuyên nghiệp hơn
 - Chỉ trả về prompt đã được mở rộng, không thêm giải thích`;
 
+    let expandedPrompt = "";
+    let timeoutId: NodeJS.Timeout;
+
     websocket.addEventListener("open", () => {
+      console.log('WebSocket connected');
       websocket.send(
         JSON.stringify({
           chatId: chatId,
@@ -162,12 +169,26 @@ export default function VideoGenerator() {
           message: `Viết lại prompt này chi tiết hơn: "${currentPrompt}"`
         })
       );
+      
+      // Set timeout for response
+      timeoutId = setTimeout(() => {
+        if (receiving) {
+          console.log('WebSocket timeout');
+          websocket.close();
+          setIsExpandingPrompt(false);
+          setExpandingPromptType(null);
+          toast({
+            title: "Timeout",
+            description: "Quá thời gian chờ phản hồi. Vui lòng thử lại.",
+            variant: "destructive",
+          });
+        }
+      }, 30000);
     });
-
-    let expandedPrompt = "";
     
     websocket.addEventListener("message", (event) => {
       try {
+        console.log('Received message:', event.data);
         const data = JSON.parse(event.data);
         if (data.message) {
           expandedPrompt += data.message;
@@ -178,27 +199,43 @@ export default function VideoGenerator() {
     });
 
     websocket.addEventListener("close", () => {
+      receiving = false;
+      if (timeoutId) clearTimeout(timeoutId);
+      
+      console.log('WebSocket closed, expandedPrompt:', expandedPrompt);
+      
       if (expandedPrompt.trim()) {
         // Clean up the expanded prompt
         const cleanedPrompt = expandedPrompt
           .replace(/^"|"$/g, '') // Remove quotes
           .replace(/^Prompt mở rộng:\s*/i, '') // Remove prefix
+          .replace(/^.*?:\s*/i, '') // Remove any prefix with colon
           .trim();
         
-        if (promptType === 'text') {
-          textForm.setValue('prompt', cleanedPrompt);
-        } else {
-          imageForm.setValue('prompt', cleanedPrompt);
-        }
+        console.log('Cleaned prompt:', cleanedPrompt);
         
-        toast({
-          title: "Prompt đã được mở rộng!",
-          description: "Prompt của bạn đã được viết lại chi tiết hơn.",
-        });
+        if (cleanedPrompt && cleanedPrompt !== currentPrompt) {
+          if (promptType === 'text') {
+            textForm.setValue('prompt', cleanedPrompt);
+          } else {
+            imageForm.setValue('prompt', cleanedPrompt);
+          }
+          
+          toast({
+            title: "Prompt đã được mở rộng!",
+            description: "Prompt của bạn đã được viết lại chi tiết hơn.",
+          });
+        } else {
+          toast({
+            title: "Không có thay đổi",
+            description: "AI không thể cải thiện prompt này thêm.",
+            variant: "destructive",
+          });
+        }
       } else {
         toast({
           title: "Không thể mở rộng prompt",
-          description: "Có lỗi xảy ra khi mở rộng prompt. Vui lòng thử lại.",
+          description: "Không nhận được phản hồi từ AI. Vui lòng thử lại.",
           variant: "destructive",
         });
       }
@@ -208,22 +245,17 @@ export default function VideoGenerator() {
     });
 
     websocket.addEventListener("error", (error) => {
+      receiving = false;
+      if (timeoutId) clearTimeout(timeoutId);
       console.error("WebSocket error:", error);
       toast({
         title: "Lỗi kết nối",
-        description: "Không thể kết nối đến dịch vụ mở rộng prompt.",
+        description: "Không thể kết nối đến dịch vụ mở rộng prompt. Kiểm tra kết nối internet.",
         variant: "destructive",
       });
       setIsExpandingPrompt(false);
       setExpandingPromptType(null);
     });
-
-    // Timeout after 30 seconds
-    setTimeout(() => {
-      if (websocket.readyState === WebSocket.OPEN) {
-        websocket.close();
-      }
-    }, 30000);
   };
 
   const handleLogout = async () => {
