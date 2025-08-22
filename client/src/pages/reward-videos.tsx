@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import RewardVideoWatcher from '@/components/reward-video-watcher';
-import { Gift, Play, Clock, CheckCircle } from 'lucide-react';
+import { GiftRegular, PlayRegular, ClockRegular, CheckmarkCircleRegular } from '@fluentui/react-icons';
 
 interface RewardVideo {
   id: string;
@@ -97,7 +97,7 @@ export default function RewardVideosPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-4 flex items-center gap-3">
-          <Gift className="w-8 h-8 text-yellow-500" />
+          <GiftRegular className="w-8 h-8 text-yellow-500" />
           Video Thưởng
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
@@ -109,7 +109,7 @@ export default function RewardVideosPage() {
       {rewardVideos.length === 0 && (
         <Card className="text-center py-12">
           <CardContent>
-            <Gift className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <GiftRegular className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Chưa có video thưởng</h3>
             <p className="text-gray-600">Hiện tại chưa có video nào để xem và kiếm credits.</p>
           </CardContent>
@@ -135,7 +135,7 @@ export default function RewardVideosPage() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <Play className="w-12 h-12 text-gray-400" />
+                      <PlayRegular className="w-12 h-12 text-gray-400" />
                     </div>
                   )}
                   
@@ -143,13 +143,13 @@ export default function RewardVideosPage() {
                   <div className="absolute top-2 right-2">
                     {watchStatus === 'claimed' && (
                       <Badge className="bg-green-500 text-white">
-                        <CheckCircle className="w-3 h-3 mr-1" />
+                        <CheckmarkCircleRegular className="w-3 h-3 mr-1" />
                         Đã nhận thưởng
                       </Badge>
                     )}
                     {watchStatus === 'completed' && (
                       <Badge className="bg-blue-500 text-white">
-                        <Gift className="w-3 h-3 mr-1" />
+                        <GiftRegular className="w-3 h-3 mr-1" />
                         Có thể nhận thưởng
                       </Badge>
                     )}
@@ -162,7 +162,7 @@ export default function RewardVideosPage() {
 
                   {/* Duration */}
                   <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                    <Clock className="w-3 h-3 inline mr-1" />
+                    <ClockRegular className="w-3 h-3 inline mr-1" />
                     {formatDuration(video.duration)}
                   </div>
                 </div>
@@ -179,7 +179,7 @@ export default function RewardVideosPage() {
                 <CardContent>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <Gift className="w-4 h-4 text-yellow-500" />
+                      <GiftRegular className="w-4 h-4 text-yellow-500" />
                       <span className="font-semibold text-yellow-600 dark:text-yellow-400">
                         {video.creditsReward} Credit
                       </span>
@@ -195,25 +195,25 @@ export default function RewardVideosPage() {
                   >
                     {watchStatus === 'claimed' && (
                       <>
-                        <CheckCircle className="w-4 h-4 mr-2" />
+                        <CheckmarkCircleRegular className="w-4 h-4 mr-2" />
                         Đã hoàn thành
                       </>
                     )}
                     {watchStatus === 'completed' && (
                       <>
-                        <Gift className="w-4 h-4 mr-2" />
+                        <GiftRegular className="w-4 h-4 mr-2" />
                         Nhận thưởng
                       </>
                     )}
                     {watchStatus === 'in_progress' && (
                       <>
-                        <Play className="w-4 h-4 mr-2" />
+                        <PlayRegular className="w-4 h-4 mr-2" />
                         Tiếp tục xem
                       </>
                     )}
                     {watchStatus === 'not_started' && (
                       <>
-                        <Play className="w-4 h-4 mr-2" />
+                        <PlayRegular className="w-4 h-4 mr-2" />
                         Bắt đầu xem
                       </>
                     )}

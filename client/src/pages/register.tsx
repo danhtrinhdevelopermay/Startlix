@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useRegister } from "@/hooks/useAuth";
-import { UserPlus } from "lucide-react";
+import { PersonAddRegular } from "@fluentui/react-icons";
 import { MD3ButtonLoading } from "@/components/md3-loading-indicator";
 
 export default function Register() {
@@ -129,7 +129,7 @@ export default function Register() {
                 </>
               ) : (
                 <>
-                  <UserPlus className="mr-2 h-4 w-4" />
+                  <PersonAddRegular className="mr-2 h-4 w-4" />
                   Đăng ký
                 </>
               )}

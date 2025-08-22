@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Play, Download, Loader2, AlertCircle, Clock } from "lucide-react";
+import { PlayRegular, ArrowDownloadRegular, ArrowClockwiseRegular, ErrorCircleRegular, ClockRegular } from "@fluentui/react-icons";
 import { formatDistanceToNow } from "date-fns";
 
 interface GenerationHistoryProps {
@@ -19,11 +19,11 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
       case "completed":
         return <div className="w-3 h-3 bg-green-400 rounded-full" />;
       case "processing":
-        return <Loader2 className="w-3 h-3 text-yellow-400 animate-spin" />;
+        return <ArrowClockwiseRegular className="w-3 h-3 text-yellow-400 animate-spin" />;
       case "failed":
-        return <AlertCircle className="w-3 h-3 text-red-400" />;
+        return <ErrorCircleRegular className="w-3 h-3 text-red-400" />;
       default:
-        return <Clock className="w-3 h-3 text-gray-400" />;
+        return <ClockRegular className="w-3 h-3 text-gray-400" />;
     }
   };
 
@@ -65,7 +65,7 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
           <h3 className="font-semibold text-lg">Lịch sử tạo video</h3>
         </div>
         <div className="p-4 flex items-center justify-center">
-          <Loader2 className="w-6 h-6 text-primary-500 animate-spin" />
+          <ArrowClockwiseRegular className="w-6 h-6 text-primary-500 animate-spin" />
         </div>
       </div>
     );
@@ -155,7 +155,7 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
                       title="Xem trước"
                       data-testid="button-preview"
                     >
-                      <Play className="w-3 h-3" />
+                      <PlayRegular className="w-3 h-3" />
                     </Button>
                     <Button
                       size="sm"
@@ -165,7 +165,7 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
                       title="Tải xuống"
                       data-testid="button-download-history"
                     >
-                      <Download className="w-3 h-3" />
+                      <ArrowDownloadRegular className="w-3 h-3" />
                     </Button>
                   </div>
                 )}

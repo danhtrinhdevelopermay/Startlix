@@ -406,10 +406,10 @@
   --input: var(--md-sys-color-surface-container-highest);
   --ring: var(--md-sys-color-primary);
   
-  /* Fluent Design 2 iOS Typography - San Francisco Pro */
-  --fluent-font-family-base: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --fluent-font-family-monospace: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-  --fluent-font-family-numeric: 'SF Pro Display', -apple-system, sans-serif;
+  /* Microsoft Fluent Design Typography - Segoe UI */
+  --fluent-font-family-base: 'Segoe UI', 'Segoe UI Web (West European)', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', sans-serif;
+  --fluent-font-family-monospace: 'Cascadia Code', 'Segoe UI Mono', 'SF Mono', Monaco, 'Roboto Mono', Consolas, 'Courier New', monospace;
+  --fluent-font-family-numeric: 'Segoe UI', 'Segoe UI Web (West European)', -apple-system, sans-serif;
   
   --md-ref-typeface-brand: var(--fluent-font-family-base);
   --md-ref-typeface-plain: var(--fluent-font-family-base);

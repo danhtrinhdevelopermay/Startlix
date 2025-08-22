@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, X } from "lucide-react";
+import { WarningRegular, DismissRegular } from "@fluentui/react-icons";
 
 interface ErrorPopupProps {
   isOpen: boolean;
@@ -14,13 +14,13 @@ export default function ErrorPopup({ isOpen, onClose, title, description, type =
   const getIcon = () => {
     switch (type) {
       case "error":
-        return <AlertTriangle className="w-6 h-6 text-red-500" />;
+        return <WarningRegular className="w-6 h-6 text-red-500" />;
       case "warning":
-        return <AlertTriangle className="w-6 h-6 text-yellow-500" />;
+        return <WarningRegular className="w-6 h-6 text-yellow-500" />;
       case "info":
-        return <AlertTriangle className="w-6 h-6 text-blue-500" />;
+        return <WarningRegular className="w-6 h-6 text-blue-500" />;
       default:
-        return <AlertTriangle className="w-6 h-6 text-red-500" />;
+        return <WarningRegular className="w-6 h-6 text-red-500" />;
     }
   };
 

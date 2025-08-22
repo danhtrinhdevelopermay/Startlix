@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Play, Download } from "lucide-react";
+import { PlayRegular, ArrowDownloadRegular } from "@fluentui/react-icons";
 import { useToast } from "@/hooks/use-toast";
 import ErrorPopup from "@/components/error-popup";
 import MD3LoadingIndicator from "./md3-loading-indicator";
@@ -176,7 +176,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
             data-testid="preview-placeholder"
           >
             <div className="text-center text-gray-400">
-              <Play className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+              <PlayRegular className="w-16 h-16 mx-auto mb-4 text-gray-500" />
               <p className="text-sm">Your generated video will appear here</p>
             </div>
           </div>
@@ -241,7 +241,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
                   className="bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container-high)] border-[var(--md-sys-color-outline-variant)] text-[var(--md-sys-color-on-surface)]"
                   data-testid="button-download"
                 >
-                  <Download className="w-4 h-4" />
+                  <ArrowDownloadRegular className="w-4 h-4" />
                   Tải xuống
                 </Button>
                 {taskId && (

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLogin } from "@/hooks/useAuth";
-import { LogIn } from "lucide-react";
+import { PersonRegular } from "@fluentui/react-icons";
 import { MD3ButtonLoading } from "@/components/md3-loading-indicator";
 
 export default function Login() {
@@ -86,7 +86,7 @@ export default function Login() {
                 </>
               ) : (
                 <>
-                  <LogIn className="mr-2 h-4 w-4" />
+                  <PersonRegular className="mr-2 h-4 w-4" />
                   Đăng nhập
                 </>
               )}
