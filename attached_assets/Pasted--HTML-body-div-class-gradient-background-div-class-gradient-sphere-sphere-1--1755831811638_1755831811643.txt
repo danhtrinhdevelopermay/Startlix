@@ -1,0 +1,88 @@
+**HTML**
+`<body>
+    <div class="gradient-background">
+        <div class="gradient-sphere sphere-1"></div>
+        <div class="gradient-sphere sphere-2"></div>
+        <div class="gradient-sphere sphere-3"></div>
+        <div class="glow"></div>
+        <div class="grid-overlay"></div>
+        <div class="noise-overlay"></div>
+        <div class="particles-container" id="particles-container"></div>
+    </div>
+
+    
+</body>
+`
+**CSS**
+`       * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Helvetica Neue', sans-serif;
+            overflow: hidden;
+            background-color: #050505;
+            color: white;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .content-container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            max-width: 600px;
+            padding: 2rem;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to right, #fff, #acacac);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 2rem;
+        }
+`
+**JavaScript**
+` // Create particle effect
+        const particlesContainer = document.getElementById('particles-container');
+        const particleCount = 80;
+        
+        // Create particles
+        for (let i = 0; i < particleCount; i++) {
+            createParticle();
+        }
+        
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            
+            // Random size (small)
+            const size = Math.random() * 3 + 1;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            
+            // Initial position
+            resetParticle(particle);
+            
+            particlesContainer.appendChild(particle);
+            
+            // Animate
+            animateParticle(particle);
+        }
+        `
+
+Áp dụng hiệu ứng nền này làm nền cho ứng dụng 

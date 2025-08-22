@@ -9,6 +9,7 @@ import Admin from "@/pages/admin";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import NotFound from "@/pages/not-found";
+import GradientBackground from "@/components/GradientBackground";
 import { Loader2 } from "lucide-react";
 
 function Router() {
@@ -17,8 +18,9 @@ function Router() {
   // Show loading spinner while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        <div className="flex flex-col items-center space-y-4">
+      <div className="min-h-screen flex items-center justify-center relative">
+        <GradientBackground />
+        <div className="flex flex-col items-center space-y-4 relative z-10">
           <Loader2 className="h-8 w-8 animate-spin text-white" />
           <p className="text-white">Đang tải...</p>
         </div>
@@ -57,6 +59,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <GradientBackground />
         <Toaster />
         <Router />
       </TooltipProvider>

@@ -193,7 +193,7 @@ export default function Admin() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-800 text-white p-6">
+    <div className="min-h-screen text-white p-6 relative z-10">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
