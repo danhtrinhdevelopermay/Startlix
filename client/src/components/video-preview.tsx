@@ -164,30 +164,41 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
   };
 
   return (
-    <div className="bg-[var(--md-sys-color-surface-container)] rounded-[var(--md-sys-shape-corner-large)] border border-[var(--md-sys-color-outline-variant)] overflow-hidden shadow-sm transition-shadow hover:shadow-md">
-      <div className="p-4 border-b border-[var(--md-sys-color-outline-variant)]">
-        <h3 className="font-semibold text-lg">Xem trước</h3>
+    <div className="fluent-glass-strong rounded-[var(--fluent-border-radius-large)] border border-[var(--fluent-neutral-stroke-1)] overflow-hidden fluent-shadow-large transition-all duration-300 hover:fluent-shadow-ultra hover:scale-[1.02]">
+      <div className="p-6 border-b border-[var(--fluent-neutral-stroke-1)] bg-gradient-to-r from-[var(--fluent-brand-primary)]/5 to-[var(--fluent-brand-secondary)]/5">
+        <div className="flex items-center space-x-3">
+          <div className="w-2 h-2 bg-gradient-to-r from-[var(--fluent-brand-primary)] to-[var(--fluent-brand-secondary)] rounded-full"></div>
+          <h3 className="fluent-title-large text-[var(--fluent-neutral-foreground-1)] font-semibold">Xem trước</h3>
+        </div>
       </div>
       
-      <div className="p-4">
+      <div className="p-6">
         {!videoUrl && !pollingTaskId && (
           <div 
-            className="aspect-video bg-[var(--md-sys-color-surface-container-low)] rounded-[var(--md-sys-shape-corner-medium)] flex items-center justify-center border border-[var(--md-sys-color-outline-variant)]"
+            className="aspect-video fluent-glass-subtle rounded-[var(--fluent-border-radius-large)] flex items-center justify-center border border-[var(--fluent-neutral-stroke-1)] backdrop-blur-xl relative overflow-hidden"
             data-testid="preview-placeholder"
           >
-            <div className="text-center text-gray-400">
-              <PlayRegular className="w-16 h-16 mx-auto mb-4 text-gray-500" />
-              <p className="text-sm">Video đã tạo sẽ hiển thị ở đây</p>
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--fluent-brand-primary)]/5 via-transparent to-[var(--fluent-brand-secondary)]/5"></div>
+            <div className="text-center text-[var(--fluent-neutral-foreground-3)] relative z-10">
+              <div className="mb-6">
+                <div className="relative inline-block">
+                  <div className="absolute inset-0 bg-gradient-to-r from-[var(--fluent-brand-primary)] to-[var(--fluent-brand-secondary)] rounded-full blur-lg opacity-30"></div>
+                  <PlayRegular className="w-16 h-16 text-[var(--fluent-brand-primary)] relative z-10" />
+                </div>
+              </div>
+              <p className="fluent-body-medium text-[var(--fluent-neutral-foreground-2)]">Video đã tạo sẽ hiển thị ở đây</p>
+              <p className="fluent-caption text-[var(--fluent-neutral-foreground-3)] mt-2">Hãy bắt đầu tạo video đầu tiên của bạn</p>
             </div>
           </div>
         )}
 
         {pollingTaskId && !videoUrl && (
           <div 
-            className="aspect-video bg-[var(--md-sys-color-surface-container-low)] rounded-[var(--md-sys-shape-corner-medium)] flex items-center justify-center border border-[var(--md-sys-color-outline-variant)]"
+            className="aspect-video fluent-glass-subtle rounded-[var(--fluent-border-radius-large)] flex items-center justify-center border border-[var(--fluent-neutral-stroke-1)] backdrop-blur-xl relative overflow-hidden"
             data-testid="preview-loading"
           >
-            <div className="text-center text-gray-400 w-full max-w-md px-8">
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--fluent-brand-primary)]/10 via-transparent to-[var(--fluent-brand-secondary)]/10 animate-pulse"></div>
+            <div className="text-center text-[var(--fluent-neutral-foreground-2)] w-full max-w-md px-8 relative z-10">
               <div className="mb-4">
                 <MD3LoadingIndicator 
                   size="medium" 
@@ -195,22 +206,22 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
                   data-testid="loading-video-creation"
                 />
               </div>
-              <p className="text-sm mb-4">Đang tạo video của bạn...</p>
+              <p className="fluent-body-medium mb-6 text-[var(--fluent-neutral-foreground-1)]">Đang tạo video của bạn...</p>
               
-              <div className="mb-3">
+              <div className="mb-4">
                 <Progress 
                   value={progress} 
-                  className="h-3 bg-[var(--md-sys-color-surface-container)]"
+                  className="h-4 fluent-glass-subtle backdrop-blur-sm"
                   data-testid="progress-bar"
                 />
               </div>
               
-              <div className="flex justify-between items-center text-xs text-gray-500">
-                <span data-testid="progress-percentage">{Math.round(progress)}%</span>
+              <div className="flex justify-between items-center fluent-caption text-[var(--fluent-neutral-foreground-3)]">
+                <span data-testid="progress-percentage" className="font-semibold text-[var(--fluent-brand-primary)]">{Math.round(progress)}%</span>
                 <span>~{Math.max(0, 120 - Math.round((new Date().getTime() - (startTime?.getTime() || 0)) / 1000))}s còn lại</span>
               </div>
               
-              {isLoading && <p className="text-xs text-gray-500 mt-2">Đang kiểm tra trạng thái...</p>}
+              {isLoading && <p className="fluent-caption text-[var(--fluent-neutral-foreground-3)] mt-3">Đang kiểm tra trạng thái...</p>}
             </div>
           </div>
         )}
@@ -219,36 +230,39 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
           <div data-testid="video-player">
             <video 
               controls 
-              className="w-full rounded-lg bg-black"
+              className="w-full rounded-[var(--fluent-border-radius-large)] bg-black fluent-shadow-medium"
               data-testid="video-element"
             >
               <source src={videoUrl} type="video/mp4" />
               Trình duyệt của bạn không hỗ trợ video.
             </video>
             
-            <div className="flex justify-between items-center mt-4">
-              <div className="flex items-center space-x-2">
-                <Badge className="bg-green-100 text-green-800" data-testid="status-completed">
-                  ✓ Đã tạo
-                </Badge>
+            <div className="flex justify-between items-center mt-6">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <Badge className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-400/30 text-green-400 fluent-caption font-medium" data-testid="status-completed">
+                    ✓ Đã tạo
+                  </Badge>
+                </div>
               </div>
               
-              <div className="flex space-x-2">
+              <div className="flex space-x-3">
                 <Button
                   size="sm"
                   variant="outlined"
                   onClick={handleDownload}
-                  className="bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container-high)] border-[var(--md-sys-color-outline-variant)] text-[var(--md-sys-color-on-surface)]"
+                  className="fluent-glass-subtle hover:fluent-glass border-[var(--fluent-neutral-stroke-1)] text-[var(--fluent-neutral-foreground-1)] hover:text-[var(--fluent-brand-primary)] transition-all duration-200"
                   data-testid="button-download"
                 >
-                  <ArrowDownloadRegular className="w-4 h-4" />
+                  <ArrowDownloadRegular className="w-4 h-4 mr-2" />
                   Tải xuống
                 </Button>
                 {taskId && (
                   <Button
                     size="sm"
                     onClick={handleGet1080p}
-                    className="bg-primary-600 hover:bg-primary-700 text-white"
+                    className="bg-gradient-to-r from-[var(--fluent-brand-primary)] to-[var(--fluent-brand-secondary)] hover:from-[var(--fluent-brand-secondary)] hover:to-[var(--fluent-brand-primary)] text-white transition-all duration-300 fluent-shadow-soft"
                     data-testid="button-get-1080p"
                   >
                     Tải 1080P
