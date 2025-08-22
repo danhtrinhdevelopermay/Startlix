@@ -38,7 +38,7 @@ export const videoGenerations = pgTable("video_generations", {
   model: text("model").notNull().default("veo3"),
   watermark: text("watermark"),
   hdGeneration: boolean("hd_generation").default(false),
-  status: text("status").notNull().default("pending"), // 'pending', 'processing', 'completed', 'failed'
+  status: text("status").notNull().default("pending"), // 'pending', 'processing', 'completed', 'failed', 'enhancing'
   resultUrls: text("result_urls").array(),
   hdResultUrl: text("hd_result_url"),
   errorMessage: text("error_message"),
@@ -46,6 +46,12 @@ export const videoGenerations = pgTable("video_generations", {
   apiKeyId: varchar("api_key_id").references(() => apiKeys.id),
   createdAt: timestamp("created_at").defaultNow(),
   completedAt: timestamp("completed_at"),
+  // Enhancement fields
+  enhancementStatus: text("enhancement_status").default("none"), // 'none', 'processing', 'completed', 'failed'
+  enhancedResultUrls: text("enhanced_result_urls").array(),
+  enhancementStartedAt: timestamp("enhancement_started_at"),
+  enhancementCompletedAt: timestamp("enhancement_completed_at"),
+  enhancementErrorMessage: text("enhancement_error_message"),
 });
 
 export const rewardVideos = pgTable("reward_videos", {

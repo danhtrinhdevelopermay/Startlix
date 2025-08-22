@@ -123,6 +123,12 @@ export class MemStorage implements IStorage {
       hdResultUrl: null,
       errorMessage: null,
       apiKeyId: generation.apiKeyId || null,
+      // Enhancement fields with default values
+      enhancementStatus: "none",
+      enhancedResultUrls: null,
+      enhancementStartedAt: null,
+      enhancementCompletedAt: null,
+      enhancementErrorMessage: null,
       createdAt: new Date(),
       completedAt: null,
     };

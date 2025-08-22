@@ -78,10 +78,10 @@ const modelOptions = [
   {
     value: "veo3",
     label: "Veo3 Cao cấp",
-    description: "Tạo video AI chất lượng cao nhất với chi tiết vượt trội và chân thực",
+    description: "Tạo video AI chất lượng cao nhất với chi tiết vượt trội và tự động nâng cao chất lượng",
     icon: TrophyRegular,
     badge: "Chất lượng tốt nhất",
-    features: ["Độ phân giải 4K", "AI tiên tiến", "Chuyển động chân thực"],
+    features: ["Độ phân giải 4K", "AI tiên tiến", "Tự động nâng cao chất lượng"],
     credits: 5
   },
   {
@@ -370,6 +370,13 @@ export default function VideoGenerator() {
         videoStatus?.errorMessage || "Có lỗi xảy ra trong quá trình tạo video. Vui lòng thử lại.", 
         "error"
       );
+    } else if (videoStatus?.status === "enhancing") {
+      // Video is being enhanced
+      setLoadingProgress(90); // Show 90% progress during enhancement
+      toast({
+        title: "Đang nâng cao chất lượng video",
+        description: "Video đang được nâng cao chất lượng bằng AI. Vui lòng chờ...",
+      });
     } else if (videoStatus?.status === "processing") {
       const elapsedSeconds = loadingStartTime ? (new Date().getTime() - loadingStartTime.getTime()) / 1000 : 0;
       
@@ -1260,7 +1267,9 @@ export default function VideoGenerator() {
                   />
                 </div>
                 
-                <h2 className="fluent-title-large text-[var(--fluent-neutral-foreground-2)] mb-8">Đang tạo video của bạn...</h2>
+                <h2 className="fluent-title-large text-[var(--fluent-neutral-foreground-2)] mb-8">
+                  {loadingProgress >= 90 ? "Đang nâng cao chất lượng video..." : "Đang tạo video của bạn..."}
+                </h2>
                 
                 <div className="mb-6">
                   <Progress 
@@ -1272,7 +1281,12 @@ export default function VideoGenerator() {
                 
                 <div className="flex justify-between items-center fluent-body-medium text-[var(--fluent-neutral-foreground-3)]">
                   <span data-testid="modal-progress-percentage" className="font-medium">{Math.round(loadingProgress)}%</span>
-                  <span>~{Math.max(0, 120 - Math.round((new Date().getTime() - (loadingStartTime?.getTime() || 0)) / 1000))}s còn lại</span>
+                  <span>
+                    {loadingProgress >= 90 
+                      ? "Đang nâng cao chất lượng..." 
+                      : `~${Math.max(0, 120 - Math.round((new Date().getTime() - (loadingStartTime?.getTime() || 0)) / 1000))}s còn lại`
+                    }
+                  </span>
                 </div>
               </div>
             </div>

@@ -21,6 +21,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const VEO3_API_BASE = "https://api.veo3api.ai/api/v1";
 const VEO3_UPLOAD_BASE = "https://veo3apiai.redpandaai.co/api";
+const SEGMIND_API_BASE = "https://api.segmind.com/v1/ai-video-enhancer";
 
 // Check API key credits
 async function checkApiCredits(apiKey: string): Promise<number> {
@@ -115,6 +116,68 @@ async function getBestApiKey(): Promise<{ key: string; apiKeyId?: string } | nul
   } catch (error) {
     console.error('Error getting API key:', error);
     return null;
+  }
+}
+
+// Enhance video quality using Segmind API
+async function enhanceVideo(generationId: string, videoUrl: string, storageInstance: any) {
+  try {
+    console.log(`🎯 Starting video enhancement for generation ${generationId} with video: ${videoUrl}`);
+    
+    // Check if we have Segmind API key
+    const segmindApiKey = process.env.SEGMIND_API_KEY;
+    if (!segmindApiKey) {
+      throw new Error("Segmind API key not configured");
+    }
+
+    // Call Segmind Video Enhancer API
+    const response = await fetch(SEGMIND_API_BASE, {
+      method: 'POST',
+      headers: {
+        'x-api-key': segmindApiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        video_url: videoUrl,
+        scale: 2, // 2x upscaling
+        version: "v1.4", // Use latest version
+      }),
+    });
+
+    const data = await response.json();
+    console.log(`🎯 Segmind API Response:`, JSON.stringify(data, null, 2));
+
+    if (!response.ok) {
+      throw new Error(data.detail || data.error || `Enhancement failed with status ${response.status}`);
+    }
+
+    // Segmind returns enhanced video URL directly
+    const enhancedVideoUrl = data.image || data.video_url || data.url;
+    if (!enhancedVideoUrl) {
+      throw new Error("No enhanced video URL returned from Segmind API");
+    }
+
+    // Update generation with enhanced video
+    await storageInstance.updateVideoGeneration(generationId, {
+      status: "completed",
+      enhancementStatus: "completed",
+      enhancedResultUrls: [enhancedVideoUrl],
+      enhancementCompletedAt: new Date(),
+    });
+
+    console.log(`✨ Video enhancement completed successfully for generation ${generationId}`);
+    console.log(`Enhanced video URL: ${enhancedVideoUrl}`);
+
+  } catch (error) {
+    console.error(`❌ Video enhancement failed for generation ${generationId}:`, error);
+    
+    // Update generation with enhancement failure
+    await storageInstance.updateVideoGeneration(generationId, {
+      status: "completed", // Original video is still available
+      enhancementStatus: "failed",
+      enhancementErrorMessage: error instanceof Error ? error.message : "Enhancement failed",
+      enhancementCompletedAt: new Date(),
+    });
   }
 }
 
@@ -538,22 +601,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let completedAt = null;
 
         if (data.data.successFlag === 1) {
-          status = "completed";
           resultUrls = data.data.response?.resultUrls || [];
           completedAt = new Date();
           console.log(`🎬 Video ${taskId} completed with ${resultUrls.length} result URLs`);
+          
+          // Check if this is a Veo3 Cao cấp model and needs enhancement
+          if (generation.model === "veo3" && generation.enhancementStatus === "none" && resultUrls.length > 0) {
+            // Start enhancement process
+            status = "enhancing";
+            await storageInstance.updateVideoGeneration(generation.id, {
+              status,
+              resultUrls,
+              completedAt,
+              enhancementStatus: "processing",
+              enhancementStartedAt: new Date(),
+            });
+            
+            // Trigger enhancement in background
+            enhanceVideo(generation.id, resultUrls[0], storageInstance);
+          } else {
+            // No enhancement needed or already done
+            status = "completed";
+            await storageInstance.updateVideoGeneration(generation.id, {
+              status,
+              resultUrls,
+              completedAt,
+            });
+          }
         } else if (data.data.successFlag === -1) {
           status = "failed";
           errorMessage = data.data.errorMessage || "Generation failed";
           console.log(`❌ Video ${taskId} failed: ${errorMessage}`);
+          await storageInstance.updateVideoGeneration(generation.id, {
+            status,
+            errorMessage,
+          });
         }
-
-        await storageInstance.updateVideoGeneration(generation.id, {
-          status,
-          resultUrls,
-          errorMessage,
-          completedAt,
-        });
       }
 
       res.json(data.data);
