@@ -174,7 +174,7 @@ export default function Admin() {
       const response = await apiRequest("POST", "/api/admin/test-segmind", data);
       return response;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: "Test thành công",
         description: data.enhancedVideoUrl ? "Video đã được nâng cao chất lượng!" : "API hoạt động nhưng không có video output",
@@ -668,17 +668,17 @@ export default function Admin() {
                 <div className="space-y-2 text-sm">
                   <div>
                     <span className="text-gray-400">Video gốc:</span>
-                    <code className="ml-2 text-blue-400">{testSegmindMutation.data.originalVideoUrl}</code>
+                    <code className="ml-2 text-blue-400">{(testSegmindMutation.data as any)?.originalVideoUrl}</code>
                   </div>
-                  {testSegmindMutation.data.enhancedVideoUrl && (
+                  {(testSegmindMutation.data as any)?.enhancedVideoUrl && (
                     <div>
                       <span className="text-gray-400">Video nâng cao:</span>
-                      <code className="ml-2 text-green-400">{testSegmindMutation.data.enhancedVideoUrl}</code>
+                      <code className="ml-2 text-green-400">{(testSegmindMutation.data as any)?.enhancedVideoUrl}</code>
                     </div>
                   )}
                   <div>
                     <span className="text-gray-400">Thời gian:</span>
-                    <span className="ml-2">{new Date(testSegmindMutation.data.timestamp).toLocaleString('vi-VN')}</span>
+                    <span className="ml-2">{new Date((testSegmindMutation.data as any)?.timestamp || Date.now()).toLocaleString('vi-VN')}</span>
                   </div>
                 </div>
               </div>
