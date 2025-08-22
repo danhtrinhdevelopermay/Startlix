@@ -487,9 +487,9 @@ export default function VideoGenerator() {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo Section */}
-            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-              <img src={starlixLogo} alt="Starlix Logo" className="h-6 sm:h-8 w-auto" />
-              <h1 className="hidden sm:block md-typescale-title-large text-[var(--md-sys-color-primary)]">
+            <div className="flex items-center space-x-3 sm:space-x-4 flex-shrink-0">
+              <img src={starlixLogo} alt="Starlix Logo" className="h-8 sm:h-10 w-auto" />
+              <h1 className="md-typescale-title-large text-[var(--md-sys-color-primary)]">
                 Starlix
               </h1>
             </div>
