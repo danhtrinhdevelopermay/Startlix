@@ -3,12 +3,14 @@ import { randomUUID } from "crypto";
 import { db } from "./db";
 import { users, videoGenerations, apiKeys, settings } from "@shared/schema";
 import { eq, desc, and } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserCredits(userId: string, credits: number): Promise<User | undefined>;
+  validateUserPassword(username: string, password: string): Promise<User | null>;
   
   createVideoGeneration(generation: InsertVideoGeneration, creditsUsed?: number): Promise<VideoGeneration>;
   updateVideoGeneration(id: string, updates: Partial<VideoGeneration>): Promise<VideoGeneration | undefined>;
@@ -64,9 +66,18 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id, credits: 100 };
+    const hashedPassword = await bcrypt.hash(insertUser.password, 10);
+    const user: User = { ...insertUser, id, password: hashedPassword, credits: 100 };
     this.users.set(id, user);
     return user;
+  }
+
+  async validateUserPassword(username: string, password: string): Promise<User | null> {
+    const user = await this.getUserByUsername(username);
+    if (!user) return null;
+    
+    const isValid = await bcrypt.compare(password, user.password);
+    return isValid ? user : null;
   }
 
   async updateUserCredits(userId: string, credits: number): Promise<User | undefined> {
@@ -206,8 +217,21 @@ export class DbStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const results = await db.insert(users).values({ ...insertUser, credits: 100 }).returning();
+    const hashedPassword = await bcrypt.hash(insertUser.password, 10);
+    const results = await db.insert(users).values({ 
+      ...insertUser, 
+      password: hashedPassword,
+      credits: 100 
+    }).returning();
     return results[0];
+  }
+
+  async validateUserPassword(username: string, password: string): Promise<User | null> {
+    const user = await this.getUserByUsername(username);
+    if (!user) return null;
+    
+    const isValid = await bcrypt.compare(password, user.password);
+    return isValid ? user : null;
   }
 
   async updateUserCredits(userId: string, credits: number): Promise<User | undefined> {
@@ -316,10 +340,11 @@ async function initializeDbStorage(): Promise<DbStorage> {
   const existingUser = await storage.getUser("default-user-id");
   if (!existingUser) {
     // Insert default user directly into database with proper typing
+    const hashedPassword = await bcrypt.hash("password", 10);
     await db.insert(users).values({
       id: "default-user-id" as const,
       username: "demo-user" as const,
-      password: "password" as const,
+      password: hashedPassword,
       credits: 150,
     }).onConflictDoNothing();
   }

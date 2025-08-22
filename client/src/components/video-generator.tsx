@@ -16,7 +16,9 @@ import CreditBalance from "@/components/credit-balance";
 import VideoPreview from "@/components/video-preview";
 import GenerationHistory from "@/components/generation-history";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Upload, Sparkles, Image, FileText } from "lucide-react";
+import { ChevronDown, Upload, Sparkles, Image, FileText, LogOut, User } from "lucide-react";
+import { useAuth, useLogout } from "@/hooks/useAuth";
+import { Link } from "wouter";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import loadingGif from "@assets/original-568544560f6ca1076a16e3428302e329_1755778026559.gif";
@@ -41,6 +43,8 @@ type TextToVideoForm = z.infer<typeof textToVideoSchema>;
 type ImageToVideoForm = z.infer<typeof imageToVideoSchema>;
 
 export default function VideoGenerator() {
+  const { user } = useAuth();
+  const logoutMutation = useLogout();
   const [activeTab, setActiveTab] = useState<"text-to-video" | "image-to-video">("text-to-video");
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
   const [uploadedImageName, setUploadedImageName] = useState<string>("");
@@ -63,6 +67,22 @@ export default function VideoGenerator() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const handleLogout = async () => {
+    try {
+      await logoutMutation.mutateAsync();
+      toast({
+        title: "Đăng xuất thành công",
+        description: "Bạn đã đăng xuất khỏi tài khoản",
+      });
+    } catch (error) {
+      toast({
+        title: "Lỗi đăng xuất",
+        description: "Không thể đăng xuất. Vui lòng thử lại.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Progress tracking for loading modal
   useEffect(() => {
@@ -272,7 +292,7 @@ export default function VideoGenerator() {
     generateVideoMutation.mutate({
       ...data,
       type: "text-to-video",
-      userId: "default-user-id",
+      userId: user?.id || "",
     });
   };
 
@@ -280,7 +300,7 @@ export default function VideoGenerator() {
     generateVideoMutation.mutate({
       ...data,
       type: "image-to-video",
-      userId: "default-user-id",
+      userId: user?.id || "",
     });
   };
 
@@ -298,12 +318,32 @@ export default function VideoGenerator() {
             </div>
             
             <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-3 text-sm">
+                <User className="w-4 h-4 text-purple-400" />
+                <span className="text-gray-300">
+                  {user?.username}
+                </span>
+              </div>
               <CreditBalance />
+              <Link to="/admin" data-testid="link-admin">
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  className="text-gray-300 border-gray-600 hover:bg-gray-700"
+                >
+                  Admin
+                </Button>
+              </Link>
               <Button 
-                className="bg-primary-600 hover:bg-primary-700 text-white font-medium"
-                data-testid="button-get-credits"
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                disabled={logoutMutation.isPending}
+                className="text-gray-300 border-gray-600 hover:bg-gray-700"
+                data-testid="button-logout"
               >
-                Get More Credits
+                <LogOut className="w-4 h-4 mr-2" />
+                {logoutMutation.isPending ? "Đang xuất..." : "Đăng xuất"}
               </Button>
             </div>
           </div>

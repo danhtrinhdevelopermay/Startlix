@@ -1,10 +1,18 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import session from "express-session";
 import { storage } from "./storage";
-import { insertVideoGenerationSchema } from "@shared/schema";
+import { insertVideoGenerationSchema, insertUserSchema, type User } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
 import FormData from "form-data";
+
+// Extend session interface
+declare module "express-session" {
+  interface SessionData {
+    userId: string;
+  }
+}
 
 // Configure multer for file uploads
 const upload = multer({ storage: multer.memoryStorage() });
@@ -152,21 +160,131 @@ async function startAutoRefresh() {
   autoRefreshInterval = setInterval(refreshCredits, 2 * 60 * 1000);
 }
 
+// Authentication middleware
+export function requireAuth(req: Request & { user?: User }, res: Response, next: NextFunction) {
+  if (!req.session?.userId) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+  next();
+}
+
+// Add user to request object middleware
+export async function addUserToRequest(req: Request & { user?: User }, res: Response, next: NextFunction) {
+  if (req.session?.userId) {
+    try {
+      const storageInstance = await storage();
+      const user = await storageInstance.getUser(req.session.userId);
+      if (user) {
+        req.user = user;
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    }
+  }
+  next();
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Start auto refresh on server start
   startAutoRefresh();
-  // Get user credits
-  app.get("/api/credits", async (req, res) => {
+  
+  // Session middleware
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'your-session-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  }));
+  
+  // Add user to request middleware
+  app.use(addUserToRequest);
+  // Auth endpoints
+  app.post("/api/register", async (req, res) => {
     try {
-      const userId = "default-user-id"; // For demo, use default user
+      const validatedData = insertUserSchema.parse(req.body);
       const storageInstance = await storage();
-      const user = await storageInstance.getUser(userId);
+      
+      // Check if username already exists
+      const existingUser = await storageInstance.getUserByUsername(validatedData.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+      
+      const user = await storageInstance.createUser(validatedData);
+      
+      // Log user in automatically
+      req.session!.userId = user.id;
+      
+      res.status(201).json({ 
+        user: { id: user.id, username: user.username, credits: user.credits } 
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      console.error('Registration error:', error);
+      res.status(500).json({ message: "Failed to register user" });
+    }
+  });
+
+  app.post("/api/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password required" });
+      }
+      
+      const storageInstance = await storage();
+      const user = await storageInstance.validateUserPassword(username, password);
       
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(401).json({ message: "Invalid username or password" });
       }
+      
+      req.session!.userId = user.id;
+      
+      res.json({ 
+        user: { id: user.id, username: user.username, credits: user.credits } 
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ message: "Failed to login" });
+    }
+  });
 
-      res.json({ credits: user.credits });
+  app.post("/api/logout", (req, res) => {
+    req.session?.destroy(() => {
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+
+  app.get("/api/auth/user", async (req: Request & { user?: User }, res: Response) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    if (req.user) {
+      res.json({ 
+        user: { id: req.user.id, username: req.user.username, credits: req.user.credits } 
+      });
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  });
+
+  // Get user credits  
+  app.get("/api/credits", requireAuth, async (req: Request & { user?: User }, res: Response) => {
+    try {
+      if (req.user) {
+        res.json({ credits: req.user.credits });
+      } else {
+        res.status(404).json({ message: "User not found" });
+      }
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch credits" });
     }
@@ -214,11 +332,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate video
-  app.post("/api/generate-video", async (req, res) => {
+  app.post("/api/generate-video", requireAuth, async (req: Request & { user?: User }, res: Response) => {
     try {
-      const userId = "default-user-id"; // For demo, use default user
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const storageInstance = await storage();
-      const user = await storageInstance.getUser(userId);
+      const user = req.user;
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -238,7 +359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create video generation record  
       const generation = await storageInstance.createVideoGeneration({
         ...validatedData,
-        userId,
+        userId: user.id,
       }, totalCredits);
 
       // Get API key with credits
@@ -287,7 +408,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: "processing",
       });
 
-      await storageInstance.updateUserCredits(userId, user.credits - totalCredits);
+      await storageInstance.updateUserCredits(user.id, user.credits - totalCredits);
 
       res.json({ 
         taskId: data.data.taskId,
@@ -428,11 +549,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's video generations
-  app.get("/api/generations", async (req, res) => {
+  app.get("/api/generations", requireAuth, async (req: Request & { user?: User }, res: Response) => {
     try {
-      const userId = "default-user-id"; // For demo, use default user
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const storageInstance = await storage();
-      const generations = await storageInstance.getUserVideoGenerations(userId);
+      const generations = await storageInstance.getUserVideoGenerations(req.user.id);
       res.json(generations);
     } catch (error) {
       console.error('Generations fetch error:', error);
