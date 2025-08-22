@@ -746,25 +746,25 @@ export default function VideoGenerator() {
                 </Button>
               </Link>
               
-              {/* Link Vượt Button */}
-              <Link href="/reward-links">
+              {/* Nhận Credit Button */}
+              <Link href="/get-credit">
                 <Button 
                   variant="outlined"
                   size="sm"
                   className="hidden sm:flex"
-                  data-testid="nav-reward-links"
+                  data-testid="nav-get-credit"
                 >
                   <LinkRegular className="w-4 h-4 mr-1 sm:mr-2" />
-                  <span className="hidden md:inline">Link Vượt</span>
+                  <span className="hidden md:inline">Nhận Credit</span>
                 </Button>
               </Link>
               
-              {/* Mobile Link Vượt Button */}
-              <Link href="/reward-links" className="sm:hidden">
+              {/* Mobile Nhận Credit Button */}
+              <Link href="/get-credit" className="sm:hidden">
                 <Button 
                   variant="text"
                   size="sm"
-                  data-testid="nav-reward-links-mobile"
+                  data-testid="nav-get-credit-mobile"
                 >
                   <LinkRegular className="w-4 h-4" />
                 </Button>

@@ -91,16 +91,16 @@ export const externalApiKeys = pgTable("external_api_keys", {
   lastResetAt: timestamp("last_reset_at").defaultNow(), // For monthly reset
 });
 
-// Reward Links for LinkBulks integration
-export const rewardLinks = pgTable("reward_links", {
+// Reward Claims for LinkBulks integration - user claims credits via bypass links
+export const rewardClaims = pgTable("reward_claims", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
-  targetUrl: text("target_url").notNull(), // Link đích mà người dùng muốn tạo
   bypassUrl: text("bypass_url").notNull(), // Link vượt từ LinkBulks
+  claimToken: varchar("claim_token").notNull().unique(), // Unique token để claim credit
   rewardAmount: integer("reward_amount").notNull().default(1), // Số credit thưởng
-  isUsed: boolean("is_used").notNull().default(false), // Đã claim reward chưa
+  isClaimed: boolean("is_claimed").notNull().default(false), // Đã claim chưa
   createdAt: timestamp("created_at").defaultNow(),
-  usedAt: timestamp("used_at"),
+  claimedAt: timestamp("claimed_at"),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -156,14 +156,13 @@ export const insertExternalApiKeySchema = createInsertSchema(externalApiKeys).om
   lastResetAt: true,
 });
 
-export const insertRewardLinkSchema = createInsertSchema(rewardLinks).omit({
+export const insertRewardClaimSchema = createInsertSchema(rewardClaims).omit({
   id: true,
   bypassUrl: true,
-  isUsed: true,
+  claimToken: true,
+  isClaimed: true,
   createdAt: true,
-  usedAt: true,
-}).extend({
-  targetUrl: z.string().url("Target URL must be a valid URL"),
+  claimedAt: true,
 });
 
 // API request schema for external API
@@ -189,5 +188,5 @@ export type VideoWatchHistory = typeof videoWatchHistory.$inferSelect;
 export type InsertExternalApiKey = z.infer<typeof insertExternalApiKeySchema>;
 export type ExternalApiKey = typeof externalApiKeys.$inferSelect;
 export type ExternalApiGenerate = z.infer<typeof externalApiGenerateSchema>;
-export type InsertRewardLink = z.infer<typeof insertRewardLinkSchema>;
-export type RewardLink = typeof rewardLinks.$inferSelect;
+export type InsertRewardClaim = z.infer<typeof insertRewardClaimSchema>;
+export type RewardClaim = typeof rewardClaims.$inferSelect;

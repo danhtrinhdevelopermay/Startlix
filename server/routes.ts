@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
 import { storage } from "./storage";
-import { insertVideoGenerationSchema, insertUserSchema, insertRewardVideoSchema, insertVideoWatchHistorySchema, type User, type ExternalApiKey, insertRewardLinkSchema, type RewardLink } from "@shared/schema";
+import { insertVideoGenerationSchema, insertUserSchema, insertRewardVideoSchema, insertVideoWatchHistorySchema, type User, type ExternalApiKey, insertRewardClaimSchema, type RewardClaim } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
 import FormData from "form-data";
@@ -436,85 +436,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
-  // Create reward link
-  app.post("/api/create-reward-link", requireAuth, async (req: Request & { user?: User }, res: Response) => {
+  // Get credit - creates bypass link via LinkBulks
+  app.post("/api/get-credit", requireAuth, async (req: Request & { user?: User }, res: Response) => {
     try {
       if (!req.user) {
         return res.status(401).json({ message: "Authentication required" });
       }
 
-      const validatedData = insertRewardLinkSchema.parse(req.body);
-      
-      // Create bypass link using LinkBulks API (currently mocked)
-      const linkResult = await createLinkBulksLink(validatedData.targetUrl);
-      
-      if (!linkResult.success) {
-        return res.status(400).json({ message: linkResult.error || "Failed to create bypass link" });
-      }
-
       const storageInstance = await storage();
-      const rewardLink = await storageInstance.createRewardLink(
-        {
-          ...validatedData,
-          userId: req.user.id,
-        },
-        linkResult.bypassUrl!
-      );
-
-      res.status(201).json({
-        id: rewardLink.id,
-        bypassUrl: rewardLink.bypassUrl,
-        targetUrl: rewardLink.targetUrl,
-        rewardAmount: rewardLink.rewardAmount,
-        createdAt: rewardLink.createdAt
+      
+      // Create reward claim and get bypass link from LinkBulks
+      const result = await storageInstance.createRewardClaim(req.user.id);
+      
+      res.json({
+        success: true,
+        bypassUrl: result.bypassUrl,
+        message: "Link vượt đã được tạo! Hãy hoàn thành link để nhận 1 credit."
       });
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid input", errors: error.errors });
-      }
-      console.error('Create reward link error:', error);
-      res.status(500).json({ message: "Failed to create reward link" });
+      console.error("Error creating reward claim:", error);
+      res.status(500).json({ message: "Không thể tạo link vượt. Vui lòng thử lại." });
     }
   });
 
-  // Get user's reward links
-  app.get("/api/reward-links", requireAuth, async (req: Request & { user?: User }, res: Response) => {
+  // Get user's reward claims
+  app.get("/api/reward-claims", requireAuth, async (req: Request & { user?: User }, res: Response) => {
     try {
       if (!req.user) {
         return res.status(401).json({ message: "Authentication required" });
       }
 
       const storageInstance = await storage();
-      const rewardLinks = await storageInstance.getUserRewardLinks(req.user.id);
+      const rewardClaims = await storageInstance.getRewardClaims(req.user.id);
       
-      res.json(rewardLinks);
+      res.json(rewardClaims);
     } catch (error) {
-      console.error('Get reward links error:', error);
-      res.status(500).json({ message: "Failed to fetch reward links" });
+      console.error('Get reward claims error:', error);
+      res.status(500).json({ message: "Failed to fetch reward claims" });
     }
   });
 
-  // Claim reward from a reward link
-  app.post("/api/claim-reward/:rewardId", async (req, res) => {
+  // Claim reward endpoint (visited after user completes bypass link)
+  app.get("/api/claim-reward/:token", async (req: Request, res: Response) => {
     try {
-      const { rewardId } = req.params;
-      const { userId } = req.body;
-      
-      if (!userId) {
-        return res.status(400).json({ message: "User ID is required" });
-      }
-
+      const { token } = req.params;
       const storageInstance = await storage();
-      const result = await storageInstance.claimReward(rewardId, userId);
+      
+      const result = await storageInstance.claimReward(token);
       
       if (result.success) {
-        res.json(result);
+        // Redirect to success page or show success message
+        res.send(`
+          <html>
+            <head>
+              <title>Chúc mừng!</title>
+              <meta charset="utf-8">
+              <style>
+                body { font-family: Arial; text-align: center; padding: 50px; background: #f5f5f5; }
+                .success { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                .success h1 { color: #4CAF50; margin-bottom: 20px; }
+                .btn { background: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 20px; }
+              </style>
+            </head>
+            <body>
+              <div class="success">
+                <h1>🎉 Chúc mừng!</h1>
+                <p>Bạn đã nhận được <strong>${result.rewardAmount} credit</strong>!</p>
+                <p>Credit đã được cộng vào tài khoản của bạn.</p>
+                <a href="/" class="btn">Về trang chủ</a>
+              </div>
+            </body>
+          </html>
+        `);
       } else {
-        res.status(400).json(result);
+        res.status(400).send(`
+          <html>
+            <head>
+              <title>Link không hợp lệ</title>
+              <meta charset="utf-8">
+              <style>
+                body { font-family: Arial; text-align: center; padding: 50px; background: #f5f5f5; }
+                .error { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                .error h1 { color: #f44336; margin-bottom: 20px; }
+                .btn { background: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 20px; }
+              </style>
+            </head>
+            <body>
+              <div class="error">
+                <h1>❌ Link không hợp lệ</h1>
+                <p>Link này đã được sử dụng hoặc không tồn tại.</p>
+                <a href="/" class="btn">Về trang chủ</a>
+              </div>
+            </body>
+          </html>
+        `);
       }
     } catch (error) {
-      console.error('Claim reward error:', error);
-      res.status(500).json({ message: "Failed to claim reward" });
+      console.error("Error claiming reward:", error);
+      res.status(500).send(`
+        <html>
+          <head>
+            <title>Lỗi hệ thống</title>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: Arial; text-align: center; padding: 50px; background: #f5f5f5; }
+              .error { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+              .error h1 { color: #f44336; margin-bottom: 20px; }
+              .btn { background: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 20px; }
+            </style>
+          </head>
+          <body>
+            <div class="error">
+              <h1>❌ Lỗi hệ thống</h1>
+              <p>Không thể xử lý yêu cầu. Vui lòng thử lại sau.</p>
+              <a href="/" class="btn">Về trang chủ</a>
+            </div>
+          </body>
+        </html>
+      `);
     }
   });
 
