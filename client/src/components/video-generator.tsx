@@ -21,8 +21,24 @@ import { useAuth, useLogout } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import loadingGif from "@assets/original-568544560f6ca1076a16e3428302e329_1755778026559.gif";
 import starlixLogo from "@assets/Dự án mới 32 [6F4A9A3]_1755821175424.png";
+
+// 3D Sphere Loading Component
+const LoadingSphere = ({ size = "normal" }: { size?: "normal" | "small" }) => {
+  return (
+    <div className={`loading-sphere ${size === "small" ? "loading-sphere-small" : ""}`}>
+      <div className="sphere-glow"></div>
+      <div className="sphere-container">
+        <div className="sphere-ring"></div>
+        <div className="sphere-ring"></div>
+        <div className="sphere-ring"></div>
+        <div className="sphere-ring"></div>
+        <div className="sphere-ring"></div>
+        <div className="sphere-ring"></div>
+      </div>
+    </div>
+  );
+};
 
 const textToVideoSchema = z.object({
   prompt: z.string().min(10, "Prompt must be at least 10 characters").max(500, "Prompt must be less than 500 characters"),
@@ -848,11 +864,9 @@ export default function VideoGenerator() {
           <DialogOverlay className="fixed inset-0 z-50 bg-black/90 backdrop-blur-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
           <DialogContent className="fixed left-[50%] top-[50%] z-50 w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] bg-dark-800/95 backdrop-blur-md border-dark-600 p-8 shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-2xl">
             <div className="text-center text-gray-400 w-full">
-              <img 
-                src={loadingGif} 
-                alt="Loading video generation" 
-                className="w-24 h-24 mx-auto mb-6" 
-              />
+              <div className="mb-6">
+                <LoadingSphere />
+              </div>
               <h2 className="text-2xl font-bold text-white mb-2">Đang tạo video...</h2>
               <p className="text-lg mb-6 text-gray-300">Vui lòng chờ trong giây lát</p>
               

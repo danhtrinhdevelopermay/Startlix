@@ -6,7 +6,23 @@ import { Progress } from "@/components/ui/progress";
 import { Play, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ErrorPopup from "@/components/error-popup";
-import loadingGif from "@assets/original-568544560f6ca1076a16e3428302e329_1755778026559.gif";
+
+// 3D Sphere Loading Component
+const LoadingSphere = ({ size = "normal" }: { size?: "normal" | "small" }) => {
+  return (
+    <div className={`loading-sphere ${size === "small" ? "loading-sphere-small" : ""}`}>
+      <div className="sphere-glow"></div>
+      <div className="sphere-container">
+        <div className="sphere-ring"></div>
+        <div className="sphere-ring"></div>
+        <div className="sphere-ring"></div>
+        <div className="sphere-ring"></div>
+        <div className="sphere-ring"></div>
+        <div className="sphere-ring"></div>
+      </div>
+    </div>
+  );
+};
 
 interface VideoPreviewProps {
   videoUrl: string;
@@ -187,11 +203,9 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
             data-testid="preview-loading"
           >
             <div className="text-center text-gray-400 w-full max-w-md px-8">
-              <img 
-                src={loadingGif} 
-                alt="Loading video generation" 
-                className="w-20 h-20 mx-auto mb-4" 
-              />
+              <div className="mb-4">
+                <LoadingSphere size="small" />
+              </div>
               <p className="text-sm mb-4">Generating your video...</p>
               
               <div className="mb-3">
