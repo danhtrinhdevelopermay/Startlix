@@ -338,7 +338,7 @@ export default function Admin() {
                     {summary?.emptyKeys || apiKeys.filter((k: ApiKey) => k.credits === 0).length}
                   </p>
                 </div>
-                <AlertCircle className="w-8 h-8 text-red-500" />
+                <ErrorCircleRegular className="w-8 h-8 text-red-500" />
               </div>
             </CardContent>
           </Card>
