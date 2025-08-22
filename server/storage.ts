@@ -1,7 +1,7 @@
-import { type User, type InsertUser, type VideoGeneration, type InsertVideoGeneration, type ApiKey, type InsertApiKey, type Settings, type InsertSettings, type RewardVideo, type InsertRewardVideo, type VideoWatchHistory, type InsertVideoWatchHistory, type ExternalApiKey, type InsertExternalApiKey } from "@shared/schema";
+import { type User, type InsertUser, type VideoGeneration, type InsertVideoGeneration, type ApiKey, type InsertApiKey, type Settings, type InsertSettings, type RewardVideo, type InsertRewardVideo, type VideoWatchHistory, type InsertVideoWatchHistory, type ExternalApiKey, type InsertExternalApiKey, type RewardLink, type InsertRewardLink } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { users, videoGenerations, apiKeys, settings, rewardVideos, videoWatchHistory, externalApiKeys } from "@shared/schema";
+import { users, videoGenerations, apiKeys, settings, rewardVideos, videoWatchHistory, externalApiKeys, rewardLinks } from "@shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -50,6 +50,13 @@ export interface IStorage {
   getUserExternalApiKeys(userId: string): Promise<ExternalApiKey[]>;
   incrementExternalApiKeyUsage(id: string, creditsUsed: number): Promise<ExternalApiKey | undefined>;
   resetMonthlyUsage(id: string): Promise<ExternalApiKey | undefined>;
+  
+  // Reward Link methods
+  createRewardLink(rewardLink: InsertRewardLink, bypassUrl: string): Promise<RewardLink>;
+  getRewardLink(id: string): Promise<RewardLink | undefined>;
+  getUserRewardLinks(userId: string): Promise<RewardLink[]>;
+  updateRewardLink(id: string, updates: Partial<RewardLink>): Promise<RewardLink | undefined>;
+  claimReward(id: string, userId: string): Promise<{ success: boolean; reward?: number; message: string }>;
 }
 
 export class MemStorage implements IStorage {
@@ -60,6 +67,7 @@ export class MemStorage implements IStorage {
   private rewardVideos: Map<string, RewardVideo>;
   private videoWatchHistories: Map<string, VideoWatchHistory>;
   private externalApiKeys: Map<string, ExternalApiKey>;
+  private rewardLinks: Map<string, RewardLink>;
 
   constructor() {
     this.users = new Map();
@@ -69,6 +77,7 @@ export class MemStorage implements IStorage {
     this.rewardVideos = new Map();
     this.videoWatchHistories = new Map();
     this.externalApiKeys = new Map();
+    this.rewardLinks = new Map();
     
     // Create a default user for demo purposes
     const defaultUser: User = {
@@ -377,6 +386,68 @@ export class MemStorage implements IStorage {
     }
     return undefined;
   }
+
+  // Reward Link methods
+  async createRewardLink(insertRewardLink: InsertRewardLink, bypassUrl: string): Promise<RewardLink> {
+    const id = randomUUID();
+    const rewardLink: RewardLink = {
+      ...insertRewardLink,
+      id,
+      bypassUrl,
+      isUsed: false,
+      createdAt: new Date(),
+      usedAt: null,
+    };
+    this.rewardLinks.set(id, rewardLink);
+    return rewardLink;
+  }
+
+  async getRewardLink(id: string): Promise<RewardLink | undefined> {
+    return this.rewardLinks.get(id);
+  }
+
+  async getUserRewardLinks(userId: string): Promise<RewardLink[]> {
+    return Array.from(this.rewardLinks.values()).filter(
+      (link) => link.userId === userId
+    );
+  }
+
+  async updateRewardLink(id: string, updates: Partial<RewardLink>): Promise<RewardLink | undefined> {
+    const link = this.rewardLinks.get(id);
+    if (link) {
+      const updatedLink = { ...link, ...updates };
+      this.rewardLinks.set(id, updatedLink);
+      return updatedLink;
+    }
+    return undefined;
+  }
+
+  async claimReward(id: string, userId: string): Promise<{ success: boolean; reward?: number; message: string }> {
+    const link = this.rewardLinks.get(id);
+    if (!link) {
+      return { success: false, message: "Link không tồn tại" };
+    }
+    
+    if (link.isUsed) {
+      return { success: false, message: "Link đã được sử dụng" };
+    }
+    
+    // Mark link as used
+    const updatedLink = { ...link, isUsed: true, usedAt: new Date() };
+    this.rewardLinks.set(id, updatedLink);
+    
+    // Update user credits
+    const user = await this.getUser(userId);
+    if (user) {
+      await this.updateUserCredits(userId, user.credits + link.rewardAmount);
+    }
+    
+    return { 
+      success: true, 
+      reward: link.rewardAmount, 
+      message: `Bạn đã nhận được ${link.rewardAmount} credit!` 
+    };
+  }
 }
 
 export class DbStorage implements IStorage {
@@ -596,6 +667,67 @@ export class DbStorage implements IStorage {
       .where(eq(externalApiKeys.id, id))
       .returning();
     return results[0];
+  }
+
+  // Reward Link methods
+  async createRewardLink(insertRewardLink: InsertRewardLink, bypassUrl: string): Promise<RewardLink> {
+    const fullRewardLink = {
+      ...insertRewardLink,
+      bypassUrl,
+      isUsed: false,
+    };
+    const results = await db.insert(rewardLinks).values(fullRewardLink).returning();
+    return results[0];
+  }
+
+  async getRewardLink(id: string): Promise<RewardLink | undefined> {
+    const results = await db.select().from(rewardLinks).where(eq(rewardLinks.id, id));
+    return results[0];
+  }
+
+  async getUserRewardLinks(userId: string): Promise<RewardLink[]> {
+    return await db.select().from(rewardLinks).where(eq(rewardLinks.userId, userId)).orderBy(desc(rewardLinks.createdAt));
+  }
+
+  async updateRewardLink(id: string, updates: Partial<RewardLink>): Promise<RewardLink | undefined> {
+    const results = await db.update(rewardLinks).set(updates).where(eq(rewardLinks.id, id)).returning();
+    return results[0];
+  }
+
+  async claimReward(id: string, userId: string): Promise<{ success: boolean; reward?: number; message: string }> {
+    // Get the reward link
+    const link = await this.getRewardLink(id);
+    if (!link) {
+      return { success: false, message: "Link không tồn tại" };
+    }
+    
+    if (link.isUsed) {
+      return { success: false, message: "Link đã được sử dụng" };
+    }
+    
+    try {
+      // Start transaction
+      await db.transaction(async (tx) => {
+        // Mark link as used
+        await tx.update(rewardLinks)
+          .set({ isUsed: true, usedAt: new Date() })
+          .where(eq(rewardLinks.id, id));
+        
+        // Update user credits
+        await tx.update(users)
+          .set({ credits: sql`credits + ${link.rewardAmount}` })
+          .where(eq(users.id, userId));
+      });
+      
+      return { 
+        success: true, 
+        reward: link.rewardAmount, 
+        message: `Bạn đã nhận được ${link.rewardAmount} credit!` 
+      };
+    } catch (error) {
+      console.error('Error claiming reward:', error);
+      return { success: false, message: "Lỗi khi claim reward" };
+    }
   }
 }
 

@@ -91,6 +91,18 @@ export const externalApiKeys = pgTable("external_api_keys", {
   lastResetAt: timestamp("last_reset_at").defaultNow(), // For monthly reset
 });
 
+// Reward Links for LinkBulks integration
+export const rewardLinks = pgTable("reward_links", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  targetUrl: text("target_url").notNull(), // Link đích mà người dùng muốn tạo
+  bypassUrl: text("bypass_url").notNull(), // Link vượt từ LinkBulks
+  rewardAmount: integer("reward_amount").notNull().default(1), // Số credit thưởng
+  isUsed: boolean("is_used").notNull().default(false), // Đã claim reward chưa
+  createdAt: timestamp("created_at").defaultNow(),
+  usedAt: timestamp("used_at"),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -144,6 +156,16 @@ export const insertExternalApiKeySchema = createInsertSchema(externalApiKeys).om
   lastResetAt: true,
 });
 
+export const insertRewardLinkSchema = createInsertSchema(rewardLinks).omit({
+  id: true,
+  bypassUrl: true,
+  isUsed: true,
+  createdAt: true,
+  usedAt: true,
+}).extend({
+  targetUrl: z.string().url("Target URL must be a valid URL"),
+});
+
 // API request schema for external API
 export const externalApiGenerateSchema = z.object({
   prompt: z.string().min(10, "Prompt must be at least 10 characters").max(500, "Prompt must be less than 500 characters"),
@@ -167,3 +189,5 @@ export type VideoWatchHistory = typeof videoWatchHistory.$inferSelect;
 export type InsertExternalApiKey = z.infer<typeof insertExternalApiKeySchema>;
 export type ExternalApiKey = typeof externalApiKeys.$inferSelect;
 export type ExternalApiGenerate = z.infer<typeof externalApiGenerateSchema>;
+export type InsertRewardLink = z.infer<typeof insertRewardLinkSchema>;
+export type RewardLink = typeof rewardLinks.$inferSelect;

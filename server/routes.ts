@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
 import { storage } from "./storage";
-import { insertVideoGenerationSchema, insertUserSchema, insertRewardVideoSchema, insertVideoWatchHistorySchema, type User, type ExternalApiKey } from "@shared/schema";
+import { insertVideoGenerationSchema, insertUserSchema, insertRewardVideoSchema, insertVideoWatchHistorySchema, type User, type ExternalApiKey, insertRewardLinkSchema, type RewardLink } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
 import FormData from "form-data";
@@ -414,6 +414,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch credits" });
+    }
+  });
+
+  // Mock function for LinkBulks API - replace with real API when available
+  async function createLinkBulksLink(targetUrl: string): Promise<{ success: boolean; bypassUrl?: string; error?: string }> {
+    try {
+      // TODO: Replace this mock with actual LinkBulks API call
+      // const response = await fetch('https://api.linkbulks.com/create', {
+      //   method: 'POST',
+      //   headers: { 'Authorization': 'Bearer YOUR_API_KEY' },
+      //   body: JSON.stringify({ url: targetUrl })
+      // });
+      
+      // Mock response for now - generates a fake bypass URL
+      const mockBypassUrl = `https://linkbulks.com/bypass/${Math.random().toString(36).substr(2, 8)}`;
+      
+      return { success: true, bypassUrl: mockBypassUrl };
+    } catch (error) {
+      return { success: false, error: 'Failed to create bypass link' };
+    }
+  }
+
+  // Create reward link
+  app.post("/api/create-reward-link", requireAuth, async (req: Request & { user?: User }, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const validatedData = insertRewardLinkSchema.parse(req.body);
+      
+      // Create bypass link using LinkBulks API (currently mocked)
+      const linkResult = await createLinkBulksLink(validatedData.targetUrl);
+      
+      if (!linkResult.success) {
+        return res.status(400).json({ message: linkResult.error || "Failed to create bypass link" });
+      }
+
+      const storageInstance = await storage();
+      const rewardLink = await storageInstance.createRewardLink(
+        {
+          ...validatedData,
+          userId: req.user.id,
+        },
+        linkResult.bypassUrl!
+      );
+
+      res.status(201).json({
+        id: rewardLink.id,
+        bypassUrl: rewardLink.bypassUrl,
+        targetUrl: rewardLink.targetUrl,
+        rewardAmount: rewardLink.rewardAmount,
+        createdAt: rewardLink.createdAt
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      console.error('Create reward link error:', error);
+      res.status(500).json({ message: "Failed to create reward link" });
+    }
+  });
+
+  // Get user's reward links
+  app.get("/api/reward-links", requireAuth, async (req: Request & { user?: User }, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const storageInstance = await storage();
+      const rewardLinks = await storageInstance.getUserRewardLinks(req.user.id);
+      
+      res.json(rewardLinks);
+    } catch (error) {
+      console.error('Get reward links error:', error);
+      res.status(500).json({ message: "Failed to fetch reward links" });
+    }
+  });
+
+  // Claim reward from a reward link
+  app.post("/api/claim-reward/:rewardId", async (req, res) => {
+    try {
+      const { rewardId } = req.params;
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+
+      const storageInstance = await storage();
+      const result = await storageInstance.claimReward(rewardId, userId);
+      
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(400).json(result);
+      }
+    } catch (error) {
+      console.error('Claim reward error:', error);
+      res.status(500).json({ message: "Failed to claim reward" });
     }
   });
 

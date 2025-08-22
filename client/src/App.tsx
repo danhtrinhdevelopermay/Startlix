@@ -9,6 +9,7 @@ import Admin from "@/pages/admin";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import RewardVideos from "@/pages/reward-videos";
+import RewardLinks from "@/pages/reward-links";
 import NotFound from "@/pages/not-found";
 import GradientBackground from "@/components/GradientBackground";
 import { MD3FullPageLoading } from "@/components/md3-loading-indicator";
@@ -35,6 +36,7 @@ function Router() {
             <Route path="/" component={Home} />
             <Route path="/admin" component={Admin} />
             <Route path="/reward-videos" component={RewardVideos} />
+            <Route path="/reward-links" component={RewardLinks} />
             {/* Redirect to home if trying to access login/register while authenticated */}
             <Route path="/login" component={Home} />
             <Route path="/register" component={Home} />
