@@ -16,10 +16,10 @@ import CreditBalance from "@/components/credit-balance";
 import VideoPreview from "@/components/video-preview";
 import GenerationHistory from "@/components/generation-history";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Upload, Sparkles, Image, FileText, LogOut, User } from "lucide-react";
+import { ChevronDown, Upload, Sparkles, Image, FileText, LogOut, User, Monitor, Smartphone, Square, Zap, Trophy } from "lucide-react";
 import { useAuth, useLogout } from "@/hooks/useAuth";
 import { Link } from "wouter";
-import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogOverlay, DialogPortal, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import loadingGif from "@assets/original-568544560f6ca1076a16e3428302e329_1755778026559.gif";
 import starlixLogo from "@assets/Dự án mới 32 [6F4A9A3]_1755821175424.png";
@@ -42,11 +42,64 @@ const imageToVideoSchema = z.object({
 type TextToVideoForm = z.infer<typeof textToVideoSchema>;
 type ImageToVideoForm = z.infer<typeof imageToVideoSchema>;
 
+// Aspect ratio options with visual elements
+const aspectRatioOptions = [
+  {
+    value: "16:9",
+    label: "Landscape",
+    description: "Widescreen format, perfect for desktop viewing and YouTube",
+    icon: Monitor,
+    preview: "████████████",
+    dimensions: "1920 × 1080"
+  },
+  {
+    value: "9:16", 
+    label: "Portrait",
+    description: "Vertical format, ideal for mobile viewing and TikTok",
+    icon: Smartphone,
+    preview: "████\n████\n████",
+    dimensions: "1080 × 1920"
+  },
+  {
+    value: "1:1",
+    label: "Square", 
+    description: "Perfect square format for Instagram and social media",
+    icon: Square,
+    preview: "████████\n████████",
+    dimensions: "1080 × 1080"
+  }
+];
+
+// Model options with visual elements
+const modelOptions = [
+  {
+    value: "veo3",
+    label: "Veo3 Premium",
+    description: "Highest quality AI video generation with superior detail and realism",
+    icon: Trophy,
+    badge: "Best Quality",
+    features: ["4K Resolution", "Advanced AI", "Realistic Motion"],
+    credits: 5
+  },
+  {
+    value: "veo3_fast",
+    label: "Veo3 Fast",
+    description: "Quick generation with good quality, perfect for rapid prototyping",
+    icon: Zap,
+    badge: "Fast Generation",
+    features: ["HD Resolution", "Quick Processing", "Good Quality"],
+    credits: 3
+  }
+];
+
 export default function VideoGenerator() {
   const { user } = useAuth();
   const logoutMutation = useLogout();
   const [activeTab, setActiveTab] = useState<"text-to-video" | "image-to-video">("text-to-video");
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
+  const [aspectRatioModalOpen, setAspectRatioModalOpen] = useState(false);
+  const [modelModalOpen, setModelModalOpen] = useState(false);
+  const [currentFormType, setCurrentFormType] = useState<"text" | "image">("text");
   const [uploadedImageName, setUploadedImageName] = useState<string>("");
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string>("");
   const [currentTaskId, setCurrentTaskId] = useState<string>("");
@@ -428,21 +481,21 @@ export default function VideoGenerator() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel className="text-gray-300">Aspect Ratio</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger 
-                                    className="bg-dark-600 border-dark-500 text-white focus:ring-2 focus:ring-primary-500"
-                                    data-testid="select-aspect-ratio"
-                                  >
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent className="bg-dark-600 border-dark-500 max-h-[120px] md:max-h-[200px] overflow-y-auto z-50 max-w-[200px] md:max-w-[250px] fixed">
-                                  <SelectItem value="16:9">16:9 (Landscape)</SelectItem>
-                                  <SelectItem value="9:16">9:16 (Portrait)</SelectItem>
-                                  <SelectItem value="1:1">1:1 (Square)</SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <FormControl>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="w-full justify-between bg-dark-600 border-dark-500 text-white hover:bg-dark-500"
+                                  onClick={() => {
+                                    setCurrentFormType("text");
+                                    setAspectRatioModalOpen(true);
+                                  }}
+                                  data-testid="button-select-aspect-ratio"
+                                >
+                                  {field.value ? aspectRatioOptions.find(opt => opt.value === field.value)?.label : "Choose aspect ratio"}
+                                  <ChevronDown className="h-4 w-4" />
+                                </Button>
+                              </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -454,20 +507,21 @@ export default function VideoGenerator() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel className="text-gray-300">Model</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger 
-                                    className="bg-dark-600 border-dark-500 text-white focus:ring-2 focus:ring-primary-500"
-                                    data-testid="select-model"
-                                  >
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent className="bg-dark-600 border-dark-500 max-h-[120px] md:max-h-[200px] overflow-y-auto z-50 max-w-[200px] md:max-w-[250px] fixed">
-                                  <SelectItem value="veo3">Veo3 (Best Quality)</SelectItem>
-                                  <SelectItem value="veo3_fast">Veo3 Fast</SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <FormControl>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="w-full justify-between bg-dark-600 border-dark-500 text-white hover:bg-dark-500"
+                                  onClick={() => {
+                                    setCurrentFormType("text");
+                                    setModelModalOpen(true);
+                                  }}
+                                  data-testid="button-select-model"
+                                >
+                                  {field.value ? modelOptions.find(opt => opt.value === field.value)?.label : "Choose model"}
+                                  <ChevronDown className="h-4 w-4" />
+                                </Button>
+                              </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -628,21 +682,21 @@ export default function VideoGenerator() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel className="text-gray-300">Aspect Ratio</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger 
-                                    className="bg-dark-600 border-dark-500 text-white focus:ring-2 focus:ring-primary-500"
-                                    data-testid="select-image-aspect-ratio"
-                                  >
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent className="bg-dark-600 border-dark-500 max-h-[120px] md:max-h-[200px] overflow-y-auto z-50 max-w-[200px] md:max-w-[250px] fixed">
-                                  <SelectItem value="16:9">16:9 (Landscape)</SelectItem>
-                                  <SelectItem value="9:16">9:16 (Portrait)</SelectItem>
-                                  <SelectItem value="1:1">1:1 (Square)</SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <FormControl>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="w-full justify-between bg-dark-600 border-dark-500 text-white hover:bg-dark-500"
+                                  onClick={() => {
+                                    setCurrentFormType("image");
+                                    setAspectRatioModalOpen(true);
+                                  }}
+                                  data-testid="button-select-image-aspect-ratio"
+                                >
+                                  {field.value ? aspectRatioOptions.find(opt => opt.value === field.value)?.label : "Choose aspect ratio"}
+                                  <ChevronDown className="h-4 w-4" />
+                                </Button>
+                              </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -654,20 +708,21 @@ export default function VideoGenerator() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel className="text-gray-300">Model</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger 
-                                    className="bg-dark-600 border-dark-500 text-white focus:ring-2 focus:ring-primary-500"
-                                    data-testid="select-image-model"
-                                  >
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent className="bg-dark-600 border-dark-500 max-h-[120px] md:max-h-[200px] overflow-y-auto z-50 max-w-[200px] md:max-w-[250px] fixed">
-                                  <SelectItem value="veo3">Veo3 (Best Quality)</SelectItem>
-                                  <SelectItem value="veo3_fast">Veo3 Fast</SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <FormControl>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="w-full justify-between bg-dark-600 border-dark-500 text-white hover:bg-dark-500"
+                                  onClick={() => {
+                                    setCurrentFormType("image");
+                                    setModelModalOpen(true);
+                                  }}
+                                  data-testid="button-select-image-model"
+                                >
+                                  {field.value ? modelOptions.find(opt => opt.value === field.value)?.label : "Choose model"}
+                                  <ChevronDown className="h-4 w-4" />
+                                </Button>
+                              </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -823,6 +878,130 @@ export default function VideoGenerator() {
                 <span data-testid="modal-progress-percentage">{Math.round(loadingProgress)}%</span>
                 <span>~{Math.max(0, 120 - Math.round((new Date().getTime() - (loadingStartTime?.getTime() || 0)) / 1000))}s còn lại</span>
               </div>
+            </div>
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>
+
+      {/* Aspect Ratio Selection Modal */}
+      <Dialog open={aspectRatioModalOpen} onOpenChange={setAspectRatioModalOpen}>
+        <DialogPortal>
+          <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
+          <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-dark-700 border border-dark-600 rounded-xl p-6 w-[90vw] max-w-md z-50">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-white mb-4">Choose Aspect Ratio</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              {aspectRatioOptions.map((option) => {
+                const IconComponent = option.icon;
+                const currentValue = currentFormType === "text" 
+                  ? textForm.getValues().aspectRatio 
+                  : imageForm.getValues().aspectRatio;
+                const isSelected = currentValue === option.value;
+                
+                return (
+                  <button
+                    key={option.value}
+                    className={`w-full p-4 rounded-lg border transition-all ${
+                      isSelected 
+                        ? 'border-primary-500 bg-primary-500/20 text-white' 
+                        : 'border-dark-500 bg-dark-600 text-gray-300 hover:border-primary-400 hover:bg-primary-400/10'
+                    }`}
+                    onClick={() => {
+                      if (currentFormType === "text") {
+                        textForm.setValue("aspectRatio", option.value as "16:9" | "9:16" | "1:1");
+                      } else {
+                        imageForm.setValue("aspectRatio", option.value as "16:9" | "9:16" | "1:1");
+                      }
+                      setAspectRatioModalOpen(false);
+                    }}
+                    data-testid={`option-aspect-ratio-${option.value}`}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-shrink-0">
+                        <IconComponent className="w-8 h-8 text-primary-400" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="font-semibold">{option.label}</h3>
+                          <span className="text-xs text-gray-400">{option.dimensions}</span>
+                        </div>
+                        <p className="text-sm text-gray-400">{option.description}</p>
+                        <div className="mt-2 text-xs font-mono text-primary-300">
+                          {option.value}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>
+
+      {/* Model Selection Modal */}
+      <Dialog open={modelModalOpen} onOpenChange={setModelModalOpen}>
+        <DialogPortal>
+          <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
+          <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-dark-700 border border-dark-600 rounded-xl p-6 w-[90vw] max-w-lg z-50">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-white mb-4">Choose AI Model</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              {modelOptions.map((option) => {
+                const IconComponent = option.icon;
+                const currentValue = currentFormType === "text" 
+                  ? textForm.getValues().model 
+                  : imageForm.getValues().model;
+                const isSelected = currentValue === option.value;
+                
+                return (
+                  <button
+                    key={option.value}
+                    className={`w-full p-4 rounded-lg border transition-all ${
+                      isSelected 
+                        ? 'border-primary-500 bg-primary-500/20 text-white' 
+                        : 'border-dark-500 bg-dark-600 text-gray-300 hover:border-primary-400 hover:bg-primary-400/10'
+                    }`}
+                    onClick={() => {
+                      if (currentFormType === "text") {
+                        textForm.setValue("model", option.value as "veo3" | "veo3_fast");
+                      } else {
+                        imageForm.setValue("model", option.value as "veo3" | "veo3_fast");
+                      }
+                      setModelModalOpen(false);
+                    }}
+                    data-testid={`option-model-${option.value}`}
+                  >
+                    <div className="flex items-start space-x-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <IconComponent className="w-8 h-8 text-primary-400" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold">{option.label}</h3>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs bg-primary-600 px-2 py-1 rounded-full">{option.badge}</span>
+                            <span className="text-xs text-primary-400">{option.credits} credits</span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-400 mb-3">{option.description}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {option.features.map((feature, index) => (
+                            <span 
+                              key={index}
+                              className="text-xs bg-dark-500 px-2 py-1 rounded text-gray-300"
+                            >
+                              {feature}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </DialogContent>
         </DialogPortal>
