@@ -385,8 +385,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
             <div 
               className="relative w-full rounded-[var(--fluent-border-radius-large)] overflow-hidden bg-black fluent-shadow-medium group cursor-pointer"
               style={{ 
-                aspectRatio: videoAspectRatio.toString(),
-                maxHeight: videoAspectRatio < 1 ? '70vh' : '50vh' // Limit height for vertical videos
+                aspectRatio: videoAspectRatio.toString()
               }}
               onMouseMove={resetControlsTimeout}
               onMouseLeave={() => {
