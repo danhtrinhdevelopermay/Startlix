@@ -68,18 +68,24 @@ async function checkApiCreditsWithCache(apiKey: string): Promise<number> {
 let lastUsedApiKeyIndex = -1;
 async function getBestApiKey(): Promise<{ key: string; apiKeyId?: string } | null> {
   try {
+    console.log('🔍 Looking for API key with credits...');
     const storageInstance = await storage();
     const activeKeys = await storageInstance.getActiveApiKeys();
+    console.log(`📋 Found ${activeKeys.length} active keys in database`);
     
     // If no active keys in database, check environment variables
     if (activeKeys.length === 0) {
+      console.log('⚠️ No active keys in database, checking environment variables...');
       const envKey = process.env.VEOAPI_KEY || process.env.VEO3_API_KEY;
       if (envKey && envKey !== "your-api-key") {
         const credits = await checkApiCreditsWithCache(envKey);
+        console.log(`🔋 Environment API key has ${credits} credits`);
         if (credits > 0) {
+          console.log('✅ Using environment API key');
           return { key: envKey };
         }
       }
+      console.log('❌ No valid environment API key found');
       return null;
     }
     
@@ -87,6 +93,7 @@ async function getBestApiKey(): Promise<{ key: string; apiKeyId?: string } | nul
     const validKeys = [];
     for (const dbApiKey of activeKeys) {
       const credits = await checkApiCreditsWithCache(dbApiKey.apiKey);
+      console.log(`🔋 API key "${dbApiKey.name}" has ${credits} credits`);
       
       // Update credits in database if cache was refreshed
       const cached = creditCache.get(dbApiKey.apiKey);
@@ -103,7 +110,10 @@ async function getBestApiKey(): Promise<{ key: string; apiKeyId?: string } | nul
       }
     }
     
+    console.log(`✅ Found ${validKeys.length} valid keys with credits`);
+    
     if (validKeys.length === 0) {
+      console.log('❌ No valid keys with credits found');
       return null;
     }
     
@@ -111,11 +121,11 @@ async function getBestApiKey(): Promise<{ key: string; apiKeyId?: string } | nul
     lastUsedApiKeyIndex = (lastUsedApiKeyIndex + 1) % validKeys.length;
     const selectedKey = validKeys[lastUsedApiKeyIndex];
     
-    console.log(`Selected API key "${selectedKey.name}" with ${selectedKey.currentCredits} credits (${lastUsedApiKeyIndex + 1}/${validKeys.length})`);
+    console.log(`🎯 Selected API key "${selectedKey.name}" with ${selectedKey.currentCredits} credits (${lastUsedApiKeyIndex + 1}/${validKeys.length})`);
     
     return { key: selectedKey.apiKey, apiKeyId: selectedKey.id };
   } catch (error) {
-    console.error('Error getting API key:', error);
+    console.error('❌ Error getting API key:', error);
     return null;
   }
 }
