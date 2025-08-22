@@ -253,7 +253,7 @@ export default function Admin() {
 
         {/* Statistics Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-dark-700 border-dark-600">
+          <Card className="bg-[var(--md-sys-color-surface-container)] border-[var(--md-sys-color-outline-variant)]">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -267,7 +267,7 @@ export default function Admin() {
             </CardContent>
           </Card>
 
-          <Card className="bg-dark-700 border-dark-600">
+          <Card className="bg-[var(--md-sys-color-surface-container)] border-[var(--md-sys-color-outline-variant)]">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -281,7 +281,7 @@ export default function Admin() {
             </CardContent>
           </Card>
 
-          <Card className="bg-dark-700 border-dark-600">
+          <Card className="bg-[var(--md-sys-color-surface-container)] border-[var(--md-sys-color-outline-variant)]">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -297,7 +297,7 @@ export default function Admin() {
             </CardContent>
           </Card>
 
-          <Card className="bg-dark-700 border-dark-600">
+          <Card className="bg-[var(--md-sys-color-surface-container)] border-[var(--md-sys-color-outline-variant)]">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -314,7 +314,7 @@ export default function Admin() {
 
         {/* API Key with Most Credits */}
         {apiKeys.length > 0 && apiKeys.some((k: ApiKey) => k.credits > 0) && (
-          <Card className="bg-dark-700 border-dark-600">
+          <Card className="bg-[var(--md-sys-color-surface-container)] border-[var(--md-sys-color-outline-variant)]">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <div className="w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center">
@@ -355,7 +355,7 @@ export default function Admin() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Veo3 API Key Configuration */}
-          <Card className="bg-dark-700 border-dark-600">
+          <Card className="bg-[var(--md-sys-color-surface-container)] border-[var(--md-sys-color-outline-variant)]">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Key className="w-5 h-5" />
@@ -404,7 +404,7 @@ export default function Admin() {
           </Card>
 
           {/* Add New API Key */}
-          <Card className="bg-dark-700 border-dark-600">
+          <Card className="bg-[var(--md-sys-color-surface-container)] border-[var(--md-sys-color-outline-variant)]">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Plus className="w-5 h-5" />

@@ -164,15 +164,15 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
   };
 
   return (
-    <div className="bg-dark-700 rounded-xl border border-dark-600 overflow-hidden">
-      <div className="p-4 border-b border-dark-600">
+    <div className="bg-[var(--md-sys-color-surface-container)] rounded-[var(--md-sys-shape-corner-large)] border border-[var(--md-sys-color-outline-variant)] overflow-hidden shadow-sm transition-shadow hover:shadow-md">
+      <div className="p-4 border-b border-[var(--md-sys-color-outline-variant)]">
         <h3 className="font-semibold text-lg">Preview</h3>
       </div>
       
       <div className="p-4">
         {!videoUrl && !pollingTaskId && (
           <div 
-            className="aspect-video bg-dark-600 rounded-lg flex items-center justify-center border border-dark-500"
+            className="aspect-video bg-[var(--md-sys-color-surface-container-low)] rounded-[var(--md-sys-shape-corner-medium)] flex items-center justify-center border border-[var(--md-sys-color-outline-variant)]"
             data-testid="preview-placeholder"
           >
             <div className="text-center text-gray-400">
@@ -184,7 +184,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
 
         {pollingTaskId && !videoUrl && (
           <div 
-            className="aspect-video bg-dark-600 rounded-lg flex items-center justify-center border border-dark-500"
+            className="aspect-video bg-[var(--md-sys-color-surface-container-low)] rounded-[var(--md-sys-shape-corner-medium)] flex items-center justify-center border border-[var(--md-sys-color-outline-variant)]"
             data-testid="preview-loading"
           >
             <div className="text-center text-gray-400 w-full max-w-md px-8">
@@ -200,7 +200,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
               <div className="mb-3">
                 <Progress 
                   value={progress} 
-                  className="h-3 bg-dark-500"
+                  className="h-3 bg-[var(--md-sys-color-surface-container)]"
                   data-testid="progress-bar"
                 />
               </div>
@@ -238,7 +238,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
                   size="sm"
                   variant="outlined"
                   onClick={handleDownload}
-                  className="bg-dark-600 hover:bg-dark-500 border-dark-500 text-white"
+                  className="bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container-high)] border-[var(--md-sys-color-outline-variant)] text-[var(--md-sys-color-on-surface)]"
                   data-testid="button-download"
                 >
                   <Download className="w-4 h-4" />

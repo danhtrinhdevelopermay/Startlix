@@ -1038,7 +1038,7 @@ export default function VideoGenerator() {
               </div>
               
               {/* Loading Container */}
-              <div className="bg-dark-800/60 backdrop-blur-md rounded-3xl p-8 md:p-12 border border-dark-600/50 max-w-2xl w-full">
+              <div className="bg-[var(--md-sys-color-surface-container)] backdrop-blur-md rounded-[var(--md-sys-shape-corner-extra-large)] p-8 md:p-12 border border-[var(--md-sys-color-outline-variant)] max-w-2xl w-full shadow-md">
                 <div className="mb-8">
                   <MD3VideoProcessingLoading 
                     progress={loadingProgress / 100}
@@ -1051,7 +1051,7 @@ export default function VideoGenerator() {
                 <div className="mb-6">
                   <Progress 
                     value={loadingProgress} 
-                    className="h-3 md:h-4 bg-dark-700/80"
+                    className="h-3 md:h-4 bg-[var(--md-sys-color-surface-container-low)]"
                     data-testid="modal-progress-bar"
                   />
                 </div>
@@ -1070,9 +1070,9 @@ export default function VideoGenerator() {
       <Dialog open={aspectRatioModalOpen} onOpenChange={setAspectRatioModalOpen}>
         <DialogPortal>
           <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
-          <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-dark-700 border border-dark-600 rounded-xl p-4 w-[95vw] max-w-sm max-h-[85vh] overflow-y-auto z-50">
+          <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)] rounded-[var(--md-sys-shape-corner-large)] p-4 w-[95vw] max-w-sm max-h-[85vh] overflow-y-auto z-50 shadow-lg">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-white mb-4">Chọn Tỷ lệ khung hình</DialogTitle>
+              <DialogTitle className="text-xl font-bold text-[var(--md-sys-color-on-surface)] mb-4">Chọn Tỷ lệ khung hình</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
               {aspectRatioOptions.map((option) => {
@@ -1087,8 +1087,8 @@ export default function VideoGenerator() {
                     key={option.value}
                     className={`w-full p-3 rounded-lg border transition-all ${
                       isSelected 
-                        ? 'border-primary-500 bg-primary-500/20 text-white' 
-                        : 'border-dark-500 bg-dark-600 text-gray-300 hover:border-primary-400 hover:bg-primary-400/10'
+                        ? 'border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]' 
+                        : 'border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] text-[var(--md-sys-color-on-surface)] hover:border-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-surface-container-high)]'
                     }`}
                     onClick={() => {
                       if (currentFormType === "text") {
@@ -1144,8 +1144,8 @@ export default function VideoGenerator() {
                     key={option.value}
                     className={`w-full p-3 rounded-lg border transition-all ${
                       isSelected 
-                        ? 'border-primary-500 bg-primary-500/20 text-white' 
-                        : 'border-dark-500 bg-dark-600 text-gray-300 hover:border-primary-400 hover:bg-primary-400/10'
+                        ? 'border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]' 
+                        : 'border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] text-[var(--md-sys-color-on-surface)] hover:border-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-surface-container-high)]'
                     }`}
                     onClick={() => {
                       if (currentFormType === "text") {

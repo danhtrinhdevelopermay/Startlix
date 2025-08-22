@@ -26,7 +26,7 @@ export default function ErrorPopup({ isOpen, onClose, title, description, type =
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-dark-700 border-dark-600 text-white max-w-md">
+      <DialogContent className="bg-[var(--md-sys-color-surface-container)] border-[var(--md-sys-color-outline-variant)] text-[var(--md-sys-color-on-surface)] max-w-md shadow-lg">
         <DialogHeader className="pb-4">
           <div className="flex items-center space-x-3">
             {getIcon()}

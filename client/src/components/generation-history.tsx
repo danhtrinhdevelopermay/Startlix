@@ -60,8 +60,8 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
 
   if (isLoading && generations.length === 0) {
     return (
-      <div className="bg-dark-700 rounded-xl border border-dark-600 overflow-hidden">
-        <div className="p-4 border-b border-dark-600">
+      <div className="bg-[var(--md-sys-color-surface-container)] rounded-[var(--md-sys-shape-corner-large)] border border-[var(--md-sys-color-outline-variant)] overflow-hidden shadow-sm">
+        <div className="p-4 border-b border-[var(--md-sys-color-outline-variant)]">
           <h3 className="font-semibold text-lg">Lịch sử tạo video</h3>
         </div>
         <div className="p-4 flex items-center justify-center">
@@ -72,7 +72,7 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
   }
 
   return (
-    <div className="bg-dark-700 rounded-xl border border-dark-600 overflow-hidden">
+    <div className="bg-[var(--md-sys-color-surface-container)] rounded-[var(--md-sys-shape-corner-large)] border border-[var(--md-sys-color-outline-variant)] overflow-hidden shadow-sm">
       <div className="p-4 border-b border-dark-600">
         <h3 className="font-semibold text-lg">Recent Generations</h3>
       </div>
@@ -87,12 +87,12 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
           generations.map((generation: any) => (
             <div
               key={generation.id}
-              className={`bg-dark-600 rounded-lg p-4 border transition-colors ${
+              className={`bg-[var(--md-sys-color-surface-container-low)] rounded-[var(--md-sys-shape-corner-medium)] p-4 border transition-colors ${
                 generation.status === "completed" 
-                  ? "border-dark-500 cursor-pointer hover:bg-dark-500" 
+                  ? "border-[var(--md-sys-color-outline-variant)] cursor-pointer hover:bg-[var(--md-sys-color-surface-container-high)]" 
                   : generation.status === "failed"
                   ? "border-red-500/30"
-                  : "border-dark-500"
+                  : "border-[var(--md-sys-color-outline-variant)]"
               }`}
               onClick={() => handleSelectVideo(generation)}
               data-testid={`generation-item-${generation.id}`}
@@ -103,7 +103,7 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
                   <span className="text-sm font-medium">
                     {getStatusText(generation.status)}
                   </span>
-                  <Badge variant="outline" className="text-xs border-dark-400 text-gray-300">
+                  <Badge variant="outline" className="text-xs border-[var(--md-sys-color-outline)] text-[var(--md-sys-color-on-surface-variant)]">
                     {generation.type === "text-to-video" ? "Văn bản" : "Hình ảnh"}
                   </Badge>
                 </div>
