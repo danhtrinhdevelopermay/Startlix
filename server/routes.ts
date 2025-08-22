@@ -347,7 +347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const response = await fetch(`${VEO3_UPLOAD_BASE}/file-stream-upload`, {
           method: 'POST',
           headers,
-          body: formData,
+          body: formData as any,
         });
 
         const data = await response.json();
