@@ -484,38 +484,61 @@ export default function VideoGenerator() {
     <div>
       {/* Header - Material Design 3 Top App Bar */}
       <header className="border-b border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container)] sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <img src={starlixLogo} alt="Starlix Logo" className="h-8 w-auto" />
-              <h1 className="md-typescale-title-large text-[var(--md-sys-color-primary)]">
+            {/* Logo Section */}
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+              <img src={starlixLogo} alt="Starlix Logo" className="h-6 sm:h-8 w-auto" />
+              <h1 className="hidden sm:block md-typescale-title-large text-[var(--md-sys-color-primary)]">
                 Starlix
               </h1>
             </div>
             
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
+            {/* Navigation Actions */}
+            <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3 flex-shrink-0">
+              {/* User Info */}
+              <div className="hidden sm:flex items-center space-x-2 mr-1 md:mr-2">
                 <User className="w-4 h-4 text-[var(--md-sys-color-primary)]" />
-                <span className="md-typescale-body-medium text-[var(--md-sys-color-on-surface)]">
+                <span className="md-typescale-body-medium text-[var(--md-sys-color-on-surface)] truncate max-w-[100px]">
                   {user?.username}
                 </span>
               </div>
+              
+              {/* Credit Balance */}
+              <CreditBalance />
+              
+              {/* Video Thưởng Button */}
               <Link href="/reward-videos">
                 <Button 
                   variant="outlined"
                   size="sm"
+                  className="hidden sm:flex"
                   data-testid="nav-reward-videos"
                 >
-                  <Trophy className="w-4 h-4 mr-2" />
-                  Video Thưởng
+                  <Trophy className="w-4 h-4 mr-1 sm:mr-2" />
+                  <span className="hidden md:inline">Video Thưởng</span>
                 </Button>
               </Link>
+              
+              {/* Mobile Video Thưởng Button */}
+              <Link href="/reward-videos" className="sm:hidden">
+                <Button 
+                  variant="text"
+                  size="sm"
+                  data-testid="nav-reward-videos-mobile"
+                >
+                  <Trophy className="w-4 h-4" />
+                </Button>
+              </Link>
+              
+              {/* Logout Button */}
               <Button 
                 variant="text"
                 size="sm"
                 onClick={handleLogout}
                 disabled={logoutMutation.isPending}
                 data-testid="button-logout"
+                className="flex-shrink-0"
               >
                 <LogOut className="w-4 h-4" />
               </Button>
