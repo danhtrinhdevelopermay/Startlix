@@ -6,6 +6,8 @@ import { insertVideoGenerationSchema, insertUserSchema, insertRewardVideoSchema,
 import { z } from "zod";
 import multer from "multer";
 import FormData from "form-data";
+import fs from "fs";
+import path from "path";
 
 // Extend session interface
 declare module "express-session" {
@@ -304,8 +306,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('No API keys available, working in demo mode for image upload');
         
         // Create uploads directory if it doesn't exist
-        const fs = require('fs');
-        const path = require('path');
         const uploadsDir = path.join(process.cwd(), 'client', 'public', 'uploads');
         
         if (!fs.existsSync(uploadsDir)) {
@@ -339,13 +339,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         console.log(`Uploading to VEO3 API: ${VEO3_UPLOAD_BASE}/file-stream-upload`);
         
+        const headers = {
+          'Authorization': `Bearer ${apiKeyData.key}`,
+          ...formData.getHeaders(),
+        };
+        
         const response = await fetch(`${VEO3_UPLOAD_BASE}/file-stream-upload`, {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKeyData.key}`,
-            ...formData.getHeaders(),
-          },
-          body: formData as any,
+          headers,
+          body: formData,
         });
 
         const data = await response.json();
@@ -360,8 +362,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('VEO3 upload failed, falling back to local storage:', veoError?.message || veoError);
         
         // Fallback to local storage
-        const fs = require('fs');
-        const path = require('path');
         const uploadsDir = path.join(process.cwd(), 'client', 'public', 'uploads');
         
         if (!fs.existsSync(uploadsDir)) {
