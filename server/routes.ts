@@ -356,8 +356,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         res.json({ downloadUrl: data.data.downloadUrl });
-      } catch (veoError) {
-        console.log('VEO3 upload failed, falling back to local storage:', veoError.message);
+      } catch (veoError: any) {
+        console.log('VEO3 upload failed, falling back to local storage:', veoError?.message || veoError);
         
         // Fallback to local storage
         const fs = require('fs');
