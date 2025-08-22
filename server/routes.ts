@@ -222,7 +222,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get API key with credits
       const apiKeyData = await getBestApiKey();
       if (!apiKeyData) {
-        return res.status(503).json({ message: "No API keys with credits available" });
+        return res.status(503).json({ 
+          message: "No API keys with credits available", 
+          error: "INSUFFICIENT_CREDITS",
+          details: "All API keys have run out of credits. Please add more credits or add a new API key to continue."
+        });
       }
       
       const response = await fetch(`${VEO3_API_BASE}/veo/record-info?taskId=${taskId}`, {

@@ -39,12 +39,16 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
     setPopup({ isOpen: false, title: "", description: "", type: "error" });
   };
 
-  const { data: videoStatus, isLoading } = useQuery<any>({
+  const { data: videoStatus, isLoading, error } = useQuery<any>({
     queryKey: ["/api/video-status", pollingTaskId],
     enabled: !!pollingTaskId,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Stop polling if completed or failed
-      if ((data as any)?.successFlag === 1 || (data as any)?.successFlag === -1) {
+      if (query.state.data?.successFlag === 1 || query.state.data?.successFlag === -1) {
+        return false;
+      }
+      // Stop polling if there's a credits error
+      if (query.state.error) {
         return false;
       }
       return 5000; // Poll every 5 seconds
@@ -92,6 +96,32 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
       );
     }
   }, [videoStatus, onVideoLoad, toast]);
+
+  // Handle API errors (insufficient credits)
+  useEffect(() => {
+    if (error && pollingTaskId) {
+      const errorResponse = (error as any)?.response;
+      if (errorResponse?.status === 503) {
+        setProgress(0);
+        setPollingTaskId(""); // Stop polling
+        
+        // Parse error response
+        if (errorResponse?.data?.error === "INSUFFICIENT_CREDITS") {
+          showPopup(
+            "Hết credits", 
+            "Tất cả API keys đã hết credits. Vui lòng thêm credits hoặc thêm API key mới để tiếp tục.", 
+            "warning"
+          );
+        } else {
+          showPopup(
+            "Lỗi hệ thống", 
+            "Không thể kiểm tra trạng thái video. Vui lòng thử lại sau.", 
+            "error"
+          );
+        }
+      }
+    }
+  }, [error, pollingTaskId]);
 
   const handleGet1080p = async () => {
     try {
