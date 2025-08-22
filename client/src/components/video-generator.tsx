@@ -108,16 +108,27 @@ export default function VideoGenerator() {
         "error"
       );
     } else if (videoStatus?.status === "processing") {
-      // Video is still processing, show extended wait message after 3 minutes
       const elapsedSeconds = loadingStartTime ? (new Date().getTime() - loadingStartTime.getTime()) / 1000 : 0;
-      if (elapsedSeconds > 180) { // 3 minutes
+      
+      // Timeout after 8 minutes for veo3_fast, 12 minutes for veo3
+      const timeoutSeconds = 480; // 8 minutes for veo3_fast, could extend to 720 for veo3
+      
+      if (elapsedSeconds > timeoutSeconds) {
+        setIsLoadingModalOpen(false);
+        showPopup(
+          "Timeout - Video quá lâu", 
+          "Video đã vượt quá thời gian xử lý bình thường. Có thể VEO3 đang quá tải. Vui lòng thử tạo video mới với prompt ngắn gọn hơn.", 
+          "warning"
+        );
+      } else if (elapsedSeconds > 180) { // 3 minutes
+        const remainingMinutes = Math.ceil((timeoutSeconds - elapsedSeconds) / 60);
         toast({
           title: "Video đang được xử lý",
-          description: "VEO3 đang tạo video phức tạp, có thể mất 5-10 phút. Vui lòng đợi thêm.",
+          description: `VEO3 đang tạo video phức tạp. Còn tối đa ${remainingMinutes} phút nữa.`,
         });
       }
     }
-  }, [videoStatus, toast, loadingStartTime]);
+  }, [videoStatus, toast, loadingStartTime, currentTaskId]);
 
   const showPopup = (title: string, description: string, type: "error" | "warning" | "info" = "error") => {
     setPopup({ isOpen: true, title, description, type });
