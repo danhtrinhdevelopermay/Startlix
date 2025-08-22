@@ -206,7 +206,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
               <div className="mb-4">
                 <LoadingSphere size="small" />
               </div>
-              <p className="text-sm mb-4">Generating your video...</p>
+              <p className="text-sm mb-4">Đang tạo video của bạn...</p>
               
               <div className="mb-3">
                 <Progress 
@@ -218,7 +218,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
               
               <div className="flex justify-between items-center text-xs text-gray-500">
                 <span data-testid="progress-percentage">{Math.round(progress)}%</span>
-                <span>~{Math.max(0, 120 - Math.round((new Date().getTime() - (startTime?.getTime() || 0)) / 1000))}s remaining</span>
+                <span>~{Math.max(0, 120 - Math.round((new Date().getTime() - (startTime?.getTime() || 0)) / 1000))}s còn lại</span>
               </div>
               
               {isLoading && <p className="text-xs text-gray-500 mt-2">Checking status...</p>}
@@ -253,6 +253,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
                   data-testid="button-download"
                 >
                   <Download className="w-4 h-4" />
+                  Tải xuống
                 </Button>
                 {taskId && (
                   <Button

@@ -62,24 +62,24 @@ type ImageToVideoForm = z.infer<typeof imageToVideoSchema>;
 const aspectRatioOptions = [
   {
     value: "16:9",
-    label: "Landscape",
-    description: "Widescreen format, perfect for desktop viewing and YouTube",
+    label: "Ngang",
+    description: "Định dạng rộng, hoàn hảo cho xem trên máy tính và YouTube",
     icon: Monitor,
     preview: "████████████",
     dimensions: "1920 × 1080"
   },
   {
     value: "9:16", 
-    label: "Portrait",
-    description: "Vertical format, ideal for mobile viewing and TikTok",
+    label: "Dọc",
+    description: "Định dạng dọc, lý tưởng cho xem trên điện thoại và TikTok",
     icon: Smartphone,
     preview: "████\n████\n████",
     dimensions: "1080 × 1920"
   },
   {
     value: "1:1",
-    label: "Square", 
-    description: "Perfect square format for Instagram and social media",
+    label: "Vuông", 
+    description: "Định dạng vuông hoàn hảo cho Instagram và mạng xã hội",
     icon: Square,
     preview: "████████\n████████",
     dimensions: "1080 × 1080"
@@ -90,20 +90,20 @@ const aspectRatioOptions = [
 const modelOptions = [
   {
     value: "veo3",
-    label: "Veo3 Premium",
-    description: "Highest quality AI video generation with superior detail and realism",
+    label: "Veo3 Cao cấp",
+    description: "Tạo video AI chất lượng cao nhất với chi tiết vượt trội và chân thực",
     icon: Trophy,
-    badge: "Best Quality",
-    features: ["4K Resolution", "Advanced AI", "Realistic Motion"],
+    badge: "Chất lượng tốt nhất",
+    features: ["Độ phân giải 4K", "AI tiên tiến", "Chuyển động chân thực"],
     credits: 5
   },
   {
     value: "veo3_fast",
-    label: "Veo3 Fast",
-    description: "Quick generation with good quality, perfect for rapid prototyping",
+    label: "Veo3 Nhanh",
+    description: "Tạo nhanh với chất lượng tốt, hoàn hảo cho nguyên mẫu nhanh",
     icon: Zap,
-    badge: "Fast Generation",
-    features: ["HD Resolution", "Quick Processing", "Good Quality"],
+    badge: "Tạo nhanh",
+    features: ["Độ phân giải HD", "Xử lý nhanh", "Chất lượng tốt"],
     credits: 3
   }
 ];
@@ -866,7 +866,7 @@ export default function VideoGenerator() {
             <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 px-8">
               {/* Header */}
               <div className="mb-8">
-                <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Preview</h1>
+                <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Xem trước</h1>
               </div>
               
               {/* Loading Container */}
@@ -875,7 +875,7 @@ export default function VideoGenerator() {
                   <LoadingSphere />
                 </div>
                 
-                <h2 className="text-xl md:text-2xl font-semibold text-gray-300 mb-8">Generating your video...</h2>
+                <h2 className="text-xl md:text-2xl font-semibold text-gray-300 mb-8">Đang tạo video của bạn...</h2>
                 
                 <div className="mb-6">
                   <Progress 
@@ -887,7 +887,7 @@ export default function VideoGenerator() {
                 
                 <div className="flex justify-between items-center text-sm md:text-base text-gray-400">
                   <span data-testid="modal-progress-percentage" className="font-medium">{Math.round(loadingProgress)}%</span>
-                  <span>~{Math.max(0, 120 - Math.round((new Date().getTime() - (loadingStartTime?.getTime() || 0)) / 1000))}s remaining</span>
+                  <span>~{Math.max(0, 120 - Math.round((new Date().getTime() - (loadingStartTime?.getTime() || 0)) / 1000))}s còn lại</span>
                 </div>
               </div>
             </div>
@@ -901,7 +901,7 @@ export default function VideoGenerator() {
           <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
           <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-dark-700 border border-dark-600 rounded-xl p-4 w-[95vw] max-w-sm max-h-[85vh] overflow-y-auto z-50">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-white mb-4">Choose Aspect Ratio</DialogTitle>
+              <DialogTitle className="text-xl font-bold text-white mb-4">Chọn Tỷ lệ khung hình</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
               {aspectRatioOptions.map((option) => {
@@ -958,7 +958,7 @@ export default function VideoGenerator() {
           <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
           <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-dark-700 border border-dark-600 rounded-xl p-4 w-[95vw] max-w-sm max-h-[85vh] overflow-y-auto z-50">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-white mb-4">Choose AI Model</DialogTitle>
+              <DialogTitle className="text-xl font-bold text-white mb-4">Chọn Mô hình AI</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
               {modelOptions.map((option) => {

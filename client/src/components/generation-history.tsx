@@ -30,15 +30,15 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
   const getStatusText = (status: string) => {
     switch (status) {
       case "completed":
-        return "Completed";
+        return "Hoàn thành";
       case "processing":
-        return "Generating...";
+        return "Đang tạo...";
       case "failed":
-        return "Failed";
+        return "Thất bại";
       case "pending":
-        return "Pending";
+        return "Chờ xử lý";
       default:
-        return "Unknown";
+        return "Không rõ";
     }
   };
 
@@ -62,7 +62,7 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
     return (
       <div className="bg-dark-700 rounded-xl border border-dark-600 overflow-hidden">
         <div className="p-4 border-b border-dark-600">
-          <h3 className="font-semibold text-lg">Recent Generations</h3>
+          <h3 className="font-semibold text-lg">Lịch sử tạo video</h3>
         </div>
         <div className="p-4 flex items-center justify-center">
           <Loader2 className="w-6 h-6 text-primary-500 animate-spin" />
@@ -80,8 +80,8 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
       <div className="p-4 space-y-3" data-testid="generation-list">
         {generations.length === 0 ? (
           <div className="text-center py-8 text-gray-400">
-            <p className="text-sm">No generations yet</p>
-            <p className="text-xs mt-1">Your generated videos will appear here</p>
+            <p className="text-sm">Chưa có video nào</p>
+            <p className="text-xs mt-1">Các video đã tạo sẽ hiển thị ở đây</p>
           </div>
         ) : (
           generations.map((generation: any) => (
@@ -104,7 +104,7 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
                     {getStatusText(generation.status)}
                   </span>
                   <Badge variant="outline" className="text-xs border-dark-400 text-gray-300">
-                    {generation.type === "text-to-video" ? "Text" : "Image"}
+                    {generation.type === "text-to-video" ? "Văn bản" : "Hình ảnh"}
                   </Badge>
                 </div>
                 <span className="text-xs text-gray-400" data-testid="generation-timestamp">
@@ -131,13 +131,13 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-xs text-gray-400">
-                  <span>Model: {generation.model}</span>
+                  <span>Mô hình: {generation.model}</span>
                   <span>•</span>
-                  <span>Ratio: {generation.aspectRatio}</span>
+                  <span>Tỷ lệ: {generation.aspectRatio}</span>
                   {generation.status === "completed" && generation.resultUrls?.[0] && (
                     <>
                       <span>•</span>
-                      <span>Ready</span>
+                      <span>Sẵn sàng</span>
                     </>
                   )}
                 </div>
@@ -152,7 +152,7 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
                         e.stopPropagation();
                         onSelectVideo(generation.resultUrls[0]);
                       }}
-                      title="Preview"
+                      title="Xem trước"
                       data-testid="button-preview"
                     >
                       <Play className="w-3 h-3" />
@@ -162,7 +162,7 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
                       variant="ghost"
                       className="h-6 w-6 p-0 bg-dark-500 hover:bg-dark-400"
                       onClick={(e) => handleDownload(generation.resultUrls[0], e)}
-                      title="Download"
+                      title="Tải xuống"
                       data-testid="button-download-history"
                     >
                       <Download className="w-3 h-3" />

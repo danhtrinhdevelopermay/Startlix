@@ -40,7 +40,7 @@ export function useLogin() {
       
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Login failed');
+        throw new Error(error.message || 'Đăng nhập thất bại');
       }
       
       return response.json();
@@ -67,7 +67,7 @@ export function useRegister() {
       
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Registration failed');
+        throw new Error(error.message || 'Đăng ký thất bại');
       }
       
       return response.json();
@@ -89,7 +89,7 @@ export function useLogout() {
       });
       
       if (!response.ok) {
-        throw new Error('Logout failed');
+        throw new Error('Đăng xuất thất bại');
       }
       
       return response.json();
