@@ -305,15 +305,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { taskId } = req.params;
       
-      // Get API key with credits
-      const apiKeyData = await getBestApiKey();
-      if (!apiKeyData) {
+      // Get ANY API key (even with 0 credits) for status checking
+      // Status checking doesn't consume credits, just needs valid API key
+      const storageService = await storage();
+      const allApiKeys = await storageService.getAllApiKeys();
+      
+      if (allApiKeys.length === 0) {
         return res.status(503).json({ 
-          message: "No API keys with credits available", 
-          error: "INSUFFICIENT_CREDITS",
-          details: "All API keys have run out of credits. Please add more credits or add a new API key to continue."
+          message: "No API keys configured", 
+          error: "NO_API_KEYS",
+          details: "Please add at least one API key to check video status."
         });
       }
+      
+      // Use any available API key (prefer active ones but allow inactive)
+      const apiKey = allApiKeys.find(key => key.isActive) || allApiKeys[0];
+      console.log(`🔍 Using API key "${apiKey.name}" to check status for taskId ${taskId} (credits: ${apiKey.credits})`);
+      
+      const apiKeyData = { key: apiKey.apiKey, credits: apiKey.credits };
       
       const response = await fetch(`${VEO3_API_BASE}/veo/record-info?taskId=${taskId}`, {
         method: 'GET',
