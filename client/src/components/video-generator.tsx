@@ -135,14 +135,53 @@ export default function VideoGenerator() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Test connection to WebSocket service
+  const testConnection = async () => {
+    return new Promise((resolve) => {
+      const testSocket = new WebSocket("wss://backend.buildpicoapps.com/api/chatbot/chat");
+      let connected = false;
+      
+      testSocket.addEventListener("open", () => {
+        connected = true;
+        testSocket.close();
+        resolve(true);
+      });
+      
+      testSocket.addEventListener("error", () => {
+        resolve(false);
+      });
+      
+      setTimeout(() => {
+        if (!connected) {
+          testSocket.close();
+          resolve(false);
+        }
+      }, 5000);
+    });
+  };
+
   // Prompt expansion function with WebSocket
-  const expandPrompt = (currentPrompt: string, promptType: 'text' | 'image') => {
+  const expandPrompt = async (currentPrompt: string, promptType: 'text' | 'image') => {
     if (!currentPrompt.trim() || isExpandingPrompt) return;
     
     setIsExpandingPrompt(true);
     setExpandingPromptType(promptType);
     
     console.log('Starting prompt expansion for:', currentPrompt);
+    
+    // Test connection first
+    const canConnect = await testConnection();
+    if (!canConnect) {
+      console.log('Cannot connect to WebSocket service');
+      setIsExpandingPrompt(false);
+      setExpandingPromptType(null);
+      toast({
+        title: "Lỗi kết nối",
+        description: "Không thể kết nối đến dịch vụ AI. Dịch vụ có thể đang bảo trì.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     let receiving = true;
     const url = "wss://backend.buildpicoapps.com/api/chatbot/chat";
@@ -160,41 +199,55 @@ export default function VideoGenerator() {
     let timeoutId: NodeJS.Timeout;
 
     websocket.addEventListener("open", () => {
-      console.log('WebSocket connected');
-      websocket.send(
-        JSON.stringify({
-          chatId: chatId,
-          appId: "for-few",
-          systemPrompt: systemPrompt,
-          message: `Viết lại prompt này chi tiết hơn: "${currentPrompt}"`
-        })
-      );
+      console.log('WebSocket connected successfully');
+      const messagePayload = {
+        chatId: chatId,
+        appId: "for-few",
+        systemPrompt: systemPrompt,
+        message: `Viết lại prompt này chi tiết hơn: "${currentPrompt}"`
+      };
+      console.log('Sending message:', messagePayload);
+      websocket.send(JSON.stringify(messagePayload));
       
       // Set timeout for response
       timeoutId = setTimeout(() => {
         if (receiving) {
-          console.log('WebSocket timeout');
+          console.log('WebSocket timeout - no response received');
           websocket.close();
           setIsExpandingPrompt(false);
           setExpandingPromptType(null);
           toast({
             title: "Timeout",
-            description: "Quá thời gian chờ phản hồi. Vui lòng thử lại.",
+            description: "Quá thời gian chờ phản hồi. Dịch vụ có thể đang bận.",
             variant: "destructive",
           });
         }
-      }, 30000);
+      }, 15000); // Reduced timeout to 15 seconds
     });
     
     websocket.addEventListener("message", (event) => {
       try {
         console.log('Received message:', event.data);
         const data = JSON.parse(event.data);
+        
+        // Handle different possible response formats
         if (data.message) {
           expandedPrompt += data.message;
+        } else if (data.content) {
+          expandedPrompt += data.content;
+        } else if (data.text) {
+          expandedPrompt += data.text;
+        } else if (typeof data === 'string') {
+          expandedPrompt += data;
         }
+        
+        console.log('Current expandedPrompt:', expandedPrompt);
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
+        // Try to handle as plain text
+        if (typeof event.data === 'string') {
+          expandedPrompt += event.data;
+        }
       }
     });
 
