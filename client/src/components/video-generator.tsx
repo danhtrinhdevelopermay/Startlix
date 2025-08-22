@@ -517,20 +517,24 @@ export default function VideoGenerator() {
                         </CollapsibleContent>
                       </Collapsible>
 
-                      <Button
+                      <button
                         type="submit"
                         disabled={generateVideoMutation.isPending}
-                        className="w-full bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-700"
+                        className="premium-gen-button w-full"
                         data-testid="button-generate-text-video"
                       >
-                        <div className="flex items-center justify-center space-x-2">
-                          <Sparkles className="w-5 h-5" />
-                          <span>
-                            {generateVideoMutation.isPending ? "Generating..." : "Generate Video"}
-                          </span>
-                          <span className="text-xs bg-black/20 px-2 py-1 rounded">5 credits</span>
+                        <div className="wrap">
+                          <div className="content">
+                            <span className="star">✧</span>
+                            <span className="star">✦</span>
+                            <Sparkles className="w-5 h-5" />
+                            <span>
+                              {generateVideoMutation.isPending ? "Generating..." : "Generate Video"}
+                            </span>
+                            <span className="text-xs bg-black/30 px-2 py-1 rounded-full">5 credits</span>
+                          </div>
                         </div>
-                      </Button>
+                      </button>
                     </form>
                   </Form>
                 </div>
@@ -657,20 +661,24 @@ export default function VideoGenerator() {
                         />
                       </div>
 
-                      <Button
+                      <button
                         type="submit"
                         disabled={generateVideoMutation.isPending || !uploadedImageUrl}
-                        className="w-full bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02]"
+                        className="premium-gen-button w-full"
                         data-testid="button-generate-image-video"
                       >
-                        <div className="flex items-center justify-center space-x-2">
-                          <Image className="w-5 h-5" />
-                          <span>
-                            {generateVideoMutation.isPending ? "Animating..." : "Animate Image"}
-                          </span>
-                          <span className="text-xs bg-black/20 px-2 py-1 rounded">7 credits</span>
+                        <div className="wrap">
+                          <div className="content">
+                            <span className="star">✧</span>
+                            <span className="star">✦</span>
+                            <Image className="w-5 h-5" />
+                            <span>
+                              {generateVideoMutation.isPending ? "Animating..." : "Animate Image"}
+                            </span>
+                            <span className="text-xs bg-black/30 px-2 py-1 rounded-full">7 credits</span>
+                          </div>
                         </div>
-                      </Button>
+                      </button>
                     </form>
                   </Form>
                 </div>
