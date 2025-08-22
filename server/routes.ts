@@ -891,6 +891,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test Segmind API endpoint
+  app.post("/api/admin/test-segmind", async (req, res) => {
+    try {
+      const { videoUrl } = req.body;
+      
+      if (!videoUrl) {
+        return res.status(400).json({ message: "Video URL is required" });
+      }
+      
+      // Check if we have Segmind API key
+      const segmindApiKey = process.env.SEGMIND_API_KEY;
+      if (!segmindApiKey) {
+        return res.status(503).json({ 
+          message: "Segmind API key not configured",
+          error: "NO_SEGMIND_KEY" 
+        });
+      }
+
+      console.log(`🎯 Testing Segmind API with video: ${videoUrl}`);
+
+      // Call Segmind Video Enhancer API
+      const response = await fetch(SEGMIND_API_BASE, {
+        method: 'POST',
+        headers: {
+          'x-api-key': segmindApiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          video_url: videoUrl,
+          scale: 2, // 2x upscaling
+          version: "v1.4", // Use latest version
+        }),
+      });
+
+      const data = await response.json();
+      console.log(`🎯 Segmind API Test Response:`, JSON.stringify(data, null, 2));
+
+      if (!response.ok) {
+        return res.status(response.status).json({
+          success: false,
+          message: "Segmind API test failed",
+          error: data.detail || data.error || `API returned status ${response.status}`,
+          statusCode: response.status,
+          apiResponse: data
+        });
+      }
+
+      // Check if enhanced video URL is returned
+      const enhancedVideoUrl = data.image || data.video_url || data.url;
+      
+      res.json({
+        success: true,
+        message: "Segmind API test successful",
+        originalVideoUrl: videoUrl,
+        enhancedVideoUrl,
+        apiResponse: data,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('Segmind API test error:', error);
+      res.status(500).json({ 
+        success: false,
+        message: "Test failed with error",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Reward Videos API endpoints
   
   // Get all active reward videos

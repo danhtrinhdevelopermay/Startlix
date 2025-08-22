@@ -52,6 +52,13 @@ export default function Admin() {
     },
   });
 
+  // Segmind test form
+  const segmindTestForm = useForm({
+    defaultValues: {
+      videoUrl: "",
+    },
+  });
+
   // Update Veo3 API key mutation
   const updateVeo3Mutation = useMutation({
     mutationFn: async (data: { veo3ApiKey: string }) => {
@@ -161,12 +168,37 @@ export default function Admin() {
     },
   });
 
+  // Test Segmind API mutation
+  const testSegmindMutation = useMutation({
+    mutationFn: async (data: { videoUrl: string }) => {
+      const response = await apiRequest("POST", "/api/admin/test-segmind", data);
+      return response;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Test thành công",
+        description: data.enhancedVideoUrl ? "Video đã được nâng cao chất lượng!" : "API hoạt động nhưng không có video output",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Test thất bại",
+        description: error.error || error.message || "Lỗi không xác định",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmitVeo3 = (data: { veo3ApiKey: string }) => {
     updateVeo3Mutation.mutate(data);
   };
 
   const onSubmitApiKey = (data: { name: string; apiKey: string }) => {
     addApiKeyMutation.mutate(data);
+  };
+
+  const onSubmitSegmindTest = (data: { videoUrl: string }) => {
+    testSegmindMutation.mutate(data);
   };
 
   const toggleShowApiKey = (id: string) => {
@@ -569,6 +601,98 @@ export default function Admin() {
                   ))}
                 </TableBody>
               </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Segmind API Test */}
+        <Card className="bg-dark-700 border-dark-600">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ErrorCircleRegular className="w-5 h-5 text-blue-400" />
+              Test Segmind API
+            </CardTitle>
+            <CardDescription>
+              Kiểm tra tính năng nâng cao chất lượng video bằng Segmind API
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...segmindTestForm}>
+              <form onSubmit={segmindTestForm.handleSubmit(onSubmitSegmindTest)} className="space-y-4">
+                <FormField
+                  control={segmindTestForm.control}
+                  name="videoUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>URL Video để test</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="https://example.com/video.mp4"
+                          className="bg-dark-600 border-dark-500"
+                          data-testid="input-segmind-video-url"
+                        />
+                      </FormControl>
+                      <FormDescription className="text-gray-400">
+                        Nhập URL video hợp lệ để test khả năng nâng cao chất lượng qua Segmind API
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="submit"
+                  disabled={testSegmindMutation.isPending}
+                  className="fluent-button-primary"
+                  data-testid="button-test-segmind"
+                >
+                  {testSegmindMutation.isPending ? (
+                    <MD3ButtonLoading 
+                      label="Testing Segmind API" 
+                      data-testid="loading-test-segmind"
+                    />
+                  ) : (
+                    <>
+                      <CheckmarkCircleRegular className="w-4 h-4 mr-2" />
+                      Test Segmind API
+                    </>
+                  )}
+                </Button>
+              </form>
+            </Form>
+
+            {/* Test Result Display */}
+            {testSegmindMutation.data && (
+              <div className="mt-6 p-4 border border-green-600 rounded-lg bg-green-900/20">
+                <h4 className="text-green-400 font-medium mb-2">✅ Test thành công!</h4>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-400">Video gốc:</span>
+                    <code className="ml-2 text-blue-400">{testSegmindMutation.data.originalVideoUrl}</code>
+                  </div>
+                  {testSegmindMutation.data.enhancedVideoUrl && (
+                    <div>
+                      <span className="text-gray-400">Video nâng cao:</span>
+                      <code className="ml-2 text-green-400">{testSegmindMutation.data.enhancedVideoUrl}</code>
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-gray-400">Thời gian:</span>
+                    <span className="ml-2">{new Date(testSegmindMutation.data.timestamp).toLocaleString('vi-VN')}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Test Error Display */}
+            {testSegmindMutation.error && (
+              <div className="mt-6 p-4 border border-red-600 rounded-lg bg-red-900/20">
+                <h4 className="text-red-400 font-medium mb-2">❌ Test thất bại</h4>
+                <div className="text-sm">
+                  <span className="text-gray-400">Lỗi:</span>
+                  <code className="ml-2 text-red-400">{(testSegmindMutation.error as any)?.error || (testSegmindMutation.error as any)?.message || 'Lỗi không xác định'}</code>
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
