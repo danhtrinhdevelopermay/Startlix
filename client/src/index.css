@@ -102,6 +102,36 @@
     font-family: var(--font-sans);
   }
   
+  /* Ripple Effect Styles */
+  .ripple-container {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.4);
+    transform: scale(0);
+    animation: ripple-animation 600ms linear;
+    pointer-events: none;
+  }
+  
+  .ripple-dark {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+  
+  @keyframes ripple-animation {
+    0% {
+      transform: scale(0);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(4);
+      opacity: 0;
+    }
+  }
+  
   .bg-dark-800 {
     background-color: var(--dark-800);
   }
