@@ -437,7 +437,7 @@ export default function VideoGenerator() {
                                     <SelectValue />
                                   </SelectTrigger>
                                 </FormControl>
-                                <SelectContent className="bg-dark-600 border-dark-500">
+                                <SelectContent className="bg-dark-600 border-dark-500 max-h-[200px] overflow-y-auto z-50 max-w-[250px]">
                                   <SelectItem value="16:9">16:9 (Landscape)</SelectItem>
                                   <SelectItem value="9:16">9:16 (Portrait)</SelectItem>
                                   <SelectItem value="1:1">1:1 (Square)</SelectItem>
@@ -463,7 +463,7 @@ export default function VideoGenerator() {
                                     <SelectValue />
                                   </SelectTrigger>
                                 </FormControl>
-                                <SelectContent className="bg-dark-600 border-dark-500">
+                                <SelectContent className="bg-dark-600 border-dark-500 max-h-[200px] overflow-y-auto z-50 max-w-[250px]">
                                   <SelectItem value="veo3">Veo3 (Best Quality)</SelectItem>
                                   <SelectItem value="veo3_fast">Veo3 Fast</SelectItem>
                                 </SelectContent>
@@ -637,7 +637,7 @@ export default function VideoGenerator() {
                                     <SelectValue />
                                   </SelectTrigger>
                                 </FormControl>
-                                <SelectContent className="bg-dark-600 border-dark-500">
+                                <SelectContent className="bg-dark-600 border-dark-500 max-h-[200px] overflow-y-auto z-50 max-w-[250px]">
                                   <SelectItem value="16:9">16:9 (Landscape)</SelectItem>
                                   <SelectItem value="9:16">9:16 (Portrait)</SelectItem>
                                   <SelectItem value="1:1">1:1 (Square)</SelectItem>
@@ -663,7 +663,7 @@ export default function VideoGenerator() {
                                     <SelectValue />
                                   </SelectTrigger>
                                 </FormControl>
-                                <SelectContent className="bg-dark-600 border-dark-500">
+                                <SelectContent className="bg-dark-600 border-dark-500 max-h-[200px] overflow-y-auto z-50 max-w-[250px]">
                                   <SelectItem value="veo3">Veo3 (Best Quality)</SelectItem>
                                   <SelectItem value="veo3_fast">Veo3 Fast</SelectItem>
                                 </SelectContent>
