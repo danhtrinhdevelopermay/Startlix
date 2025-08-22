@@ -28,7 +28,7 @@ import 'react-image-crop/dist/ReactCrop.css';
 import { MD3VideoProcessingLoading } from "./md3-loading-indicator";
 
 const textToVideoSchema = z.object({
-  prompt: z.string().min(10, "Prompt must be at least 10 characters").max(500, "Prompt must be less than 500 characters"),
+  prompt: z.string().min(10, "Prompt phải có ít nhất 10 ký tự").max(500, "Prompt phải có ít hơn 500 ký tự"),
   aspectRatio: z.enum(["16:9", "9:16", "1:1"]),
   model: z.enum(["veo3", "veo3_fast"]),
   watermark: z.string().optional(),
@@ -36,10 +36,10 @@ const textToVideoSchema = z.object({
 });
 
 const imageToVideoSchema = z.object({
-  prompt: z.string().min(10, "Motion prompt must be at least 10 characters").max(500, "Motion prompt must be less than 500 characters"),
+  prompt: z.string().min(10, "Prompt chuyển động phải có ít nhất 10 ký tự").max(500, "Prompt chuyển động phải có ít hơn 500 ký tự"),
   aspectRatio: z.enum(["16:9", "9:16", "1:1"]),
   model: z.enum(["veo3", "veo3_fast"]),
-  imageUrl: z.string().min(1, "Please upload an image"),
+  imageUrl: z.string().min(1, "Vui lòng tải lên một ảnh"),
 });
 
 type TextToVideoForm = z.infer<typeof textToVideoSchema>;
@@ -751,7 +751,7 @@ export default function VideoGenerator() {
                 >
                   <div className="flex items-center justify-center space-x-2">
                     <DocumentRegular className="w-5 h-5" />
-                    <span>Text to Video</span>
+                    <span>Văn bản thành Video</span>
                   </div>
                 </button>
                 <button
@@ -765,7 +765,7 @@ export default function VideoGenerator() {
                 >
                   <div className="flex items-center justify-center space-x-2">
                     <ImageRegular className="w-5 h-5" />
-                    <span>Image to Video</span>
+                    <span>Ảnh thành Video</span>
                   </div>
                 </button>
               </div>
@@ -780,11 +780,11 @@ export default function VideoGenerator() {
                         name="prompt"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-4 block">Video Prompt</FormLabel>
+                            <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-4 block">Prompt Video</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Textarea
-                                  placeholder="Describe your video... (e.g., 'A golden retriever playing fetch in a sunny park, slow motion, cinematic lighting')"
+                                  placeholder="Mô tả video của bạn... (ví dụ: 'Một chú chó golden retriever chơi đùa trong công viên đầy nắng, quay chậm, ánh sáng điện ảnh')"
                                   data-testid="input-text-prompt"
                                   {...field}
                                 />
@@ -805,7 +805,7 @@ export default function VideoGenerator() {
                               </div>
                             </FormControl>
                             <div className="flex justify-between text-xs text-[var(--fluent-neutral-foreground-3)]">
-                              <span>Be specific about lighting, camera angles, and style</span>
+                              <span>Hãy cụ thể về ánh sáng, góc máy quay và phong cách</span>
                               <span data-testid="text-prompt-length">{field.value.length}/500</span>
                             </div>
                             <FormMessage />
@@ -819,7 +819,7 @@ export default function VideoGenerator() {
                           name="aspectRatio"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-2 block">Aspect Ratio</FormLabel>
+                              <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-2 block">Tỷ lệ khung hình</FormLabel>
                               <FormControl>
                                 <Button
                                   type="button"
@@ -832,7 +832,7 @@ export default function VideoGenerator() {
                                   data-testid="button-select-aspect-ratio"
                                 >
                                   <span className="fluent-body-medium">
-                                    {field.value ? aspectRatioOptions.find(opt => opt.value === field.value)?.label : "Choose aspect ratio"}
+                                    {field.value ? aspectRatioOptions.find(opt => opt.value === field.value)?.label : "Chọn tỷ lệ khung hình"}
                                   </span>
                                   <ChevronDownRegular className="h-4 w-4" />
                                 </Button>
@@ -847,7 +847,7 @@ export default function VideoGenerator() {
                           name="model"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-2 block">Model</FormLabel>
+                              <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-2 block">Mô hình AI</FormLabel>
                               <FormControl>
                                 <Button
                                   type="button"
@@ -860,7 +860,7 @@ export default function VideoGenerator() {
                                   data-testid="button-select-model"
                                 >
                                   <span className="fluent-body-medium">
-                                    {field.value ? modelOptions.find(opt => opt.value === field.value)?.label : "Choose model"}
+                                    {field.value ? modelOptions.find(opt => opt.value === field.value)?.label : "Chọn mô hình AI"}
                                   </span>
                                   <ChevronDownRegular className="h-4 w-4" />
                                 </Button>
@@ -873,7 +873,7 @@ export default function VideoGenerator() {
 
                       <Collapsible>
                         <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-[var(--fluent-neutral-foreground-2)] hover:text-[var(--fluent-neutral-foreground-1)] transition-colors">
-                          Advanced Options
+                          Tùy chọn nâng cao
                           <ChevronDownRegular className="w-5 h-5 transform transition-transform data-[state=open]:rotate-180" />
                         </CollapsibleTrigger>
                         <CollapsibleContent className="mt-4 space-y-4 pl-4">
@@ -882,10 +882,10 @@ export default function VideoGenerator() {
                             name="watermark"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-4 block">Watermark (Optional)</FormLabel>
+                                <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-4 block">Watermark (Tùy chọn)</FormLabel>
                                 <FormControl>
                                   <Input
-                                    placeholder="Your brand name"
+                                    placeholder="Tên thương hiệu của bạn"
                                     data-testid="input-watermark"
                                     {...field}
                                   />
@@ -909,7 +909,7 @@ export default function VideoGenerator() {
                                   />
                                 </FormControl>
                                 <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] cursor-pointer">
-                                  Generate 1080P HD version (+2 credits)
+                                  Tạo phiên bản HD 1080P (+2 credits)
                                 </FormLabel>
                               </FormItem>
                             )}
@@ -925,7 +925,7 @@ export default function VideoGenerator() {
                       >
                         <SparkleRegular className="w-5 h-5 mr-2" />
                         <span>
-                          {generateVideoMutation.isPending ? "Generating..." : "Generate Video"}
+                          {generateVideoMutation.isPending ? "Đang tạo..." : "Tạo Video"}
                         </span>
                         <span className="ml-2 px-2 py-1 bg-white/20 rounded-full fluent-caption">
                           5 credits
@@ -946,7 +946,7 @@ export default function VideoGenerator() {
                         name="imageUrl"
                         render={() => (
                           <FormItem>
-                            <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)]">Upload Image</FormLabel>
+                            <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)]">Tải lên ảnh</FormLabel>
                             <FormControl>
                               {!uploadedImageUrl ? (
                                 <div 
@@ -964,9 +964,9 @@ export default function VideoGenerator() {
                                   />
                                   <ArrowUploadRegular className="w-12 h-12 text-[var(--fluent-neutral-foreground-3)] mx-auto mb-4" />
                                   <div className="text-sm text-[var(--fluent-neutral-foreground-2)]">
-                                    <span className="text-[var(--fluent-brand-primary)] font-medium">Click to upload</span> or drag and drop
+                                    <span className="text-[var(--fluent-brand-primary)] font-medium">Nhấn để tải lên</span> hoặc kéo thả
                                   </div>
-                                  <p className="text-xs text-[var(--fluent-neutral-foreground-3)] mt-2">PNG, JPG, GIF up to 10MB</p>
+                                  <p className="text-xs text-[var(--fluent-neutral-foreground-3)] mt-2">PNG, JPG, GIF tối đa 10MB</p>
                                 </div>
                               ) : (
                                 <div className="space-y-4">
@@ -1044,11 +1044,11 @@ export default function VideoGenerator() {
                         name="prompt"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-4 block">Motion Prompt</FormLabel>
+                            <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-4 block">Prompt Chuyển động</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Textarea
-                                  placeholder="Describe how the image should animate... (e.g., 'The person starts walking forward with confident steps')"
+                                  placeholder="Mô tả cách ảnh sẽ chuyển động... (ví dụ: 'Người đó bắt đầu bước tới với những bước chân tự tin')"
                                   style={{minHeight: '100px'}}
                                   data-testid="input-motion-prompt"
                                   {...field}
@@ -1080,7 +1080,7 @@ export default function VideoGenerator() {
                           name="aspectRatio"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)]">Aspect Ratio</FormLabel>
+                              <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)]">Tỷ lệ khung hình</FormLabel>
                               <FormControl>
                                 <Button
                                   type="button"
@@ -1092,7 +1092,7 @@ export default function VideoGenerator() {
                                   }}
                                   data-testid="button-select-image-aspect-ratio"
                                 >
-                                  {field.value ? aspectRatioOptions.find(opt => opt.value === field.value)?.label : "Choose aspect ratio"}
+                                  {field.value ? aspectRatioOptions.find(opt => opt.value === field.value)?.label : "Chọn tỷ lệ khung hình"}
                                   <ChevronDownRegular className="h-4 w-4" />
                                 </Button>
                               </FormControl>
@@ -1106,7 +1106,7 @@ export default function VideoGenerator() {
                           name="model"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)]">Model</FormLabel>
+                              <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)]">Mô hình AI</FormLabel>
                               <FormControl>
                                 <Button
                                   type="button"
@@ -1118,7 +1118,7 @@ export default function VideoGenerator() {
                                   }}
                                   data-testid="button-select-image-model"
                                 >
-                                  {field.value ? modelOptions.find(opt => opt.value === field.value)?.label : "Choose model"}
+                                  {field.value ? modelOptions.find(opt => opt.value === field.value)?.label : "Chọn mô hình AI"}
                                   <ChevronDownRegular className="h-4 w-4" />
                                 </Button>
                               </FormControl>
@@ -1136,7 +1136,7 @@ export default function VideoGenerator() {
                       >
                         <ImageRegular className="w-5 h-5 mr-2" />
                         <span>
-                          {generateVideoMutation.isPending ? "Animating..." : "Animate Image"}
+                          {generateVideoMutation.isPending ? "Đang tạo hiệu ứng..." : "Tạo hiệu ứng cho Ảnh"}
                         </span>
                         <span className="ml-2 px-2 py-1 bg-white/20 rounded-full fluent-caption">
                           7 credits
@@ -1164,10 +1164,10 @@ export default function VideoGenerator() {
         <div className="mt-16">
           <div className="text-center mb-12">
             <h2 className="fluent-display-medium mb-4 bg-gradient-to-r from-[var(--fluent-neutral-foreground-1)] to-[var(--fluent-neutral-foreground-2)] bg-clip-text text-transparent">
-              Powered by Veo3 AI
+              Được hỗ trợ bởi Veo3 AI
             </h2>
             <p className="fluent-body-large text-[var(--fluent-neutral-foreground-3)] max-w-2xl mx-auto">
-              Generate stunning, high-quality videos from text prompts or animate your images with state-of-the-art AI technology.
+              Tạo ra những video chất lượng cao tuyệt đẹp từ prompt văn bản hoặc tạo hiệu ứng cho ảnh của bạn với công nghệ AI tiên tiến nhất.
             </p>
           </div>
           
@@ -1176,8 +1176,8 @@ export default function VideoGenerator() {
               <div className="w-12 h-12 bg-gradient-to-r from-[var(--fluent-brand-primary)] to-[var(--fluent-brand-secondary)] rounded-[var(--fluent-border-radius-medium)] flex items-center justify-center mx-auto mb-4">
                 <SparkleRegular className="w-6 h-6" />
               </div>
-              <h3 className="fluent-title-small mb-2">Lightning Fast</h3>
-              <p className="fluent-body-small text-[var(--fluent-neutral-foreground-3)]">Generate videos in minutes with our optimized Veo3 API integration</p>
+              <h3 className="fluent-title-small mb-2">Siêu Nhanh</h3>
+              <p className="fluent-body-small text-[var(--fluent-neutral-foreground-3)]">Tạo video trong vài phút với API Veo3 được tối ưu hóa của chúng tôi</p>
             </div>
             
             <div className="fluent-glass rounded-[var(--fluent-border-radius-large)] p-6 text-center">
@@ -1186,8 +1186,8 @@ export default function VideoGenerator() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="fluent-title-small mb-2">High Quality</h3>
-              <p className="fluent-body-small text-[var(--fluent-neutral-foreground-3)]">Professional-grade 1080P video generation with cinematic quality</p>
+              <h3 className="fluent-title-small mb-2">Chất Lượng Cao</h3>
+              <p className="fluent-body-small text-[var(--fluent-neutral-foreground-3)]">Tạo video 1080P chất lượng chuyên nghiệp với chất lượng điện ảnh</p>
             </div>
             
             <div className="fluent-glass rounded-[var(--fluent-border-radius-large)] p-6 text-center">
@@ -1196,8 +1196,8 @@ export default function VideoGenerator() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
               </div>
-              <h3 className="fluent-title-small mb-2">Easy to Use</h3>
-              <p className="fluent-body-small text-[var(--fluent-neutral-foreground-3)]">Intuitive interface designed for creators of all skill levels</p>
+              <h3 className="fluent-title-small mb-2">Dễ Sử Dụng</h3>
+              <p className="fluent-body-small text-[var(--fluent-neutral-foreground-3)]">Giao diện trực quan được thiết kế cho người sáng tạo ở mọi trình độ</p>
             </div>
           </div>
         </div>
@@ -1209,7 +1209,7 @@ export default function VideoGenerator() {
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
               <span className="fluent-body-small text-[var(--fluent-neutral-foreground-3)]">
-                Powered by{" "}
+                Được hỗ trợ bởi{" "}
                 <a 
                   href="https://veo3api.ai" 
                   className="text-[var(--fluent-brand-primary)] hover:text-[var(--fluent-brand-secondary)] transition-colors"
@@ -1226,21 +1226,21 @@ export default function VideoGenerator() {
                 className="hover:text-[var(--fluent-neutral-foreground-1)] transition-colors"
                 data-testid="link-documentation"
               >
-                Documentation
+                Tài liệu
               </a>
               <a 
                 href="https://veo3api.ai/api-key" 
                 className="hover:text-[var(--fluent-neutral-foreground-1)] transition-colors"
                 data-testid="link-api-key"
               >
-                Get API Key
+                Lấy API Key
               </a>
               <a 
                 href="#" 
                 className="hover:text-[var(--fluent-neutral-foreground-1)] transition-colors"
                 data-testid="link-support"
               >
-                Support
+                Hỗ trợ
               </a>
             </div>
           </div>
