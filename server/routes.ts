@@ -323,6 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const data = await response.json();
+      console.log(`🔍 VEO3 API Response for taskId ${taskId}:`, JSON.stringify(data, null, 2));
       
       if (data.code !== 200) {
         throw new Error(data.msg || 'Failed to check status');
@@ -330,6 +331,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const storageInstance = await storage();
       const generation = await storageInstance.getVideoGenerationByTaskId(taskId);
+      
+      // Handle case where VEO3 API returns null or incomplete data
+      if (!data.data || data.data === null || typeof data.data.successFlag === 'undefined') {
+        console.log(`⏳ Video ${taskId} still processing - VEO3 returned null/incomplete data`);
+        // Video is still processing, return processing status
+        res.json({
+          successFlag: 0,
+          status: "processing",
+          message: "Video is still being processed. Please wait..."
+        });
+        return;
+      }
+      
+      console.log(`✅ Video ${taskId} status check - successFlag: ${data.data.successFlag}`);
+      
       if (generation) {
         let status = "processing";
         let resultUrls = null;
@@ -340,9 +356,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status = "completed";
           resultUrls = data.data.response?.resultUrls || [];
           completedAt = new Date();
+          console.log(`🎬 Video ${taskId} completed with ${resultUrls.length} result URLs`);
         } else if (data.data.successFlag === -1) {
           status = "failed";
           errorMessage = data.data.errorMessage || "Generation failed";
+          console.log(`❌ Video ${taskId} failed: ${errorMessage}`);
         }
 
         await storageInstance.updateVideoGeneration(generation.id, {

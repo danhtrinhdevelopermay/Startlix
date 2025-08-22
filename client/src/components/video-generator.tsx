@@ -70,8 +70,8 @@ export default function VideoGenerator() {
 
     const interval = setInterval(() => {
       const elapsedSeconds = (new Date().getTime() - loadingStartTime.getTime()) / 1000;
-      // Estimate 120 seconds (2 minutes) for completion
-      const estimatedDuration = 120;
+      // Estimate 300 seconds (5 minutes) for completion - VEO3 can take longer
+      const estimatedDuration = 300;
       const calculatedProgress = Math.min((elapsedSeconds / estimatedDuration) * 85, 85); // Cap at 85% until actual completion
       setLoadingProgress(calculatedProgress);
     }, 1000);
@@ -103,12 +103,21 @@ export default function VideoGenerator() {
     } else if (videoStatus?.successFlag === -1) {
       setIsLoadingModalOpen(false);
       showPopup(
-        "Máy chủ quá tải", 
-        "Máy chủ đang xử lý quá nhiều yêu cầu. Vui lòng thử lại sau vài phút.", 
+        "Tạo video thất bại", 
+        videoStatus?.errorMessage || "Có lỗi xảy ra trong quá trình tạo video. Vui lòng thử lại.", 
         "error"
       );
+    } else if (videoStatus?.status === "processing") {
+      // Video is still processing, show extended wait message after 3 minutes
+      const elapsedSeconds = loadingStartTime ? (new Date().getTime() - loadingStartTime.getTime()) / 1000 : 0;
+      if (elapsedSeconds > 180) { // 3 minutes
+        toast({
+          title: "Video đang được xử lý",
+          description: "VEO3 đang tạo video phức tạp, có thể mất 5-10 phút. Vui lòng đợi thêm.",
+        });
+      }
     }
-  }, [videoStatus, toast]);
+  }, [videoStatus, toast, loadingStartTime]);
 
   const showPopup = (title: string, description: string, type: "error" | "warning" | "info" = "error") => {
     setPopup({ isOpen: true, title, description, type });
