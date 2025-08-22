@@ -10,22 +10,22 @@ const buttonVariants = cva(
     variants: {
       variant: {
         // Fluent Design 2 iOS Primary Button
-        filled: "bg-[var(--fluent-brand-primary)] text-white hover:bg-[var(--fluent-brand-primary-hover)] active:bg-[var(--fluent-brand-primary-pressed)] shadow-[var(--fluent-shadow-4)]",
+        filled: "fluent-button-primary text-white hover:scale-105 active:scale-95 fluent-shadow-soft",
         // Fluent Design 2 iOS Outlined Button  
         outlined:
-          "border border-[var(--fluent-neutral-stroke-1)] bg-transparent text-[var(--fluent-brand-primary)] hover:bg-[var(--fluent-neutral-background-2)] active:bg-[var(--fluent-neutral-background-3)] hover:border-[var(--fluent-neutral-stroke-2)]",
+          "fluent-glass-subtle border-0 text-[var(--fluent-brand-primary)] hover:fluent-glass hover:transform hover:-translate-y-1 fluent-shadow-soft",
         // Fluent Design 2 iOS Text Button
-        text: "bg-transparent text-[var(--fluent-brand-primary)] hover:bg-[var(--fluent-neutral-background-2)] active:bg-[var(--fluent-neutral-background-3)]",
+        text: "bg-transparent text-[var(--fluent-brand-primary)] hover:fluent-glass-subtle rounded-[var(--fluent-border-radius-medium)] transition-all duration-200",
         // Fluent Design 2 iOS Subtle Button
         subtle:
-          "bg-[var(--fluent-neutral-background-2)] text-[var(--fluent-neutral-foreground-1)] hover:bg-[var(--fluent-neutral-background-3)] active:bg-[var(--fluent-neutral-background-4)]",
+          "fluent-glass-subtle text-[var(--fluent-neutral-foreground-1)] hover:fluent-glass hover:transform hover:-translate-y-1 fluent-shadow-soft",
         // Legacy variants for compatibility
-        default: "bg-[var(--fluent-brand-primary)] text-white hover:bg-[var(--fluent-brand-primary-hover)] active:bg-[var(--fluent-brand-primary-pressed)] shadow-[var(--fluent-shadow-4)]",
+        default: "fluent-button-primary text-white hover:scale-105 active:scale-95 fluent-shadow-soft",
         destructive:
           "bg-[var(--fluent-error-primary)] text-white hover:bg-red-600 active:bg-red-700 shadow-[var(--fluent-shadow-4)]",
         secondary:
-          "bg-[var(--fluent-neutral-background-2)] text-[var(--fluent-neutral-foreground-1)] hover:bg-[var(--fluent-neutral-background-3)] active:bg-[var(--fluent-neutral-background-4)]",
-        ghost: "bg-transparent hover:bg-[var(--fluent-neutral-background-2)] active:bg-[var(--fluent-neutral-background-3)]",
+          "fluent-glass-subtle text-[var(--fluent-neutral-foreground-1)] hover:fluent-glass hover:transform hover:-translate-y-1 fluent-shadow-soft",
+        ghost: "bg-transparent hover:fluent-glass-subtle hover:transform hover:-translate-y-1 transition-all duration-200",
         link: "text-[var(--fluent-brand-primary)] underline-offset-4 hover:underline bg-transparent",
       },
       size: {

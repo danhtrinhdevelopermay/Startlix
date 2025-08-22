@@ -51,17 +51,11 @@ export default function GradientBackground() {
   }, []);
 
   return (
-    <div className="gradient-background">
-      <div className="gradient-sphere sphere-1"></div>
-      <div className="gradient-sphere sphere-2"></div>
-      <div className="gradient-sphere sphere-3"></div>
-      <div className="glow"></div>
-      <div className="grid-overlay"></div>
-      <div className="noise-overlay"></div>
-      <div 
-        className="particles-container" 
-        ref={particlesContainerRef}
-      ></div>
+    <div className="fluent-gradient-background">
+      <div className="fluent-sphere fluent-sphere-1"></div>
+      <div className="fluent-sphere fluent-sphere-2"></div>
+      <div className="fluent-sphere fluent-sphere-3"></div>
+      <div className="fluent-glow"></div>
     </div>
   );
 }
