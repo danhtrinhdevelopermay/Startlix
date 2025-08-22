@@ -58,50 +58,89 @@ export default function Register() {
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="username">Tên đăng nhập</Label>
-              <Input
-                id="username"
-                data-testid="input-username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                placeholder="Nhập tên đăng nhập (tối thiểu 3 ký tự)"
-                minLength={3}
-              />
+              <Label htmlFor="username" className="mb-4 block">Tên đăng nhập</Label>
+              <div className="premium-input-container">
+                <div className="premium-input-wrapper">
+                  <div className="premium-input-glow"></div>
+                  <div className="premium-input-darkBorderBg"></div>
+                  <div className="premium-input-darkBorderBg"></div>
+                  <div className="premium-input-darkBorderBg"></div>
+                  <div className="premium-input-white"></div>
+                  <div className="premium-input-border"></div>
+                  <input
+                    id="username"
+                    data-testid="input-username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                    placeholder="Nhập tên đăng nhập (tối thiểu 3 ký tự)"
+                    minLength={3}
+                    className="premium-input"
+                  />
+                  <div className="premium-input-mask"></div>
+                  <div className="premium-input-pink-mask"></div>
+                </div>
+              </div>
               {username.length > 0 && username.length < 3 && (
                 <p className="text-sm text-red-500">Tên đăng nhập phải có ít nhất 3 ký tự</p>
               )}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Mật khẩu</Label>
-              <Input
-                id="password"
-                data-testid="input-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
-                minLength={6}
-              />
+              <Label htmlFor="password" className="mb-4 block">Mật khẩu</Label>
+              <div className="premium-input-container">
+                <div className="premium-input-wrapper">
+                  <div className="premium-input-glow"></div>
+                  <div className="premium-input-darkBorderBg"></div>
+                  <div className="premium-input-darkBorderBg"></div>
+                  <div className="premium-input-darkBorderBg"></div>
+                  <div className="premium-input-white"></div>
+                  <div className="premium-input-border"></div>
+                  <input
+                    id="password"
+                    data-testid="input-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
+                    minLength={6}
+                    className="premium-input"
+                  />
+                  <div className="premium-input-mask"></div>
+                  <div className="premium-input-pink-mask"></div>
+                </div>
+              </div>
               {password.length > 0 && password.length < 6 && (
                 <p className="text-sm text-red-500">Mật khẩu phải có ít nhất 6 ký tự</p>
               )}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
-              <Input
-                id="confirmPassword"
-                data-testid="input-confirm-password"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                placeholder="Nhập lại mật khẩu"
-              />
+              <Label htmlFor="confirmPassword" className="mb-4 block">Xác nhận mật khẩu</Label>
+              <div className="premium-input-container">
+                <div className="premium-input-wrapper">
+                  <div className="premium-input-glow"></div>
+                  <div className="premium-input-darkBorderBg"></div>
+                  <div className="premium-input-darkBorderBg"></div>
+                  <div className="premium-input-darkBorderBg"></div>
+                  <div className="premium-input-white"></div>
+                  <div className="premium-input-border"></div>
+                  <input
+                    id="confirmPassword"
+                    data-testid="input-confirm-password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    placeholder="Nhập lại mật khẩu"
+                    className="premium-input"
+                  />
+                  <div className="premium-input-mask"></div>
+                  <div className="premium-input-pink-mask"></div>
+                </div>
+              </div>
               {confirmPassword.length > 0 && password !== confirmPassword && (
                 <p className="text-sm text-red-500">Mật khẩu xác nhận không khớp</p>
               )}

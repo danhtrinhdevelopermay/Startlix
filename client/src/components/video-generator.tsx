@@ -399,14 +399,26 @@ export default function VideoGenerator() {
                         name="prompt"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-300">Video Prompt</FormLabel>
+                            <FormLabel className="text-gray-300 mb-4 block">Video Prompt</FormLabel>
                             <FormControl>
-                              <Textarea
-                                placeholder="Describe your video... (e.g., 'A golden retriever playing fetch in a sunny park, slow motion, cinematic lighting')"
-                                className="h-32 bg-dark-600 border-dark-500 text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
-                                data-testid="input-text-prompt"
-                                {...field}
-                              />
+                              <div className="premium-input-container">
+                                <div className="premium-input-wrapper">
+                                  <div className="premium-input-glow"></div>
+                                  <div className="premium-input-darkBorderBg"></div>
+                                  <div className="premium-input-darkBorderBg"></div>
+                                  <div className="premium-input-darkBorderBg"></div>
+                                  <div className="premium-input-white"></div>
+                                  <div className="premium-input-border"></div>
+                                  <textarea
+                                    placeholder="Describe your video... (e.g., 'A golden retriever playing fetch in a sunny park, slow motion, cinematic lighting')"
+                                    className="premium-textarea"
+                                    data-testid="input-text-prompt"
+                                    {...field}
+                                  />
+                                  <div className="premium-input-mask"></div>
+                                  <div className="premium-input-pink-mask"></div>
+                                </div>
+                              </div>
                             </FormControl>
                             <div className="flex justify-between text-xs text-gray-400">
                               <span>Be specific about lighting, camera angles, and style</span>
@@ -481,14 +493,26 @@ export default function VideoGenerator() {
                             name="watermark"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-gray-300">Watermark (Optional)</FormLabel>
+                                <FormLabel className="text-gray-300 mb-4 block">Watermark (Optional)</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    placeholder="Your brand name"
-                                    className="bg-dark-600 border-dark-500 text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500"
-                                    data-testid="input-watermark"
-                                    {...field}
-                                  />
+                                  <div className="premium-input-container">
+                                    <div className="premium-input-wrapper">
+                                      <div className="premium-input-glow"></div>
+                                      <div className="premium-input-darkBorderBg"></div>
+                                      <div className="premium-input-darkBorderBg"></div>
+                                      <div className="premium-input-darkBorderBg"></div>
+                                      <div className="premium-input-white"></div>
+                                      <div className="premium-input-border"></div>
+                                      <input
+                                        placeholder="Your brand name"
+                                        className="premium-input"
+                                        data-testid="input-watermark"
+                                        {...field}
+                                      />
+                                      <div className="premium-input-mask"></div>
+                                      <div className="premium-input-pink-mask"></div>
+                                    </div>
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -594,14 +618,27 @@ export default function VideoGenerator() {
                         name="prompt"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-300">Motion Prompt</FormLabel>
+                            <FormLabel className="text-gray-300 mb-4 block">Motion Prompt</FormLabel>
                             <FormControl>
-                              <Textarea
-                                placeholder="Describe how the image should animate... (e.g., 'The person starts walking forward with confident steps')"
-                                className="h-24 bg-dark-600 border-dark-500 text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 resize-none"
-                                data-testid="input-motion-prompt"
-                                {...field}
-                              />
+                              <div className="premium-input-container">
+                                <div className="premium-input-wrapper">
+                                  <div className="premium-input-glow"></div>
+                                  <div className="premium-input-darkBorderBg"></div>
+                                  <div className="premium-input-darkBorderBg"></div>
+                                  <div className="premium-input-darkBorderBg"></div>
+                                  <div className="premium-input-white"></div>
+                                  <div className="premium-input-border"></div>
+                                  <textarea
+                                    placeholder="Describe how the image should animate... (e.g., 'The person starts walking forward with confident steps')"
+                                    className="premium-textarea"
+                                    style={{minHeight: '100px'}}
+                                    data-testid="input-motion-prompt"
+                                    {...field}
+                                  />
+                                  <div className="premium-input-mask"></div>
+                                  <div className="premium-input-pink-mask"></div>
+                                </div>
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>

@@ -44,29 +44,55 @@ export default function Login() {
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="username">Tên đăng nhập</Label>
-              <Input
-                id="username"
-                data-testid="input-username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                placeholder="Nhập tên đăng nhập"
-              />
+              <Label htmlFor="username" className="mb-4 block">Tên đăng nhập</Label>
+              <div className="premium-input-container">
+                <div className="premium-input-wrapper">
+                  <div className="premium-input-glow"></div>
+                  <div className="premium-input-darkBorderBg"></div>
+                  <div className="premium-input-darkBorderBg"></div>
+                  <div className="premium-input-darkBorderBg"></div>
+                  <div className="premium-input-white"></div>
+                  <div className="premium-input-border"></div>
+                  <input
+                    id="username"
+                    data-testid="input-username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                    placeholder="Nhập tên đăng nhập"
+                    className="premium-input"
+                  />
+                  <div className="premium-input-mask"></div>
+                  <div className="premium-input-pink-mask"></div>
+                </div>
+              </div>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Mật khẩu</Label>
-              <Input
-                id="password"
-                data-testid="input-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="Nhập mật khẩu"
-              />
+              <Label htmlFor="password" className="mb-4 block">Mật khẩu</Label>
+              <div className="premium-input-container">
+                <div className="premium-input-wrapper">
+                  <div className="premium-input-glow"></div>
+                  <div className="premium-input-darkBorderBg"></div>
+                  <div className="premium-input-darkBorderBg"></div>
+                  <div className="premium-input-darkBorderBg"></div>
+                  <div className="premium-input-white"></div>
+                  <div className="premium-input-border"></div>
+                  <input
+                    id="password"
+                    data-testid="input-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="Nhập mật khẩu"
+                    className="premium-input"
+                  />
+                  <div className="premium-input-mask"></div>
+                  <div className="premium-input-pink-mask"></div>
+                </div>
+              </div>
             </div>
             
             <Button 
