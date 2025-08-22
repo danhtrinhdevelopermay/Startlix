@@ -229,7 +229,7 @@ export default function Admin() {
                     Round-robin tự động giữa {summary?.activeKeys || apiKeys.filter((k: ApiKey) => k.isActive && k.credits > 0).length} API keys khả dụng
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Tự động refresh credits mỗi 30 phút • Cache credits 5 phút
+                    Tự động refresh credits mỗi 2 phút • Cache credits 5 phút
                   </p>
                 </div>
               </div>

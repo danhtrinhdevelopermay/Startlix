@@ -147,9 +147,9 @@ async function startAutoRefresh() {
     }
   };
   
-  // Run immediately, then every 30 minutes
+  // Run immediately, then every 2 minutes
   await refreshCredits();
-  autoRefreshInterval = setInterval(refreshCredits, 30 * 60 * 1000);
+  autoRefreshInterval = setInterval(refreshCredits, 2 * 60 * 1000);
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
