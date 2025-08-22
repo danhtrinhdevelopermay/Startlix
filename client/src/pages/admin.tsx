@@ -390,7 +390,7 @@ export default function Admin() {
           <Card className="fluent-glass">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Key className="w-5 h-5" />
+                <KeyRegular className="w-5 h-5" />
                 <span>Cấu hình Veo3 API Key</span>
               </CardTitle>
               <CardDescription>
@@ -439,7 +439,7 @@ export default function Admin() {
           <Card className="fluent-glass">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Plus className="w-5 h-5" />
+                <AddRegular className="w-5 h-5" />
                 <span>Thêm API Key</span>
               </CardTitle>
               <CardDescription>
