@@ -328,30 +328,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ downloadUrl });
       }
 
-      // Use VEO3 API if keys are available
-      const formData = new FormData();
-      formData.append('file', req.file.buffer, {
-        filename: req.file.originalname,
-        contentType: req.file.mimetype,
-      });
-      formData.append('uploadPath', 'images/user-uploads');
+      // Use VEO3 API if keys are available, with fallback to local storage
+      try {
+        const formData = new FormData();
+        formData.append('file', req.file.buffer, {
+          filename: req.file.originalname,
+          contentType: req.file.mimetype,
+        });
+        formData.append('uploadPath', 'images/user-uploads');
 
-      const response = await fetch(`${VEO3_UPLOAD_BASE}/file-stream-upload`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKeyData.key}`,
-          ...formData.getHeaders(),
-        },
-        body: formData as any,
-      });
+        console.log(`Uploading to VEO3 API: ${VEO3_UPLOAD_BASE}/file-stream-upload`);
+        
+        const response = await fetch(`${VEO3_UPLOAD_BASE}/file-stream-upload`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKeyData.key}`,
+            ...formData.getHeaders(),
+          },
+          body: formData as any,
+        });
 
-      const data = await response.json();
-      
-      if (data.code !== 200) {
-        throw new Error(data.msg || 'Upload failed');
+        const data = await response.json();
+        console.log('VEO3 upload response:', data);
+        
+        if (data.code !== 200) {
+          throw new Error(data.msg || 'VEO3 upload failed');
+        }
+
+        res.json({ downloadUrl: data.data.downloadUrl });
+      } catch (veoError) {
+        console.log('VEO3 upload failed, falling back to local storage:', veoError.message);
+        
+        // Fallback to local storage
+        const fs = require('fs');
+        const path = require('path');
+        const uploadsDir = path.join(process.cwd(), 'client', 'public', 'uploads');
+        
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        
+        const timestamp = Date.now();
+        const ext = path.extname(req.file.originalname);
+        const filename = `image_${timestamp}${ext}`;
+        const filePath = path.join(uploadsDir, filename);
+        
+        fs.writeFileSync(filePath, req.file.buffer);
+        
+        const downloadUrl = `/uploads/${filename}`;
+        console.log(`Image saved locally as fallback: ${downloadUrl}`);
+        
+        res.json({ downloadUrl });
       }
-
-      res.json({ downloadUrl: data.data.downloadUrl });
     } catch (error) {
       console.error('Upload error:', error);
       res.status(500).json({ message: "Failed to upload image" });
