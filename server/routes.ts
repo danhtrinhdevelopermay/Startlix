@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
 import { storage } from "./storage";
-import { insertVideoGenerationSchema, insertUserSchema, insertRewardVideoSchema, insertVideoWatchHistorySchema, type User } from "@shared/schema";
+import { insertVideoGenerationSchema, insertUserSchema, insertRewardVideoSchema, insertVideoWatchHistorySchema, type User, type ExternalApiKey } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
 import FormData from "form-data";
@@ -62,6 +62,47 @@ async function checkApiCreditsWithCache(apiKey: string): Promise<number> {
   creditCache.set(cacheKey, { credits, lastChecked: now });
   
   return credits;
+}
+
+// External API key authentication middleware
+async function authenticateExternalApiKey(req: Request, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing or invalid Authorization header' });
+  }
+
+  const apiKey = authHeader.substring(7); // Remove 'Bearer ' prefix
+  if (!apiKey.startsWith('stlix_')) {
+    return res.status(401).json({ error: 'Invalid API key format' });
+  }
+
+  try {
+    const storageInstance = await storage();
+    const externalApiKey = await storageInstance.getExternalApiKeyByKey(apiKey);
+    
+    if (!externalApiKey) {
+      return res.status(401).json({ error: 'Invalid API key' });
+    }
+
+    if (!externalApiKey.isActive) {
+      return res.status(401).json({ error: 'API key is deactivated' });
+    }
+
+    // Check monthly credit limit
+    if (externalApiKey.creditsUsed >= externalApiKey.creditsLimit) {
+      return res.status(429).json({ 
+        error: 'Monthly credit limit exceeded',
+        creditsUsed: externalApiKey.creditsUsed,
+        creditsLimit: externalApiKey.creditsLimit
+      });
+    }
+
+    (req as any).externalApiKey = externalApiKey;
+    next();
+  } catch (error) {
+    console.error('External API key authentication error:', error);
+    return res.status(500).json({ error: 'Authentication failed' });
+  }
 }
 
 // Get best available API key with credits using round-robin load balancing
@@ -1198,6 +1239,395 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error('Create reward video error:', error);
       res.status(500).json({ message: "Failed to create reward video" });
+    }
+  });
+
+  // Admin endpoints for managing external API keys
+  app.get("/api/admin/external-api-keys", async (req, res) => {
+    try {
+      const storageInstance = await storage();
+      const externalApiKeys = await storageInstance.getUserExternalApiKeys('admin'); // Get all for admin view
+      res.json(externalApiKeys);
+    } catch (error) {
+      console.error('Get external API keys error:', error);
+      res.status(500).json({ message: "Failed to get external API keys" });
+    }
+  });
+
+  app.post("/api/admin/external-api-keys", async (req, res) => {
+    try {
+      const { keyName, creditsLimit = 100, userId = null } = req.body;
+      
+      if (!keyName || typeof keyName !== 'string') {
+        return res.status(400).json({ message: "keyName is required" });
+      }
+      
+      const storageInstance = await storage();
+      const externalApiKey = await storageInstance.createExternalApiKey({
+        keyName,
+        userId: userId || null,
+        creditsLimit: Number(creditsLimit) || 100,
+        isActive: true
+      });
+      
+      res.status(201).json(externalApiKey);
+    } catch (error) {
+      console.error('Create external API key error:', error);
+      res.status(500).json({ message: "Failed to create external API key" });
+    }
+  });
+
+  app.patch("/api/admin/external-api-keys/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { isActive, creditsLimit, keyName } = req.body;
+      
+      const updates: any = {};
+      if (typeof isActive === 'boolean') updates.isActive = isActive;
+      if (typeof creditsLimit === 'number') updates.creditsLimit = creditsLimit;
+      if (typeof keyName === 'string') updates.keyName = keyName;
+      
+      const storageInstance = await storage();
+      const updatedKey = await storageInstance.updateExternalApiKey(id, updates);
+      
+      if (!updatedKey) {
+        return res.status(404).json({ message: "External API key not found" });
+      }
+      
+      res.json(updatedKey);
+    } catch (error) {
+      console.error('Update external API key error:', error);
+      res.status(500).json({ message: "Failed to update external API key" });
+    }
+  });
+
+  app.post("/api/admin/external-api-keys/:id/reset-usage", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const storageInstance = await storage();
+      const updatedKey = await storageInstance.resetMonthlyUsage(id);
+      
+      if (!updatedKey) {
+        return res.status(404).json({ message: "External API key not found" });
+      }
+      
+      res.json(updatedKey);
+    } catch (error) {
+      console.error('Reset external API key usage error:', error);
+      res.status(500).json({ message: "Failed to reset usage" });
+    }
+  });
+
+  // External API endpoints
+  // Text-to-video generation for external users
+  app.post("/api/external/generate/text-to-video", authenticateExternalApiKey, async (req: Request & { externalApiKey?: ExternalApiKey }, res: Response) => {
+    try {
+      const { prompt, aspectRatio = "16:9", watermark } = req.body;
+      
+      if (!prompt || typeof prompt !== 'string') {
+        return res.status(400).json({ error: 'prompt is required and must be a string' });
+      }
+      
+      const externalApiKey = req.externalApiKey!;
+      const creditsNeeded = 5; // Text-to-video costs 5 credits
+      
+      if (externalApiKey.creditsUsed + creditsNeeded > externalApiKey.creditsLimit) {
+        return res.status(429).json({
+          error: 'Insufficient credits',
+          creditsUsed: externalApiKey.creditsUsed,
+          creditsLimit: externalApiKey.creditsLimit,
+          creditsNeeded
+        });
+      }
+      
+      const storageInstance = await storage();
+      
+      // Create video generation record
+      const generation = await storageInstance.createVideoGeneration({
+        userId: externalApiKey.userId,
+        type: "text-to-video",
+        prompt,
+        aspectRatio,
+        model: "veo3_fast",
+        watermark,
+        hdGeneration: false
+      }, creditsNeeded);
+      
+      // Increment API key usage
+      await storageInstance.incrementExternalApiKeyUsage(externalApiKey.id, creditsNeeded);
+      
+      // Get best internal API key for VEO3 API
+      const internalApiKey = await getBestApiKey();
+      if (!internalApiKey) {
+        await storageInstance.updateVideoGeneration(generation.id, {
+          status: "failed",
+          errorMessage: "No API key with sufficient credits available"
+        });
+        return res.status(503).json({ error: 'Service temporarily unavailable' });
+      }
+      
+      // Submit to VEO3 API
+      try {
+        const response = await fetch(`${VEO3_API_BASE}/text-to-video`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${internalApiKey.key}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            text: prompt,
+            aspect_ratio: aspectRatio === "9:16" ? "9:16" : "16:9",
+            model: "veo3"
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'VEO3 API request failed');
+        }
+        
+        await storageInstance.updateVideoGeneration(generation.id, {
+          taskId: data.data.task_id,
+          status: "processing"
+        });
+        
+        res.json({
+          success: true,
+          taskId: data.data.task_id,
+          generationId: generation.id,
+          status: "processing",
+          creditsUsed: creditsNeeded
+        });
+        
+      } catch (error: any) {
+        console.error('VEO3 API error:', error);
+        await storageInstance.updateVideoGeneration(generation.id, {
+          status: "failed",
+          errorMessage: error.message
+        });
+        res.status(500).json({ error: 'Failed to submit video generation request' });
+      }
+      
+    } catch (error: any) {
+      console.error('External text-to-video error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
+  // Image-to-video generation for external users
+  app.post("/api/external/generate/image-to-video", authenticateExternalApiKey, upload.single('image'), async (req: Request & { externalApiKey?: ExternalApiKey }, res: Response) => {
+    try {
+      const { prompt, aspectRatio = "16:9" } = req.body;
+      const imageFile = req.file;
+      
+      if (!imageFile) {
+        return res.status(400).json({ error: 'image file is required' });
+      }
+      
+      if (!prompt || typeof prompt !== 'string') {
+        return res.status(400).json({ error: 'prompt is required and must be a string' });
+      }
+      
+      const externalApiKey = req.externalApiKey!;
+      const creditsNeeded = 8; // Image-to-video costs 8 credits
+      
+      if (externalApiKey.creditsUsed + creditsNeeded > externalApiKey.creditsLimit) {
+        return res.status(429).json({
+          error: 'Insufficient credits',
+          creditsUsed: externalApiKey.creditsUsed,
+          creditsLimit: externalApiKey.creditsLimit,
+          creditsNeeded
+        });
+      }
+      
+      const storageInstance = await storage();
+      
+      // Create video generation record
+      const generation = await storageInstance.createVideoGeneration({
+        userId: externalApiKey.userId,
+        type: "image-to-video",
+        prompt,
+        aspectRatio,
+        model: "veo3_fast",
+        hdGeneration: false
+      }, creditsNeeded);
+      
+      // Increment API key usage
+      await storageInstance.incrementExternalApiKeyUsage(externalApiKey.id, creditsNeeded);
+      
+      // Get best internal API key for VEO3 API
+      const internalApiKey = await getBestApiKey();
+      if (!internalApiKey) {
+        await storageInstance.updateVideoGeneration(generation.id, {
+          status: "failed",
+          errorMessage: "No API key with sufficient credits available"
+        });
+        return res.status(503).json({ error: 'Service temporarily unavailable' });
+      }
+      
+      try {
+        // First upload the image
+        const formData = new FormData();
+        formData.append('file', imageFile.buffer, {
+          filename: 'image.jpg',
+          contentType: imageFile.mimetype
+        });
+        
+        const uploadResponse = await fetch(`${VEO3_UPLOAD_BASE}/file/upload`, {
+          method: "POST",
+          body: formData as any
+        });
+        
+        const uploadData = await uploadResponse.json();
+        if (!uploadResponse.ok) {
+          throw new Error(uploadData.message || 'Image upload failed');
+        }
+        
+        const imageUrl = uploadData.data.url;
+        
+        // Update generation with image URL
+        await storageInstance.updateVideoGeneration(generation.id, {
+          imageUrl
+        });
+        
+        // Submit image-to-video request
+        const response = await fetch(`${VEO3_API_BASE}/image-to-video`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${internalApiKey.key}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            image: imageUrl,
+            text: prompt,
+            aspect_ratio: aspectRatio === "9:16" ? "9:16" : "16:9",
+            model: "veo3"
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'VEO3 API request failed');
+        }
+        
+        await storageInstance.updateVideoGeneration(generation.id, {
+          taskId: data.data.task_id,
+          status: "processing"
+        });
+        
+        res.json({
+          success: true,
+          taskId: data.data.task_id,
+          generationId: generation.id,
+          status: "processing",
+          creditsUsed: creditsNeeded,
+          imageUrl
+        });
+        
+      } catch (error: any) {
+        console.error('VEO3 API error:', error);
+        await storageInstance.updateVideoGeneration(generation.id, {
+          status: "failed",
+          errorMessage: error.message
+        });
+        res.status(500).json({ error: 'Failed to submit video generation request' });
+      }
+      
+    } catch (error: any) {
+      console.error('External image-to-video error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
+  // Check generation status for external users
+  app.get("/api/external/status/:taskId", authenticateExternalApiKey, async (req: Request & { externalApiKey?: ExternalApiKey }, res: Response) => {
+    try {
+      const { taskId } = req.params;
+      const externalApiKey = req.externalApiKey!;
+      
+      const storageInstance = await storage();
+      const generation = await storageInstance.getVideoGenerationByTaskId(taskId);
+      
+      if (!generation) {
+        return res.status(404).json({ error: 'Generation not found' });
+      }
+      
+      // Ensure the generation belongs to this API key's user
+      if (generation.userId !== externalApiKey.userId) {
+        return res.status(404).json({ error: 'Generation not found' });
+      }
+      
+      // If generation is still processing, check VEO3 API for updates
+      if (generation.status === "processing") {
+        const internalApiKey = await getBestApiKey();
+        if (internalApiKey) {
+          try {
+            const response = await fetch(`${VEO3_API_BASE}/query/${generation.taskId}`, {
+              headers: {
+                "Authorization": `Bearer ${internalApiKey.key}`,
+              },
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.data?.status) {
+              if (data.data.status === "completed" && data.data.output?.url) {
+                await storageInstance.updateVideoGeneration(generation.id, {
+                  status: "completed",
+                  resultUrls: [data.data.output.url],
+                  completedAt: new Date()
+                });
+                generation.status = "completed";
+                generation.resultUrls = [data.data.output.url];
+              } else if (data.data.status === "failed") {
+                await storageInstance.updateVideoGeneration(generation.id, {
+                  status: "failed",
+                  errorMessage: data.data.message || "Generation failed"
+                });
+                generation.status = "failed";
+                generation.errorMessage = data.data.message || "Generation failed";
+              }
+            }
+          } catch (error) {
+            console.error('Error checking VEO3 status:', error);
+          }
+        }
+      }
+      
+      res.json({
+        taskId: generation.taskId,
+        status: generation.status,
+        resultUrls: generation.resultUrls,
+        errorMessage: generation.errorMessage,
+        createdAt: generation.createdAt,
+        completedAt: generation.completedAt
+      });
+      
+    } catch (error: any) {
+      console.error('External status check error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
+  // Get API key usage stats for external users
+  app.get("/api/external/usage", authenticateExternalApiKey, async (req: Request & { externalApiKey?: ExternalApiKey }, res: Response) => {
+    try {
+      const externalApiKey = req.externalApiKey!;
+      
+      res.json({
+        creditsUsed: externalApiKey.creditsUsed,
+        creditsLimit: externalApiKey.creditsLimit,
+        creditsRemaining: externalApiKey.creditsLimit - externalApiKey.creditsUsed,
+        lastUsed: externalApiKey.lastUsed,
+        lastResetAt: externalApiKey.lastResetAt
+      });
+      
+    } catch (error: any) {
+      console.error('External usage check error:', error);
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 

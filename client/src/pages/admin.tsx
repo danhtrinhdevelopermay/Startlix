@@ -13,7 +13,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { SettingsRegular, KeyRegular, AddRegular, EyeRegular, EyeOffRegular, DeleteRegular, ArrowClockwiseRegular, CheckmarkCircleRegular, DismissCircleRegular, ErrorCircleRegular } from "@fluentui/react-icons";
-import { type ApiKey } from "@shared/schema";
+import { type ApiKey, type ExternalApiKey } from "@shared/schema";
 import { MD3ButtonLoading } from "@/components/md3-loading-indicator";
 
 export default function Admin() {
@@ -37,6 +37,12 @@ export default function Admin() {
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
+  // Get external API keys
+  const { data: externalApiKeys = [] } = useQuery<ExternalApiKey[]>({
+    queryKey: ["/api/admin/external-api-keys"],
+    refetchInterval: 60000, // Refresh every minute
+  });
+
   // STLix API key setting form
   const veo3Form = useForm({
     defaultValues: {
@@ -56,6 +62,15 @@ export default function Admin() {
   const segmindTestForm = useForm({
     defaultValues: {
       videoUrl: "",
+    },
+  });
+
+  // External API key form
+  const externalApiKeyForm = useForm({
+    defaultValues: {
+      keyName: "",
+      creditsLimit: "100",
+      userId: "",
     },
   });
 
@@ -827,6 +842,230 @@ export default function Admin() {
                 ))}
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* External API Keys Management */}
+        <Card className="bg-dark-700 border-dark-600">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <KeyRegular className="h-5 w-5" />
+              External API Keys
+            </CardTitle>
+            <CardDescription>
+              Quản lý API keys cho người dùng bên ngoài
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Create External API Key Form */}
+            <Form {...externalApiKeyForm}>
+              <form
+                onSubmit={externalApiKeyForm.handleSubmit(async (data) => {
+                  try {
+                    await apiRequest("POST", "/api/admin/external-api-keys", {
+                      keyName: data.keyName,
+                      creditsLimit: Number(data.creditsLimit),
+                      userId: data.userId || null,
+                    });
+                    queryClient.invalidateQueries({ queryKey: ["/api/admin/external-api-keys"] });
+                    externalApiKeyForm.reset();
+                    toast({
+                      title: "Thành công",
+                      description: "Đã tạo External API Key mới",
+                    });
+                  } catch (error: any) {
+                    toast({
+                      title: "Lỗi",
+                      description: error.message || "Không thể tạo External API Key",
+                      variant: "destructive",
+                    });
+                  }
+                })}
+                className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end"
+              >
+                <FormField
+                  control={externalApiKeyForm.control}
+                  name="keyName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tên API Key</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Tên mô tả cho API key"
+                          data-testid="input-external-key-name"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={externalApiKeyForm.control}
+                  name="creditsLimit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Giới hạn Credits</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="number"
+                          placeholder="100"
+                          data-testid="input-credits-limit"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={externalApiKeyForm.control}
+                  name="userId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>User ID (tuỳ chọn)</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="ID người dùng"
+                          data-testid="input-user-id"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="submit"
+                  className="bg-blue-600 hover:bg-blue-700"
+                  data-testid="button-create-external-key"
+                >
+                  <AddRegular className="h-4 w-4 mr-2" />
+                  Tạo API Key
+                </Button>
+              </form>
+            </Form>
+
+            <Separator />
+
+            {/* External API Keys Table */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Danh sách External API Keys</h3>
+              {externalApiKeys.length === 0 ? (
+                <p className="text-gray-400 text-center py-8">Chưa có External API Key nào</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Tên</TableHead>
+                        <TableHead>API Key</TableHead>
+                        <TableHead>Trạng thái</TableHead>
+                        <TableHead>Credits</TableHead>
+                        <TableHead>Sử dụng gần đây</TableHead>
+                        <TableHead>Thao tác</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {externalApiKeys.map((key) => (
+                        <TableRow key={key.id} data-testid={`external-key-${key.id}`}>
+                          <TableCell className="font-medium">{key.keyName}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <code className="text-sm bg-dark-600 px-2 py-1 rounded">
+                                {showApiKey[key.id] ? key.apiKey : `${key.apiKey.slice(0, 12)}...${key.apiKey.slice(-4)}`}
+                              </code>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowApiKey({ ...showApiKey, [key.id]: !showApiKey[key.id] })}
+                                data-testid={`button-toggle-key-${key.id}`}
+                              >
+                                {showApiKey[key.id] ? <EyeOffRegular className="h-4 w-4" /> : <EyeRegular className="h-4 w-4" />}
+                              </Button>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={key.isActive ? "default" : "secondary"}>
+                              {key.isActive ? "Hoạt động" : "Tạm dừng"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              <div>{key.creditsUsed} / {key.creditsLimit}</div>
+                              <div className="text-gray-400">
+                                {key.creditsLimit - key.creditsUsed} còn lại
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm text-gray-400">
+                              {key.lastUsed ? new Date(key.lastUsed).toLocaleDateString('vi-VN') : 'Chưa sử dụng'}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={async () => {
+                                  try {
+                                    await apiRequest("PATCH", `/api/admin/external-api-keys/${key.id}`, {
+                                      isActive: !key.isActive
+                                    });
+                                    queryClient.invalidateQueries({ queryKey: ["/api/admin/external-api-keys"] });
+                                    toast({
+                                      title: "Thành công",
+                                      description: `Đã ${key.isActive ? 'tạm dừng' : 'kích hoạt'} API key`,
+                                    });
+                                  } catch (error: any) {
+                                    toast({
+                                      title: "Lỗi",
+                                      description: error.message || "Không thể cập nhật API key",
+                                      variant: "destructive",
+                                    });
+                                  }
+                                }}
+                                data-testid={`button-toggle-status-${key.id}`}
+                              >
+                                {key.isActive ? (
+                                  <DismissCircleRegular className="h-4 w-4 text-orange-400" />
+                                ) : (
+                                  <CheckmarkCircleRegular className="h-4 w-4 text-green-400" />
+                                )}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={async () => {
+                                  try {
+                                    await apiRequest("POST", `/api/admin/external-api-keys/${key.id}/reset-usage`, {});
+                                    queryClient.invalidateQueries({ queryKey: ["/api/admin/external-api-keys"] });
+                                    toast({
+                                      title: "Thành công",
+                                      description: "Đã reset usage cho API key",
+                                    });
+                                  } catch (error: any) {
+                                    toast({
+                                      title: "Lỗi",
+                                      description: error.message || "Không thể reset usage",
+                                      variant: "destructive",
+                                    });
+                                  }
+                                }}
+                                data-testid={`button-reset-usage-${key.id}`}
+                              >
+                                <ArrowClockwiseRegular className="h-4 w-4 text-blue-400" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>

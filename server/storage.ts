@@ -1,8 +1,8 @@
-import { type User, type InsertUser, type VideoGeneration, type InsertVideoGeneration, type ApiKey, type InsertApiKey, type Settings, type InsertSettings, type RewardVideo, type InsertRewardVideo, type VideoWatchHistory, type InsertVideoWatchHistory } from "@shared/schema";
+import { type User, type InsertUser, type VideoGeneration, type InsertVideoGeneration, type ApiKey, type InsertApiKey, type Settings, type InsertSettings, type RewardVideo, type InsertRewardVideo, type VideoWatchHistory, type InsertVideoWatchHistory, type ExternalApiKey, type InsertExternalApiKey } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { users, videoGenerations, apiKeys, settings, rewardVideos, videoWatchHistory } from "@shared/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { users, videoGenerations, apiKeys, settings, rewardVideos, videoWatchHistory, externalApiKeys } from "@shared/schema";
+import { eq, desc, and, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export interface IStorage {
@@ -42,6 +42,14 @@ export interface IStorage {
   updateVideoWatchHistory(id: string, updates: Partial<VideoWatchHistory>): Promise<VideoWatchHistory | undefined>;
   getVideoWatchHistory(userId: string, rewardVideoId: string): Promise<VideoWatchHistory | undefined>;
   getUserWatchHistories(userId: string): Promise<VideoWatchHistory[]>;
+  
+  // External API Key methods
+  createExternalApiKey(apiKey: InsertExternalApiKey): Promise<ExternalApiKey>;
+  getExternalApiKeyByKey(apiKey: string): Promise<ExternalApiKey | undefined>;
+  updateExternalApiKey(id: string, updates: Partial<ExternalApiKey>): Promise<ExternalApiKey | undefined>;
+  getUserExternalApiKeys(userId: string): Promise<ExternalApiKey[]>;
+  incrementExternalApiKeyUsage(id: string, creditsUsed: number): Promise<ExternalApiKey | undefined>;
+  resetMonthlyUsage(id: string): Promise<ExternalApiKey | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -51,6 +59,7 @@ export class MemStorage implements IStorage {
   private settings: Map<string, Settings>;
   private rewardVideos: Map<string, RewardVideo>;
   private videoWatchHistories: Map<string, VideoWatchHistory>;
+  private externalApiKeys: Map<string, ExternalApiKey>;
 
   constructor() {
     this.users = new Map();
@@ -59,6 +68,7 @@ export class MemStorage implements IStorage {
     this.settings = new Map();
     this.rewardVideos = new Map();
     this.videoWatchHistories = new Map();
+    this.externalApiKeys = new Map();
     
     // Create a default user for demo purposes
     const defaultUser: User = {
@@ -299,6 +309,74 @@ export class MemStorage implements IStorage {
       .filter((history) => history.userId === userId)
       .sort((a, b) => new Date(b.startedAt!).getTime() - new Date(a.startedAt!).getTime());
   }
+
+  // External API Key methods
+  async createExternalApiKey(insertApiKey: InsertExternalApiKey): Promise<ExternalApiKey> {
+    const id = randomUUID();
+    const apiKey = `stlix_${randomUUID().replace(/-/g, '')}`;
+    const externalApiKey: ExternalApiKey = {
+      ...insertApiKey,
+      id,
+      apiKey,
+      userId: insertApiKey.userId || null,
+      isActive: insertApiKey.isActive ?? true,
+      creditsLimit: insertApiKey.creditsLimit ?? 100,
+      creditsUsed: 0,
+      lastUsed: null,
+      createdAt: new Date(),
+      lastResetAt: new Date(),
+    };
+    this.externalApiKeys.set(id, externalApiKey);
+    return externalApiKey;
+  }
+
+  async getExternalApiKeyByKey(apiKey: string): Promise<ExternalApiKey | undefined> {
+    return Array.from(this.externalApiKeys.values()).find(key => key.apiKey === apiKey);
+  }
+
+  async updateExternalApiKey(id: string, updates: Partial<ExternalApiKey>): Promise<ExternalApiKey | undefined> {
+    const apiKey = this.externalApiKeys.get(id);
+    if (apiKey) {
+      const updatedApiKey = { ...apiKey, ...updates };
+      this.externalApiKeys.set(id, updatedApiKey);
+      return updatedApiKey;
+    }
+    return undefined;
+  }
+
+  async getUserExternalApiKeys(userId: string): Promise<ExternalApiKey[]> {
+    return Array.from(this.externalApiKeys.values())
+      .filter(apiKey => apiKey.userId === userId)
+      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+  }
+
+  async incrementExternalApiKeyUsage(id: string, creditsUsed: number): Promise<ExternalApiKey | undefined> {
+    const apiKey = this.externalApiKeys.get(id);
+    if (apiKey) {
+      const updatedApiKey = { 
+        ...apiKey, 
+        creditsUsed: apiKey.creditsUsed + creditsUsed,
+        lastUsed: new Date()
+      };
+      this.externalApiKeys.set(id, updatedApiKey);
+      return updatedApiKey;
+    }
+    return undefined;
+  }
+
+  async resetMonthlyUsage(id: string): Promise<ExternalApiKey | undefined> {
+    const apiKey = this.externalApiKeys.get(id);
+    if (apiKey) {
+      const updatedApiKey = { 
+        ...apiKey, 
+        creditsUsed: 0,
+        lastResetAt: new Date()
+      };
+      this.externalApiKeys.set(id, updatedApiKey);
+      return updatedApiKey;
+    }
+    return undefined;
+  }
 }
 
 export class DbStorage implements IStorage {
@@ -467,6 +545,57 @@ export class DbStorage implements IStorage {
 
   async getUserWatchHistories(userId: string): Promise<VideoWatchHistory[]> {
     return await db.select().from(videoWatchHistory).where(eq(videoWatchHistory.userId, userId)).orderBy(desc(videoWatchHistory.startedAt));
+  }
+
+  // External API Key methods
+  async createExternalApiKey(insertApiKey: InsertExternalApiKey): Promise<ExternalApiKey> {
+    const apiKey = `stlix_${randomUUID().replace(/-/g, '')}`;
+    const fullApiKey = {
+      ...insertApiKey,
+      apiKey,
+      userId: insertApiKey.userId || null,
+      isActive: insertApiKey.isActive ?? true,
+      creditsLimit: insertApiKey.creditsLimit ?? 100,
+      creditsUsed: 0,
+    };
+    const results = await db.insert(externalApiKeys).values(fullApiKey).returning();
+    return results[0];
+  }
+
+  async getExternalApiKeyByKey(apiKey: string): Promise<ExternalApiKey | undefined> {
+    const results = await db.select().from(externalApiKeys).where(eq(externalApiKeys.apiKey, apiKey));
+    return results[0];
+  }
+
+  async updateExternalApiKey(id: string, updates: Partial<ExternalApiKey>): Promise<ExternalApiKey | undefined> {
+    const results = await db.update(externalApiKeys).set(updates).where(eq(externalApiKeys.id, id)).returning();
+    return results[0];
+  }
+
+  async getUserExternalApiKeys(userId: string): Promise<ExternalApiKey[]> {
+    return await db.select().from(externalApiKeys).where(eq(externalApiKeys.userId, userId)).orderBy(desc(externalApiKeys.createdAt));
+  }
+
+  async incrementExternalApiKeyUsage(id: string, creditsUsed: number): Promise<ExternalApiKey | undefined> {
+    const results = await db.update(externalApiKeys)
+      .set({ 
+        creditsUsed: sql`credits_used + ${creditsUsed}`,
+        lastUsed: new Date()
+      })
+      .where(eq(externalApiKeys.id, id))
+      .returning();
+    return results[0];
+  }
+
+  async resetMonthlyUsage(id: string): Promise<ExternalApiKey | undefined> {
+    const results = await db.update(externalApiKeys)
+      .set({ 
+        creditsUsed: 0,
+        lastResetAt: new Date()
+      })
+      .where(eq(externalApiKeys.id, id))
+      .returning();
+    return results[0];
   }
 }
 

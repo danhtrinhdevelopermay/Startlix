@@ -77,6 +77,20 @@ export const videoWatchHistory = pgTable("video_watch_history", {
   completedAt: timestamp("completed_at"),
 });
 
+// External User API Keys for public API access
+export const externalApiKeys = pgTable("external_api_keys", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  keyName: text("key_name").notNull(),
+  apiKey: text("api_key").notNull().unique(),
+  userId: varchar("user_id").references(() => users.id),
+  isActive: boolean("is_active").notNull().default(true),
+  creditsLimit: integer("credits_limit").notNull().default(100), // Monthly limit
+  creditsUsed: integer("credits_used").notNull().default(0), // Used this month
+  lastUsed: timestamp("last_used"),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastResetAt: timestamp("last_reset_at").defaultNow(), // For monthly reset
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -121,6 +135,23 @@ export const insertVideoWatchHistorySchema = createInsertSchema(videoWatchHistor
   completedAt: true,
 });
 
+export const insertExternalApiKeySchema = createInsertSchema(externalApiKeys).omit({
+  id: true,
+  apiKey: true,
+  creditsUsed: true,
+  lastUsed: true,
+  createdAt: true,
+  lastResetAt: true,
+});
+
+// API request schema for external API
+export const externalApiGenerateSchema = z.object({
+  prompt: z.string().min(10, "Prompt must be at least 10 characters").max(500, "Prompt must be less than 500 characters"),
+  aspectRatio: z.enum(["16:9", "9:16", "1:1"]).default("16:9"),
+  model: z.literal("stlix_fast"), // Only allow fast model for external API
+  watermark: z.string().optional(),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertApiKey = z.infer<typeof insertApiKeySchema>;
@@ -133,3 +164,6 @@ export type InsertRewardVideo = z.infer<typeof insertRewardVideoSchema>;
 export type RewardVideo = typeof rewardVideos.$inferSelect;
 export type InsertVideoWatchHistory = z.infer<typeof insertVideoWatchHistorySchema>;
 export type VideoWatchHistory = typeof videoWatchHistory.$inferSelect;
+export type InsertExternalApiKey = z.infer<typeof insertExternalApiKeySchema>;
+export type ExternalApiKey = typeof externalApiKeys.$inferSelect;
+export type ExternalApiGenerate = z.infer<typeof externalApiGenerateSchema>;
