@@ -741,6 +741,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check VEO3 Premium model status
+  app.get("/api/model-status/veo3-premium", async (req, res) => {
+    try {
+      const storageInstance = await storage();
+      const setting = await storageInstance.getSetting("VEO3_PREMIUM_ENABLED");
+      const isEnabled = setting?.value === "true";
+      
+      res.json({ 
+        enabled: isEnabled,
+        status: isEnabled ? "active" : "maintenance"
+      });
+    } catch (error) {
+      console.error('Model status check error:', error);
+      res.status(500).json({ message: "Failed to check model status" });
+    }
+  });
+
   // Admin API Keys management
   app.get("/api/admin/api-keys", async (req, res) => {
     try {

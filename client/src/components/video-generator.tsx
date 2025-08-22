@@ -135,6 +135,12 @@ export default function VideoGenerator() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Check VEO3 Premium model status
+  const { data: veo3PremiumStatus } = useQuery({
+    queryKey: ["/api/model-status/veo3-premium"],
+    refetchInterval: 30000, // Check every 30 seconds
+  });
+
   // Test connection to WebSocket service
   const testConnection = async () => {
     return new Promise((resolve) => {
@@ -651,6 +657,16 @@ export default function VideoGenerator() {
   };
 
   const onTextToVideoSubmit = (data: TextToVideoForm) => {
+    // Check if Veo3 Premium is disabled
+    if (data.model === "veo3" && (veo3PremiumStatus as any)?.enabled === false) {
+      toast({
+        title: "Mô hình đang bảo trì",
+        description: "Mô hình Veo3 Cao Cấp hiện đang bảo trì. Vui lòng chọn mô hình khác.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     generateVideoMutation.mutate({
       ...data,
       type: "text-to-video",
@@ -659,6 +675,16 @@ export default function VideoGenerator() {
   };
 
   const onImageToVideoSubmit = (data: ImageToVideoForm) => {
+    // Check if Veo3 Premium is disabled
+    if (data.model === "veo3" && (veo3PremiumStatus as any)?.enabled === false) {
+      toast({
+        title: "Mô hình đang bảo trì",
+        description: "Mô hình Veo3 Cao Cấp hiện đang bảo trì. Vui lòng chọn mô hình khác.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     generateVideoMutation.mutate({
       ...data,
       type: "image-to-video",
@@ -1364,16 +1390,23 @@ export default function VideoGenerator() {
                   ? textForm.getValues().model 
                   : imageForm.getValues().model;
                 const isSelected = currentValue === option.value;
+                const isVeo3Premium = option.value === "veo3";
+                const isVeo3PremiumDisabled = isVeo3Premium && (veo3PremiumStatus as any)?.enabled === false;
                 
                 return (
                   <button
                     key={option.value}
+                    disabled={isVeo3PremiumDisabled}
                     className={`w-full p-3 rounded-[var(--fluent-border-radius-medium)] transition-all ${
-                      isSelected 
-                        ? 'fluent-glass-strong border-[var(--fluent-brand-primary)] text-[var(--fluent-brand-primary)]' 
-                        : 'fluent-glass-subtle text-[var(--fluent-neutral-foreground-1)] hover:border-[var(--fluent-brand-primary)] hover:fluent-glass'
+                      isVeo3PremiumDisabled
+                        ? 'fluent-glass-subtle opacity-50 cursor-not-allowed border-red-600 bg-red-900/20'
+                        : isSelected 
+                          ? 'fluent-glass-strong border-[var(--fluent-brand-primary)] text-[var(--fluent-brand-primary)]' 
+                          : 'fluent-glass-subtle text-[var(--fluent-neutral-foreground-1)] hover:border-[var(--fluent-brand-primary)] hover:fluent-glass'
                     }`}
                     onClick={() => {
+                      if (isVeo3PremiumDisabled) return;
+                      
                       if (currentFormType === "text") {
                         textForm.setValue("model", option.value as "veo3" | "veo3_fast");
                       } else {
@@ -1406,6 +1439,19 @@ export default function VideoGenerator() {
                             </span>
                           ))}
                         </div>
+                        {isVeo3PremiumDisabled && (
+                          <div className="mt-2 p-2 bg-red-900/20 border border-red-600 rounded-md">
+                            <div className="flex items-center space-x-2">
+                              <DismissRegular className="w-3 h-3 text-red-400" />
+                              <span className="text-xs text-red-300 font-medium">
+                                Mô hình đang bảo trì
+                              </span>
+                            </div>
+                            <p className="text-xs text-red-400 mt-1">
+                              Vui lòng chọn mô hình khác hoặc liên hệ admin
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </button>

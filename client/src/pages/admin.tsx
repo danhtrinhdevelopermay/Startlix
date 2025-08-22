@@ -189,6 +189,30 @@ export default function Admin() {
     },
   });
 
+  // Toggle Veo3 Premium model mutation
+  const toggleVeo3PremiumMutation = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      await apiRequest("POST", "/api/admin/settings", {
+        key: "VEO3_PREMIUM_ENABLED",
+        value: enabled ? "true" : "false",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/settings"] });
+      toast({
+        title: "Cập nhật thành công",
+        description: "Đã thay đổi trạng thái mô hình Veo3 Cao Cấp",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Lỗi",
+        description: "Không thể cập nhật trạng thái mô hình",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmitVeo3 = (data: { veo3ApiKey: string }) => {
     updateVeo3Mutation.mutate(data);
   };
@@ -499,6 +523,79 @@ export default function Admin() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Veo3 Premium Model Control */}
+        <Card className="fluent-glass-strong border-primary-600">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">V3</span>
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Quản lý Mô hình Veo3 Cao Cấp</CardTitle>
+                  <CardDescription>
+                    Bật/tắt mô hình Veo3 Cao Cấp cho người dùng
+                  </CardDescription>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="text-right">
+                  <div className="text-sm text-gray-400">Trạng thái</div>
+                  <div className={`text-sm font-medium ${
+                    settings?.find((s: any) => s.key === "VEO3_PREMIUM_ENABLED")?.value === "true" 
+                      ? "text-green-400" 
+                      : "text-red-400"
+                  }`}>
+                    {settings?.find((s: any) => s.key === "VEO3_PREMIUM_ENABLED")?.value === "true" 
+                      ? "Hoạt động" 
+                      : "Bảo trì"}
+                  </div>
+                </div>
+                <Switch
+                  checked={settings?.find((s: any) => s.key === "VEO3_PREMIUM_ENABLED")?.value === "true"}
+                  onCheckedChange={(checked) => toggleVeo3PremiumMutation.mutate(checked)}
+                  disabled={toggleVeo3PremiumMutation.isPending}
+                  data-testid="switch-veo3-premium"
+                />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="p-4 bg-dark-600 rounded-lg border border-dark-500">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium text-green-400 mb-2">Khi BẬT:</h4>
+                    <ul className="text-sm text-gray-300 space-y-1">
+                      <li>• Người dùng có thể chọn mô hình Veo3 Cao Cấp</li>
+                      <li>• Mô hình hoạt động bình thường</li>
+                      <li>• Tạo video chất lượng cao nhất</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-red-400 mb-2">Khi TẮT:</h4>
+                    <ul className="text-sm text-gray-300 space-y-1">
+                      <li>• Mô hình bị vô hiệu hóa</li>
+                      <li>• Hiển thị thông báo bảo trì</li>
+                      <li>• Người dùng phải chọn mô hình khác</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              {settings?.find((s: any) => s.key === "VEO3_PREMIUM_ENABLED")?.value !== "true" && (
+                <div className="p-3 bg-yellow-900/20 border border-yellow-600 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <ErrorCircleRegular className="w-4 h-4 text-yellow-400" />
+                    <span className="text-sm text-yellow-300">
+                      Mô hình Veo3 Cao Cấp hiện đang ở chế độ bảo trì
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* API Keys List */}
         <Card className="fluent-glass-strong">
