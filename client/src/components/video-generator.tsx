@@ -377,16 +377,6 @@ export default function VideoGenerator() {
                   {user?.username}
                 </span>
               </div>
-              <CreditBalance />
-              <Link to="/admin" data-testid="link-admin">
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className="text-gray-300 border-gray-600 hover:bg-gray-700"
-                >
-                  Admin
-                </Button>
-              </Link>
               <Button 
                 variant="outline"
                 size="sm"
