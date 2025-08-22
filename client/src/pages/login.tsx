@@ -18,10 +18,15 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await loginMutation.mutateAsync({ username, password });
-      setLocation("/");
+      const result = await loginMutation.mutateAsync({ username, password });
+      if (result?.user) {
+        // Ensure navigation happens after successful login
+        setTimeout(() => {
+          setLocation("/");
+        }, 100);
+      }
     } catch (error) {
-      // Error is handled by the mutation
+      console.error('Login error:', error);
     }
   };
 
