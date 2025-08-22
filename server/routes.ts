@@ -503,7 +503,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: user.id,
       }, totalCredits);
 
-      // Call Veo3 API
+      // Call STLix API
       const veoPayload: any = {
         prompt: validatedData.prompt,
         model: validatedData.model,
@@ -620,7 +620,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           completedAt = new Date();
           console.log(`🎬 Video ${taskId} completed with ${resultUrls.length} result URLs`);
           
-          // Check if this is a Veo3 Cao cấp model and needs enhancement
+          // Check if this is a STLix Cao cấp model and needs enhancement
           if (generation.model === "veo3" && generation.enhancementStatus === "none" && resultUrls.length > 0) {
             // Start enhancement process
             status = "enhancing";

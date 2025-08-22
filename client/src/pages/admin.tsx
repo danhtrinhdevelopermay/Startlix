@@ -37,7 +37,7 @@ export default function Admin() {
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
-  // Veo3 API key setting form
+  // STLix API key setting form
   const veo3Form = useForm({
     defaultValues: {
       veo3ApiKey: Array.isArray(settings) ? settings?.find((s: any) => s.key === "VEO3_API_KEY")?.value || "" : "",
@@ -59,8 +59,8 @@ export default function Admin() {
     },
   });
 
-  // Update Veo3 API key mutation
-  const updateVeo3Mutation = useMutation({
+  // Update STLix API key mutation
+  const updateSTLixMutation = useMutation({
     mutationFn: async (data: { veo3ApiKey: string }) => {
       await apiRequest("POST", "/api/admin/settings", {
         key: "VEO3_API_KEY",
@@ -71,13 +71,13 @@ export default function Admin() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/settings"] });
       toast({
         title: "Cập nhật thành công",
-        description: "Đã lưu Veo3 API Key mới",
+        description: "Đã lưu STLix API Key mới",
       });
     },
     onError: () => {
       toast({
         title: "Lỗi",
-        description: "Không thể lưu Veo3 API Key",
+        description: "Không thể lưu STLix API Key",
         variant: "destructive",
       });
     },
@@ -189,8 +189,8 @@ export default function Admin() {
     },
   });
 
-  // Toggle Veo3 Premium model mutation
-  const toggleVeo3PremiumMutation = useMutation({
+  // Toggle STLix Premium model mutation
+  const toggleSTLixPremiumMutation = useMutation({
     mutationFn: async (enabled: boolean) => {
       await apiRequest("POST", "/api/admin/settings", {
         key: "VEO3_PREMIUM_ENABLED",
@@ -202,7 +202,7 @@ export default function Admin() {
       queryClient.invalidateQueries({ queryKey: ["/api/model-status/veo3-premium"] });
       toast({
         title: "Cập nhật thành công",
-        description: "Đã thay đổi trạng thái mô hình Veo3 Cao Cấp",
+        description: "Đã thay đổi trạng thái mô hình STLix Cao Cấp",
       });
     },
     onError: () => {
@@ -214,8 +214,8 @@ export default function Admin() {
     },
   });
 
-  const onSubmitVeo3 = (data: { veo3ApiKey: string }) => {
-    updateVeo3Mutation.mutate(data);
+  const onSubmitSTLix = (data: { veo3ApiKey: string }) => {
+    updateSTLixMutation.mutate(data);
   };
 
   const onSubmitApiKey = (data: { name: string; apiKey: string }) => {
@@ -258,7 +258,7 @@ export default function Admin() {
           <div className="flex items-center space-x-3">
             <SettingsRegular className="w-8 h-8 text-primary-500" />
             <div>
-              <h1 className="text-3xl font-bold">Quản trị VEO3 API</h1>
+              <h1 className="text-3xl font-bold">Quản trị STLIX API</h1>
               <p className="text-gray-400 mt-1">Quản lý API keys và kiểm tra credits tự động</p>
             </div>
           </div>
@@ -411,12 +411,12 @@ export default function Admin() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Veo3 API Key Configuration */}
+          {/* STLix API Key Configuration */}
           <Card className="fluent-glass">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <KeyRegular className="w-5 h-5" />
-                <span>Cấu hình Veo3 API Key</span>
+                <span>Cấu hình STLix API Key</span>
               </CardTitle>
               <CardDescription>
                 Thiết lập API Key chính để tạo video
@@ -424,24 +424,24 @@ export default function Admin() {
             </CardHeader>
             <CardContent>
               <Form {...veo3Form}>
-                <form onSubmit={veo3Form.handleSubmit(onSubmitVeo3)} className="space-y-4">
+                <form onSubmit={veo3Form.handleSubmit(onSubmitSTLix)} className="space-y-4">
                   <FormField
                     control={veo3Form.control}
                     name="veo3ApiKey"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Veo3 API Key</FormLabel>
+                        <FormLabel>STLix API Key</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             type="password"
-                            placeholder="Nhập Veo3 API Key..."
+                            placeholder="Nhập STLix API Key..."
                             className="fluent-glass-subtle text-[var(--fluent-neutral-foreground-1)]"
                             data-testid="input-veo3-api-key"
                           />
                         </FormControl>
                         <FormDescription>
-                          API Key được sử dụng để kết nối với dịch vụ Veo3
+                          API Key được sử dụng để kết nối với dịch vụ STLix
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -449,11 +449,11 @@ export default function Admin() {
                   />
                   <Button
                     type="submit"
-                    disabled={updateVeo3Mutation.isPending}
+                    disabled={updateSTLixMutation.isPending}
                     className="w-full bg-primary-600 hover:bg-primary-700"
                     data-testid="button-save-veo3-key"
                   >
-                    {updateVeo3Mutation.isPending ? "Đang lưu..." : "Lưu API Key"}
+                    {updateSTLixMutation.isPending ? "Đang lưu..." : "Lưu API Key"}
                   </Button>
                 </form>
               </Form>
@@ -525,7 +525,7 @@ export default function Admin() {
           </Card>
         </div>
 
-        {/* Veo3 Premium Model Control */}
+        {/* STLix Premium Model Control */}
         <Card className="fluent-glass-strong border-primary-600">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -534,9 +534,9 @@ export default function Admin() {
                   <span className="text-white font-bold text-sm">V3</span>
                 </div>
                 <div>
-                  <CardTitle className="text-lg">Quản lý Mô hình Veo3 Cao Cấp</CardTitle>
+                  <CardTitle className="text-lg">Quản lý Mô hình STLix Cao Cấp</CardTitle>
                   <CardDescription>
-                    Bật/tắt mô hình Veo3 Cao Cấp cho người dùng
+                    Bật/tắt mô hình STLix Cao Cấp cho người dùng
                   </CardDescription>
                 </div>
               </div>
@@ -555,8 +555,8 @@ export default function Admin() {
                 </div>
                 <Switch
                   checked={settings?.find((s: any) => s.key === "VEO3_PREMIUM_ENABLED")?.value === "true"}
-                  onCheckedChange={(checked) => toggleVeo3PremiumMutation.mutate(checked)}
-                  disabled={toggleVeo3PremiumMutation.isPending}
+                  onCheckedChange={(checked) => toggleSTLixPremiumMutation.mutate(checked)}
+                  disabled={toggleSTLixPremiumMutation.isPending}
                   data-testid="switch-veo3-premium"
                 />
               </div>
@@ -569,7 +569,7 @@ export default function Admin() {
                   <div>
                     <h4 className="font-medium text-green-400 mb-2">Khi BẬT:</h4>
                     <ul className="text-sm text-gray-300 space-y-1">
-                      <li>• Người dùng có thể chọn mô hình Veo3 Cao Cấp</li>
+                      <li>• Người dùng có thể chọn mô hình STLix Cao Cấp</li>
                       <li>• Mô hình hoạt động bình thường</li>
                       <li>• Tạo video chất lượng cao nhất</li>
                     </ul>
@@ -589,7 +589,7 @@ export default function Admin() {
                   <div className="flex items-center space-x-2">
                     <ErrorCircleRegular className="w-4 h-4 text-yellow-400" />
                     <span className="text-sm text-yellow-300">
-                      Mô hình Veo3 Cao Cấp hiện đang ở chế độ bảo trì
+                      Mô hình STLix Cao Cấp hiện đang ở chế độ bảo trì
                     </span>
                   </div>
                 </div>

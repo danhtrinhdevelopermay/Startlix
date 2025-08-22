@@ -1,6 +1,6 @@
 # Overview
 
-Starlix is a video generation application built with React and Express that leverages the VEO3 API for AI-powered video creation. The app supports both text-to-video and image-to-video generation with a modern, responsive user interface. Users can create videos from text prompts or upload images with motion descriptions, track their generation history, and manage their credits.
+Starlix is a video generation application built with React and Express that leverages the STLIX API for AI-powered video creation. The app supports both text-to-video and image-to-video generation with a modern, responsive user interface. Users can create videos from text prompts or upload images with motion descriptions, track their generation history, and manage their credits.
 
 # User Preferences
 
@@ -29,7 +29,7 @@ The backend follows a **REST API** pattern built with **Express.js**:
 - **Database**: PostgreSQL with Drizzle ORM for type-safe database operations
 - **Storage Layer**: Abstracted storage interface supporting both in-memory (development) and database persistence
 - **File Handling**: Multer for multipart file uploads
-- **API Integration**: RESTful client for VEO3 API communication
+- **API Integration**: RESTful client for STLIX API communication
 
 The server implements middleware for request logging, error handling, and development-specific features like Vite integration.
 
@@ -51,7 +51,7 @@ Currently implements a simplified authentication system with:
 
 ## API Integration
 
-**VEO3 API Integration**:
+**STLIX API Integration**:
 - Text-to-video generation endpoint
 - Image-to-video generation with file upload
 - Status polling for generation progress
@@ -69,8 +69,8 @@ Currently implements a simplified authentication system with:
 # External Dependencies
 
 ## Core APIs
-- **VEO3 API**: Primary video generation service for AI-powered video creation
-- **VEO3 Upload API**: File upload service for image-to-video generation
+- **STLIX API**: Primary video generation service for AI-powered video creation
+- **STLIX Upload API**: File upload service for image-to-video generation
 
 ## Database
 - **PostgreSQL**: Primary data storage via Neon serverless postgres
