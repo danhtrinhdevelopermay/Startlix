@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useRegister } from "@/hooks/useAuth";
-import { Loader2, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
+import { MD3ButtonLoading } from "@/components/md3-loading-indicator";
 
 export default function Register() {
   const [, setLocation] = useLocation();
@@ -135,7 +136,10 @@ export default function Register() {
             >
               {registerMutation.isPending ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <MD3ButtonLoading 
+                    label="Registering" 
+                    data-testid="loading-register"
+                  />
                   Đang đăng ký...
                 </>
               ) : (

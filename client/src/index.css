@@ -30,121 +30,104 @@
   }
 }
 
-/* 3D Sphere Loading Animation */
-.loading-sphere {
-  width: 120px;
-  height: 120px;
+/* Material Design 3 Loading Indicators */
+.md3-loading-indicator {
+  --size: 48px;
+  --stroke-width: 4px;
+  --track-color: hsl(var(--md-sys-color-outline-variant, 210 5% 80%));
+  --active-color: hsl(var(--md-sys-color-primary, 258 100% 87%));
+  
+  width: var(--size);
+  height: var(--size);
   position: relative;
-  margin: 0 auto;
-  perspective: 1000px;
+  display: inline-block;
 }
 
-.sphere-container {
+.md3-loading-indicator--small {
+  --size: 36px;
+  --stroke-width: 3px;
+}
+
+.md3-loading-indicator--medium {
+  --size: 48px;
+  --stroke-width: 4px;
+}
+
+.md3-loading-indicator--large {
+  --size: 60px;
+  --stroke-width: 5px;
+}
+
+.md3-loading-indicator svg {
   width: 100%;
   height: 100%;
-  position: relative;
-  transform-style: preserve-3d;
-  animation: sphereRotate 4s linear infinite;
+  transform: rotate(-90deg);
+  will-change: transform;
 }
 
-.sphere-ring {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border: 2px solid transparent;
-  border-radius: 50%;
-  background: linear-gradient(45deg, #00ffff, #8a2be2, #ff00ff, #00ffff);
-  background-size: 400% 400%;
-  animation: gradientShift 3s ease-in-out infinite;
+.md3-loading-indicator circle {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: var(--stroke-width);
 }
 
-.sphere-ring:nth-child(1) {
-  transform: rotateX(0deg) rotateY(0deg);
-  animation-delay: 0s;
+/* Indeterminate animation */
+.md3-loading-indicator--indeterminate {
+  animation: md3-rotate 2s linear infinite;
 }
 
-.sphere-ring:nth-child(2) {
-  transform: rotateX(30deg) rotateY(30deg);
-  animation-delay: -0.5s;
+.md3-loading-indicator--indeterminate .md3-progress-path {
+  stroke: var(--active-color);
+  stroke-dasharray: 89, 200;
+  stroke-dashoffset: 0;
+  animation: md3-dash 1.5s ease-in-out infinite;
 }
 
-.sphere-ring:nth-child(3) {
-  transform: rotateX(60deg) rotateY(60deg);
-  animation-delay: -1s;
+/* Determinate progress */
+.md3-loading-indicator--determinate .md3-progress-track {
+  stroke: var(--track-color);
+  opacity: 0.3;
 }
 
-.sphere-ring:nth-child(4) {
-  transform: rotateX(90deg) rotateY(90deg);
-  animation-delay: -1.5s;
+.md3-loading-indicator--determinate .md3-progress-path {
+  stroke: var(--active-color);
+  stroke-dasharray: var(--circumference, 113.097);
+  stroke-dashoffset: calc(var(--circumference, 113.097) * (1 - var(--progress, 0)));
+  transition: stroke-dashoffset 0.2s ease;
 }
 
-.sphere-ring:nth-child(5) {
-  transform: rotateX(120deg) rotateY(120deg);
-  animation-delay: -2s;
-}
-
-.sphere-ring:nth-child(6) {
-  transform: rotateX(150deg) rotateY(150deg);
-  animation-delay: -2.5s;
-}
-
-.sphere-glow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 140px;
-  height: 140px;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(138, 43, 226, 0.3) 0%, rgba(0, 255, 255, 0.2) 50%, transparent 70%);
-  border-radius: 50%;
-  filter: blur(20px);
-  animation: glowPulse 2s ease-in-out infinite alternate;
-}
-
-@keyframes sphereRotate {
-  0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-  100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
-}
-
-@keyframes gradientShift {
-  0%, 100% { 
-    background-position: 0% 50%;
-    filter: hue-rotate(0deg) brightness(1);
-  }
-  25% { 
-    background-position: 100% 50%;
-    filter: hue-rotate(90deg) brightness(1.2);
-  }
-  50% { 
-    background-position: 100% 100%;
-    filter: hue-rotate(180deg) brightness(1);
-  }
-  75% { 
-    background-position: 0% 100%;
-    filter: hue-rotate(270deg) brightness(1.2);
-  }
-}
-
-@keyframes glowPulse {
-  0% { 
-    opacity: 0.5;
-    transform: translate(-50%, -50%) scale(1);
-  }
+@keyframes md3-rotate {
   100% { 
-    opacity: 0.8;
-    transform: translate(-50%, -50%) scale(1.1);
+    transform: rotate(-90deg) rotate(360deg); 
   }
 }
 
-/* Small version for inline loading */
-.loading-sphere-small {
-  width: 60px;
-  height: 60px;
+@keyframes md3-dash {
+  0% {
+    stroke-dasharray: 1, 200;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -35px;
+  }
+  100% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -124px;
+  }
 }
 
-.loading-sphere-small .sphere-glow {
-  width: 70px;
-  height: 70px;
+/* Color variants */
+.md3-loading-indicator--primary {
+  --active-color: hsl(var(--md-sys-color-primary, 258 100% 87%));
+}
+
+.md3-loading-indicator--secondary {
+  --active-color: hsl(var(--md-sys-color-secondary, 258 100% 87%));
+}
+
+.md3-loading-indicator--error {
+  --active-color: hsl(var(--md-sys-color-error, 0 100% 67%));
 }
 
 /* Dynamic Gradient Background Styles */

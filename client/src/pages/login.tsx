@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLogin } from "@/hooks/useAuth";
-import { Loader2, LogIn } from "lucide-react";
+import { LogIn } from "lucide-react";
+import { MD3ButtonLoading } from "@/components/md3-loading-indicator";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -87,7 +88,10 @@ export default function Login() {
             >
               {loginMutation.isPending ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <MD3ButtonLoading 
+                    label="Logging in" 
+                    data-testid="loading-login"
+                  />
                   Đang đăng nhập...
                 </>
               ) : (

@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Settings, Key, Plus, Eye, EyeOff, Trash2, RefreshCw, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { type ApiKey } from "@shared/schema";
+import { MD3ButtonLoading } from "@/components/md3-loading-indicator";
 
 export default function Admin() {
   const { toast } = useToast();
@@ -210,7 +211,14 @@ export default function Admin() {
             className="bg-primary-600 hover:bg-primary-700"
             data-testid="button-check-all-credits"
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${checkCreditsMutation.isPending ? 'animate-spin' : ''}`} />
+            {checkCreditsMutation.isPending ? (
+              <MD3ButtonLoading 
+                label="Checking credits" 
+                data-testid="loading-check-credits"
+              />
+            ) : (
+              <RefreshCw className="w-4 h-4 mr-2" />
+            )}
             Kiểm tra Credits
           </Button>
         </div>
@@ -546,7 +554,7 @@ export default function Admin() {
                             data-testid={`switch-${apiKey.id}`}
                           />
                           <Button
-                            variant="outline"
+                            variant="outlined"
                             size="sm"
                             onClick={() => deleteApiKeyMutation.mutate(apiKey.id)}
                             disabled={deleteApiKeyMutation.isPending}

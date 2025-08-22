@@ -25,22 +25,7 @@ import starlixLogo from "@assets/Dự án mới 32 [6F4A9A3]_1755821175424.png";
 import ReactCrop, { centerCrop, makeAspectCrop, type Crop, type PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 
-// 3D Sphere Loading Component
-const LoadingSphere = ({ size = "normal" }: { size?: "normal" | "small" }) => {
-  return (
-    <div className={`loading-sphere ${size === "small" ? "loading-sphere-small" : ""}`}>
-      <div className="sphere-glow"></div>
-      <div className="sphere-container">
-        <div className="sphere-ring"></div>
-        <div className="sphere-ring"></div>
-        <div className="sphere-ring"></div>
-        <div className="sphere-ring"></div>
-        <div className="sphere-ring"></div>
-        <div className="sphere-ring"></div>
-      </div>
-    </div>
-  );
-};
+import { MD3VideoProcessingLoading } from "./md3-loading-indicator";
 
 const textToVideoSchema = z.object({
   prompt: z.string().min(10, "Prompt must be at least 10 characters").max(500, "Prompt must be less than 500 characters"),
@@ -789,7 +774,7 @@ export default function VideoGenerator() {
                                   <div className="flex flex-wrap gap-2">
                                     <Button
                                       type="button"
-                                      variant="outline"
+                                      variant="outlined"
                                       size="sm"
                                       onClick={handleChangeImage}
                                       className="bg-dark-600 border-dark-500 text-gray-300 hover:bg-dark-500"
@@ -801,7 +786,7 @@ export default function VideoGenerator() {
                                     
                                     <Button
                                       type="button"
-                                      variant="outline"
+                                      variant="outlined"
                                       size="sm"
                                       onClick={handleCropImage}
                                       className="bg-dark-600 border-dark-500 text-gray-300 hover:bg-dark-500"
@@ -813,7 +798,7 @@ export default function VideoGenerator() {
                                     
                                     <Button
                                       type="button"
-                                      variant="outline"
+                                      variant="outlined"
                                       size="sm"
                                       onClick={handleRemoveImage}
                                       className="bg-red-600/20 border-red-500 text-red-400 hover:bg-red-600/30"
@@ -874,7 +859,7 @@ export default function VideoGenerator() {
                               <FormControl>
                                 <Button
                                   type="button"
-                                  variant="outline"
+                                  variant="outlined"
                                   className="w-full justify-between bg-dark-600 border-dark-500 text-white hover:bg-dark-500"
                                   onClick={() => {
                                     setCurrentFormType("image");
@@ -900,7 +885,7 @@ export default function VideoGenerator() {
                               <FormControl>
                                 <Button
                                   type="button"
-                                  variant="outline"
+                                  variant="outlined"
                                   className="w-full justify-between bg-dark-600 border-dark-500 text-white hover:bg-dark-500"
                                   onClick={() => {
                                     setCurrentFormType("image");
@@ -1055,7 +1040,10 @@ export default function VideoGenerator() {
               {/* Loading Container */}
               <div className="bg-dark-800/60 backdrop-blur-md rounded-3xl p-8 md:p-12 border border-dark-600/50 max-w-2xl w-full">
                 <div className="mb-8">
-                  <LoadingSphere />
+                  <MD3VideoProcessingLoading 
+                    progress={loadingProgress / 100}
+                    data-testid="loading-video-processing"
+                  />
                 </div>
                 
                 <h2 className="text-xl md:text-2xl font-semibold text-gray-300 mb-8">Đang tạo video của bạn...</h2>
@@ -1236,7 +1224,7 @@ export default function VideoGenerator() {
               <div className="flex justify-end space-x-3">
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="outlined"
                   onClick={handleCropCancel}
                   className="bg-dark-600 border-dark-500 text-gray-300 hover:bg-dark-500"
                   data-testid="button-crop-cancel"

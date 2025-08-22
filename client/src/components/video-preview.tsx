@@ -6,23 +6,8 @@ import { Progress } from "@/components/ui/progress";
 import { Play, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ErrorPopup from "@/components/error-popup";
+import MD3LoadingIndicator from "./md3-loading-indicator";
 
-// 3D Sphere Loading Component
-const LoadingSphere = ({ size = "normal" }: { size?: "normal" | "small" }) => {
-  return (
-    <div className={`loading-sphere ${size === "small" ? "loading-sphere-small" : ""}`}>
-      <div className="sphere-glow"></div>
-      <div className="sphere-container">
-        <div className="sphere-ring"></div>
-        <div className="sphere-ring"></div>
-        <div className="sphere-ring"></div>
-        <div className="sphere-ring"></div>
-        <div className="sphere-ring"></div>
-        <div className="sphere-ring"></div>
-      </div>
-    </div>
-  );
-};
 
 interface VideoPreviewProps {
   videoUrl: string;
@@ -204,7 +189,11 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
           >
             <div className="text-center text-gray-400 w-full max-w-md px-8">
               <div className="mb-4">
-                <LoadingSphere size="small" />
+                <MD3LoadingIndicator 
+                  size="medium" 
+                  label="Creating video" 
+                  data-testid="loading-video-creation"
+                />
               </div>
               <p className="text-sm mb-4">Đang tạo video của bạn...</p>
               
@@ -247,7 +236,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
               <div className="flex space-x-2">
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="outlined"
                   onClick={handleDownload}
                   className="bg-dark-600 hover:bg-dark-500 border-dark-500 text-white"
                   data-testid="button-download"

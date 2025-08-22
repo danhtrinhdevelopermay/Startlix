@@ -308,7 +308,7 @@ export default function RewardVideoWatcher({ video, onRewardClaimed, onClose }: 
         {/* Close Button */}
         {onClose && (
           <div className="flex justify-center">
-            <Button variant="outline" onClick={onClose} data-testid="close-button">
+            <Button variant="outlined" onClick={onClose} data-testid="close-button">
               Đóng
             </Button>
           </div>

@@ -11,7 +11,7 @@ import Register from "@/pages/register";
 import RewardVideos from "@/pages/reward-videos";
 import NotFound from "@/pages/not-found";
 import GradientBackground from "@/components/GradientBackground";
-import { Loader2 } from "lucide-react";
+import { MD3FullPageLoading } from "@/components/md3-loading-indicator";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -19,12 +19,10 @@ function Router() {
   // Show loading spinner while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--md-sys-color-background)]">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-[var(--md-sys-color-primary)]" />
-          <p className="md-typescale-body-large text-[var(--md-sys-color-on-background)]">Đang tải...</p>
-        </div>
-      </div>
+      <MD3FullPageLoading 
+        label="Đang tải" 
+        data-testid="loading-authentication"
+      />
     );
   }
 
