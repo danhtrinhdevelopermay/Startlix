@@ -248,7 +248,7 @@ export default function VideoGenerator() {
     new Promise<HTMLImageElement>((resolve, reject) => {
       const image = new Image();
       image.addEventListener('load', () => resolve(image));
-      image.addEventListener('error', (error: Event) => reject(error));
+      image.addEventListener('error', (error) => reject(error));
       image.src = url;
     });
 
@@ -482,14 +482,14 @@ export default function VideoGenerator() {
 
   return (
     <div>
-      {/* Header - Material Design 3 Top App Bar */}
-      <header className="border-b border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container)] sticky top-0 z-50">
+      {/* Header - Fluent Design 2 iOS Top App Bar */}
+      <header className="fluent-glass-strong sticky top-0 z-50 fluent-shadow-soft">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo Section */}
             <div className="flex items-center space-x-3 sm:space-x-4 flex-shrink-0">
               <img src={starlixLogo} alt="Starlix Logo" className="h-8 sm:h-10 w-auto" />
-              <h1 className="md-typescale-title-large text-[var(--md-sys-color-primary)]">
+              <h1 className="fluent-title-medium text-[var(--fluent-brand-primary)]">
                 Starlix
               </h1>
             </div>
@@ -498,8 +498,8 @@ export default function VideoGenerator() {
             <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3 flex-shrink-0">
               {/* User Info */}
               <div className="hidden sm:flex items-center space-x-2 mr-1 md:mr-2">
-                <User className="w-4 h-4 text-[var(--md-sys-color-primary)]" />
-                <span className="md-typescale-body-medium text-[var(--md-sys-color-on-surface)] truncate max-w-[100px]">
+                <User className="w-4 h-4 text-[var(--fluent-brand-primary)]" />
+                <span className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] truncate max-w-[100px]">
                   {user?.username}
                 </span>
               </div>
@@ -551,14 +551,14 @@ export default function VideoGenerator() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Generation Controls */}
           <div className="lg:col-span-2">
-            <div className="bg-[var(--md-sys-color-surface-container-low)] rounded-[var(--md-sys-shape-corner-large)] border border-[var(--md-sys-color-outline-variant)] overflow-hidden shadow-sm">
-              {/* Tab Navigation - Material Design 3 Secondary Navigation */}
-              <div className="flex border-b border-[var(--md-sys-color-outline-variant)]">
+            <div className="fluent-glass rounded-[var(--fluent-border-radius-large)] overflow-hidden fluent-shadow-medium">
+              {/* Tab Navigation - Fluent Design 2 iOS Secondary Navigation */}
+              <div className="flex border-b border-[var(--fluent-neutral-stroke-1)]">
                 <button
-                  className={`flex-1 px-6 py-4 border-b-2 transition-all duration-200 md-typescale-title-small ${
+                  className={`flex-1 px-6 py-4 border-b-2 transition-all duration-300 fluent-title-small ${
                     activeTab === "text-to-video"
-                      ? "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] border-[var(--md-sys-color-primary)]"
-                      : "text-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-on-surface)] hover:bg-[var(--md-sys-color-surface-variant)] border-transparent"
+                      ? "fluent-glass-strong text-[var(--fluent-brand-primary)] border-[var(--fluent-brand-primary)]"
+                      : "text-[var(--fluent-neutral-foreground-3)] hover:text-[var(--fluent-neutral-foreground-1)] hover:fluent-glass-subtle border-transparent"
                   }`}
                   onClick={() => setActiveTab("text-to-video")}
                   data-testid="tab-text-to-video"
@@ -569,10 +569,10 @@ export default function VideoGenerator() {
                   </div>
                 </button>
                 <button
-                  className={`flex-1 px-6 py-4 border-b-2 transition-all duration-200 md-typescale-title-small ${
+                  className={`flex-1 px-6 py-4 border-b-2 transition-all duration-300 fluent-title-small ${
                     activeTab === "image-to-video"
-                      ? "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] border-[var(--md-sys-color-primary)]"
-                      : "text-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-on-surface)] hover:bg-[var(--md-sys-color-surface-variant)] border-transparent"
+                      ? "fluent-glass-strong text-[var(--fluent-brand-primary)] border-[var(--fluent-brand-primary)]"
+                      : "text-[var(--fluent-neutral-foreground-3)] hover:text-[var(--fluent-neutral-foreground-1)] hover:fluent-glass-subtle border-transparent"
                   }`}
                   onClick={() => setActiveTab("image-to-video")}
                   data-testid="tab-image-to-video"
@@ -594,20 +594,15 @@ export default function VideoGenerator() {
                         name="prompt"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-300 mb-4 block">Video Prompt</FormLabel>
+                            <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-4 block">Video Prompt</FormLabel>
                             <FormControl>
-                              <div className="premium-input-container">
-                                <div className="premium-input-wrapper">
-                                  <textarea
-                                    placeholder="Describe your video... (e.g., 'A golden retriever playing fetch in a sunny park, slow motion, cinematic lighting')"
-                                    className="premium-textarea"
-                                    data-testid="input-text-prompt"
-                                    {...field}
-                                  />
-                                </div>
-                              </div>
+                              <Textarea
+                                placeholder="Describe your video... (e.g., 'A golden retriever playing fetch in a sunny park, slow motion, cinematic lighting')"
+                                data-testid="input-text-prompt"
+                                {...field}
+                              />
                             </FormControl>
-                            <div className="flex justify-between text-xs text-gray-400">
+                            <div className="flex justify-between text-xs text-[var(--fluent-neutral-foreground-3)]">
                               <span>Be specific about lighting, camera angles, and style</span>
                               <span data-testid="text-prompt-length">{field.value.length}/500</span>
                             </div>
@@ -622,7 +617,7 @@ export default function VideoGenerator() {
                           name="aspectRatio"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="md-typescale-body-large text-[var(--md-sys-color-on-surface)] mb-2 block">Aspect Ratio</FormLabel>
+                              <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-2 block">Aspect Ratio</FormLabel>
                               <FormControl>
                                 <Button
                                   type="button"
@@ -634,7 +629,7 @@ export default function VideoGenerator() {
                                   }}
                                   data-testid="button-select-aspect-ratio"
                                 >
-                                  <span className="md-typescale-body-large">
+                                  <span className="fluent-body-medium">
                                     {field.value ? aspectRatioOptions.find(opt => opt.value === field.value)?.label : "Choose aspect ratio"}
                                   </span>
                                   <ChevronDown className="h-4 w-4" />
@@ -650,7 +645,7 @@ export default function VideoGenerator() {
                           name="model"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="md-typescale-body-large text-[var(--md-sys-color-on-surface)] mb-2 block">Model</FormLabel>
+                              <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-2 block">Model</FormLabel>
                               <FormControl>
                                 <Button
                                   type="button"
@@ -662,7 +657,7 @@ export default function VideoGenerator() {
                                   }}
                                   data-testid="button-select-model"
                                 >
-                                  <span className="md-typescale-body-large">
+                                  <span className="fluent-body-medium">
                                     {field.value ? modelOptions.find(opt => opt.value === field.value)?.label : "Choose model"}
                                   </span>
                                   <ChevronDown className="h-4 w-4" />
@@ -675,7 +670,7 @@ export default function VideoGenerator() {
                       </div>
 
                       <Collapsible>
-                        <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-gray-300 hover:text-white transition-colors">
+                        <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-[var(--fluent-neutral-foreground-2)] hover:text-[var(--fluent-neutral-foreground-1)] transition-colors">
                           Advanced Options
                           <ChevronDown className="w-5 h-5 transform transition-transform data-[state=open]:rotate-180" />
                         </CollapsibleTrigger>
@@ -685,18 +680,13 @@ export default function VideoGenerator() {
                             name="watermark"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-gray-300 mb-4 block">Watermark (Optional)</FormLabel>
+                                <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-4 block">Watermark (Optional)</FormLabel>
                                 <FormControl>
-                                  <div className="premium-input-container">
-                                    <div className="premium-input-wrapper">
-                                      <input
-                                        placeholder="Your brand name"
-                                        className="premium-input"
-                                        data-testid="input-watermark"
-                                        {...field}
-                                      />
-                                    </div>
-                                  </div>
+                                  <Input
+                                    placeholder="Your brand name"
+                                    data-testid="input-watermark"
+                                    {...field}
+                                  />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -707,7 +697,7 @@ export default function VideoGenerator() {
                             control={textForm.control}
                             name="hdGeneration"
                             render={({ field }) => (
-                              <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4 rounded-[var(--md-sys-shape-corner-medium)] border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-highest)]">
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4 rounded-[var(--fluent-border-radius-medium)] fluent-glass-subtle">
                                 <FormControl>
                                   <Checkbox
                                     checked={field.value}
@@ -716,7 +706,7 @@ export default function VideoGenerator() {
                                     data-testid="checkbox-hd-generation"
                                   />
                                 </FormControl>
-                                <FormLabel className="md-typescale-body-medium text-[var(--md-sys-color-on-surface)] cursor-pointer">
+                                <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] cursor-pointer">
                                   Generate 1080P HD version (+2 credits)
                                 </FormLabel>
                               </FormItem>
@@ -728,14 +718,14 @@ export default function VideoGenerator() {
                       <Button
                         type="submit"
                         disabled={generateVideoMutation.isPending}
-                        className="w-full h-14 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] hover:shadow-lg hover:shadow-[var(--md-sys-color-primary)]/25 md-typescale-label-large"
+                        className="w-full h-14 fluent-button-primary fluent-title-medium"
                         data-testid="button-generate-text-video"
                       >
                         <Sparkles className="w-5 h-5 mr-2" />
                         <span>
                           {generateVideoMutation.isPending ? "Generating..." : "Generate Video"}
                         </span>
-                        <span className="ml-2 px-2 py-1 bg-[var(--md-sys-color-on-primary)]/20 rounded-full md-typescale-label-small">
+                        <span className="ml-2 px-2 py-1 bg-white/20 rounded-full fluent-caption">
                           5 credits
                         </span>
                       </Button>
@@ -754,11 +744,11 @@ export default function VideoGenerator() {
                         name="imageUrl"
                         render={() => (
                           <FormItem>
-                            <FormLabel className="text-gray-300">Upload Image</FormLabel>
+                            <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)]">Upload Image</FormLabel>
                             <FormControl>
                               {!uploadedImageUrl ? (
                                 <div 
-                                  className="border-2 border-dashed border-dark-500 rounded-lg p-8 text-center hover:border-primary-500 transition-colors cursor-pointer bg-dark-600/50"
+                                  className="border-2 border-dashed border-[var(--fluent-neutral-stroke-1)] rounded-[var(--fluent-border-radius-medium)] p-8 text-center hover:border-[var(--fluent-brand-primary)] transition-colors cursor-pointer fluent-glass-subtle"
                                   onClick={() => fileInputRef.current?.click()}
                                   data-testid="upload-area"
                                 >
@@ -770,16 +760,16 @@ export default function VideoGenerator() {
                                     onChange={handleFileUpload}
                                     data-testid="input-file-upload"
                                   />
-                                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                                  <div className="text-sm text-gray-400">
-                                    <span className="text-primary-400 font-medium">Click to upload</span> or drag and drop
+                                  <Upload className="w-12 h-12 text-[var(--fluent-neutral-foreground-3)] mx-auto mb-4" />
+                                  <div className="text-sm text-[var(--fluent-neutral-foreground-2)]">
+                                    <span className="text-[var(--fluent-brand-primary)] font-medium">Click to upload</span> or drag and drop
                                   </div>
-                                  <p className="text-xs text-gray-500 mt-2">PNG, JPG, GIF up to 10MB</p>
+                                  <p className="text-xs text-[var(--fluent-neutral-foreground-3)] mt-2">PNG, JPG, GIF up to 10MB</p>
                                 </div>
                               ) : (
                                 <div className="space-y-4">
                                   {/* Image Preview */}
-                                  <div className="relative rounded-lg overflow-hidden bg-dark-600">
+                                  <div className="relative rounded-[var(--fluent-border-radius-medium)] overflow-hidden fluent-glass-subtle">
                                     <img 
                                       src={uploadedImageUrl} 
                                       alt="Uploaded preview" 
@@ -799,7 +789,7 @@ export default function VideoGenerator() {
                                       variant="outlined"
                                       size="sm"
                                       onClick={handleChangeImage}
-                                      className="bg-dark-600 border-dark-500 text-gray-300 hover:bg-dark-500"
+                                      className="fluent-glass-subtle text-[var(--fluent-neutral-foreground-1)] hover:fluent-glass"
                                       data-testid="button-change-image"
                                     >
                                       <Edit className="w-4 h-4 mr-2" />
@@ -811,7 +801,7 @@ export default function VideoGenerator() {
                                       variant="outlined"
                                       size="sm"
                                       onClick={handleCropImage}
-                                      className="bg-dark-600 border-dark-500 text-gray-300 hover:bg-dark-500"
+                                      className="fluent-glass-subtle text-[var(--fluent-neutral-foreground-1)] hover:fluent-glass"
                                       data-testid="button-crop-image"
                                     >
                                       <Scissors className="w-4 h-4 mr-2" />
@@ -852,19 +842,14 @@ export default function VideoGenerator() {
                         name="prompt"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-300 mb-4 block">Motion Prompt</FormLabel>
+                            <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] mb-4 block">Motion Prompt</FormLabel>
                             <FormControl>
-                              <div className="premium-input-container">
-                                <div className="premium-input-wrapper">
-                                  <textarea
-                                    placeholder="Describe how the image should animate... (e.g., 'The person starts walking forward with confident steps')"
-                                    className="premium-textarea"
-                                    style={{minHeight: '100px'}}
-                                    data-testid="input-motion-prompt"
-                                    {...field}
-                                  />
-                                </div>
-                              </div>
+                              <Textarea
+                                placeholder="Describe how the image should animate... (e.g., 'The person starts walking forward with confident steps')"
+                                style={{minHeight: '100px'}}
+                                data-testid="input-motion-prompt"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -877,12 +862,12 @@ export default function VideoGenerator() {
                           name="aspectRatio"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-gray-300">Aspect Ratio</FormLabel>
+                              <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)]">Aspect Ratio</FormLabel>
                               <FormControl>
                                 <Button
                                   type="button"
                                   variant="outlined"
-                                  className="w-full justify-between bg-dark-600 border-dark-500 text-white hover:bg-dark-500"
+                                  className="w-full justify-between"
                                   onClick={() => {
                                     setCurrentFormType("image");
                                     setAspectRatioModalOpen(true);
@@ -903,12 +888,12 @@ export default function VideoGenerator() {
                           name="model"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-gray-300">Model</FormLabel>
+                              <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)]">Model</FormLabel>
                               <FormControl>
                                 <Button
                                   type="button"
                                   variant="outlined"
-                                  className="w-full justify-between bg-dark-600 border-dark-500 text-white hover:bg-dark-500"
+                                  className="w-full justify-between"
                                   onClick={() => {
                                     setCurrentFormType("image");
                                     setModelModalOpen(true);
@@ -925,24 +910,20 @@ export default function VideoGenerator() {
                         />
                       </div>
 
-                      <button
+                      <Button
                         type="submit"
                         disabled={generateVideoMutation.isPending || !uploadedImageUrl}
-                        className="premium-gen-button w-full"
+                        className="w-full h-14 fluent-button-primary fluent-title-medium"
                         data-testid="button-generate-image-video"
                       >
-                        <div className="wrap">
-                          <div className="content">
-                            <span className="star">✧</span>
-                            <span className="star">✦</span>
-                            <Image className="w-5 h-5" />
-                            <span>
-                              {generateVideoMutation.isPending ? "Animating..." : "Animate Image"}
-                            </span>
-                            <span className="text-xs bg-black/30 px-2 py-1 rounded-full">7 credits</span>
-                          </div>
-                        </div>
-                      </button>
+                        <Image className="w-5 h-5 mr-2" />
+                        <span>
+                          {generateVideoMutation.isPending ? "Animating..." : "Animate Image"}
+                        </span>
+                        <span className="ml-2 px-2 py-1 bg-white/20 rounded-full fluent-caption">
+                          7 credits
+                        </span>
+                      </Button>
                     </form>
                   </Form>
                 </div>
@@ -964,56 +945,56 @@ export default function VideoGenerator() {
         {/* Feature Showcase */}
         <div className="mt-16">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+            <h2 className="fluent-display-medium mb-4 bg-gradient-to-r from-[var(--fluent-neutral-foreground-1)] to-[var(--fluent-neutral-foreground-2)] bg-clip-text text-transparent">
               Powered by Veo3 AI
             </h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">
+            <p className="fluent-body-large text-[var(--fluent-neutral-foreground-3)] max-w-2xl mx-auto">
               Generate stunning, high-quality videos from text prompts or animate your images with state-of-the-art AI technology.
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-dark-700 rounded-xl p-6 border border-dark-600 text-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-primary-500 to-purple-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <div className="fluent-glass rounded-[var(--fluent-border-radius-large)] p-6 text-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-[var(--fluent-brand-primary)] to-[var(--fluent-brand-secondary)] rounded-[var(--fluent-border-radius-medium)] flex items-center justify-center mx-auto mb-4">
                 <Sparkles className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Lightning Fast</h3>
-              <p className="text-gray-400 text-sm">Generate videos in minutes with our optimized Veo3 API integration</p>
+              <h3 className="fluent-title-small mb-2">Lightning Fast</h3>
+              <p className="fluent-body-small text-[var(--fluent-neutral-foreground-3)]">Generate videos in minutes with our optimized Veo3 API integration</p>
             </div>
             
-            <div className="bg-dark-700 rounded-xl p-6 border border-dark-600 text-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <div className="fluent-glass rounded-[var(--fluent-border-radius-large)] p-6 text-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-[var(--fluent-border-radius-medium)] flex items-center justify-center mx-auto mb-4">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold mb-2">High Quality</h3>
-              <p className="text-gray-400 text-sm">Professional-grade 1080P video generation with cinematic quality</p>
+              <h3 className="fluent-title-small mb-2">High Quality</h3>
+              <p className="fluent-body-small text-[var(--fluent-neutral-foreground-3)]">Professional-grade 1080P video generation with cinematic quality</p>
             </div>
             
-            <div className="bg-dark-700 rounded-xl p-6 border border-dark-600 text-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <div className="fluent-glass rounded-[var(--fluent-border-radius-large)] p-6 text-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-[var(--fluent-border-radius-medium)] flex items-center justify-center mx-auto mb-4">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold mb-2">Easy to Use</h3>
-              <p className="text-gray-400 text-sm">Intuitive interface designed for creators of all skill levels</p>
+              <h3 className="fluent-title-small mb-2">Easy to Use</h3>
+              <p className="fluent-body-small text-[var(--fluent-neutral-foreground-3)]">Intuitive interface designed for creators of all skill levels</p>
             </div>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-dark-600 bg-dark-700 mt-20">
+      <footer className="border-t border-[var(--fluent-neutral-stroke-1)] fluent-glass-strong mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <span className="text-sm text-gray-400">
+              <span className="fluent-body-small text-[var(--fluent-neutral-foreground-3)]">
                 Powered by{" "}
                 <a 
                   href="https://veo3api.ai" 
-                  className="text-primary-400 hover:text-primary-300 transition-colors"
+                  className="text-[var(--fluent-brand-primary)] hover:text-[var(--fluent-brand-secondary)] transition-colors"
                   data-testid="link-veo3api"
                 >
                   Veo3 API
@@ -1021,24 +1002,24 @@ export default function VideoGenerator() {
               </span>
             </div>
             
-            <div className="flex space-x-6 text-sm text-gray-400">
+            <div className="flex space-x-6 fluent-body-small text-[var(--fluent-neutral-foreground-3)]">
               <a 
                 href="https://docs.veo3api.ai" 
-                className="hover:text-white transition-colors"
+                className="hover:text-[var(--fluent-neutral-foreground-1)] transition-colors"
                 data-testid="link-documentation"
               >
                 Documentation
               </a>
               <a 
                 href="https://veo3api.ai/api-key" 
-                className="hover:text-white transition-colors"
+                className="hover:text-[var(--fluent-neutral-foreground-1)] transition-colors"
                 data-testid="link-api-key"
               >
                 Get API Key
               </a>
               <a 
                 href="#" 
-                className="hover:text-white transition-colors"
+                className="hover:text-[var(--fluent-neutral-foreground-1)] transition-colors"
                 data-testid="link-support"
               >
                 Support
@@ -1052,15 +1033,15 @@ export default function VideoGenerator() {
       <Dialog open={isLoadingModalOpen} onOpenChange={(open) => !open && setIsLoadingModalOpen(false)}>
         <DialogPortal>
           <DialogOverlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-          <DialogContent className="fixed inset-0 z-50 bg-dark-900/90 backdrop-blur-2xl border-0 p-0 shadow-none duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
-            <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 px-8">
+          <DialogContent className="fixed inset-0 z-50 fluent-glass-ultra backdrop-blur-2xl border-0 p-0 shadow-none duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
+            <div className="flex flex-col items-center justify-center h-full text-center text-[var(--fluent-neutral-foreground-3)] px-8">
               {/* Header */}
               <div className="mb-8">
-                <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Xem trước</h1>
+                <h1 className="fluent-display-large text-[var(--fluent-neutral-foreground-1)] mb-2">Xem trước</h1>
               </div>
               
               {/* Loading Container */}
-              <div className="bg-[var(--md-sys-color-surface-container)] backdrop-blur-md rounded-[var(--md-sys-shape-corner-extra-large)] p-8 md:p-12 border border-[var(--md-sys-color-outline-variant)] max-w-2xl w-full shadow-md">
+              <div className="fluent-glass-strong backdrop-blur-md rounded-[var(--fluent-border-radius-large)] p-8 md:p-12 max-w-2xl w-full fluent-shadow-large">
                 <div className="mb-8">
                   <MD3VideoProcessingLoading 
                     progress={loadingProgress / 100}
@@ -1068,17 +1049,17 @@ export default function VideoGenerator() {
                   />
                 </div>
                 
-                <h2 className="text-xl md:text-2xl font-semibold text-gray-300 mb-8">Đang tạo video của bạn...</h2>
+                <h2 className="fluent-title-large text-[var(--fluent-neutral-foreground-2)] mb-8">Đang tạo video của bạn...</h2>
                 
                 <div className="mb-6">
                   <Progress 
                     value={loadingProgress} 
-                    className="h-3 md:h-4 bg-[var(--md-sys-color-surface-container-low)]"
+                    className="h-3 md:h-4 fluent-glass-subtle"
                     data-testid="modal-progress-bar"
                   />
                 </div>
                 
-                <div className="flex justify-between items-center text-sm md:text-base text-gray-400">
+                <div className="flex justify-between items-center fluent-body-medium text-[var(--fluent-neutral-foreground-3)]">
                   <span data-testid="modal-progress-percentage" className="font-medium">{Math.round(loadingProgress)}%</span>
                   <span>~{Math.max(0, 120 - Math.round((new Date().getTime() - (loadingStartTime?.getTime() || 0)) / 1000))}s còn lại</span>
                 </div>
@@ -1092,9 +1073,9 @@ export default function VideoGenerator() {
       <Dialog open={aspectRatioModalOpen} onOpenChange={setAspectRatioModalOpen}>
         <DialogPortal>
           <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
-          <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)] rounded-[var(--md-sys-shape-corner-large)] p-4 w-[95vw] max-w-sm max-h-[85vh] overflow-y-auto z-50 shadow-lg">
+          <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 fluent-glass-strong rounded-[var(--fluent-border-radius-large)] p-4 w-[95vw] max-w-sm max-h-[85vh] overflow-y-auto z-50 fluent-shadow-large">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-[var(--md-sys-color-on-surface)] mb-4">Chọn Tỷ lệ khung hình</DialogTitle>
+              <DialogTitle className="fluent-title-large text-[var(--fluent-neutral-foreground-1)] mb-4">Chọn Tỷ lệ khung hình</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
               {aspectRatioOptions.map((option) => {
@@ -1107,10 +1088,10 @@ export default function VideoGenerator() {
                 return (
                   <button
                     key={option.value}
-                    className={`w-full p-3 rounded-lg border transition-all ${
+                    className={`w-full p-3 rounded-[var(--fluent-border-radius-medium)] transition-all ${
                       isSelected 
-                        ? 'border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]' 
-                        : 'border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] text-[var(--md-sys-color-on-surface)] hover:border-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-surface-container-high)]'
+                        ? 'fluent-glass-strong border-[var(--fluent-brand-primary)] text-[var(--fluent-brand-primary)]' 
+                        : 'fluent-glass-subtle text-[var(--fluent-neutral-foreground-1)] hover:border-[var(--fluent-brand-primary)] hover:fluent-glass'
                     }`}
                     onClick={() => {
                       if (currentFormType === "text") {
@@ -1124,15 +1105,15 @@ export default function VideoGenerator() {
                   >
                     <div className="flex items-center space-x-3">
                       <div className="flex-shrink-0">
-                        <IconComponent className="w-6 h-6 text-primary-400" />
+                        <IconComponent className="w-6 h-6 text-[var(--fluent-brand-primary)]" />
                       </div>
                       <div className="flex-1 text-left min-w-0">
                         <div className="flex items-center justify-between mb-1">
                           <h3 className="font-semibold text-sm truncate">{option.label}</h3>
-                          <span className="text-xs text-gray-400 ml-2 flex-shrink-0">{option.dimensions}</span>
+                          <span className="text-xs text-[var(--fluent-neutral-foreground-3)] ml-2 flex-shrink-0">{option.dimensions}</span>
                         </div>
-                        <p className="text-xs text-gray-400 leading-tight">{option.description}</p>
-                        <div className="mt-1 text-xs font-mono text-primary-300">
+                        <p className="text-xs text-[var(--fluent-neutral-foreground-3)] leading-tight">{option.description}</p>
+                        <div className="mt-1 text-xs font-mono text-[var(--fluent-brand-secondary)]">
                           {option.value}
                         </div>
                       </div>
@@ -1149,9 +1130,9 @@ export default function VideoGenerator() {
       <Dialog open={modelModalOpen} onOpenChange={setModelModalOpen}>
         <DialogPortal>
           <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
-          <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-dark-700 border border-dark-600 rounded-xl p-4 w-[95vw] max-w-sm max-h-[85vh] overflow-y-auto z-50">
+          <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 fluent-glass-strong rounded-[var(--fluent-border-radius-large)] p-4 w-[95vw] max-w-sm max-h-[85vh] overflow-y-auto z-50 fluent-shadow-large">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-white mb-4">Chọn Mô hình AI</DialogTitle>
+              <DialogTitle className="fluent-title-large text-[var(--fluent-neutral-foreground-1)] mb-4">Chọn Mô hình AI</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
               {modelOptions.map((option) => {
@@ -1164,10 +1145,10 @@ export default function VideoGenerator() {
                 return (
                   <button
                     key={option.value}
-                    className={`w-full p-3 rounded-lg border transition-all ${
+                    className={`w-full p-3 rounded-[var(--fluent-border-radius-medium)] transition-all ${
                       isSelected 
-                        ? 'border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]' 
-                        : 'border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] text-[var(--md-sys-color-on-surface)] hover:border-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-surface-container-high)]'
+                        ? 'fluent-glass-strong border-[var(--fluent-brand-primary)] text-[var(--fluent-brand-primary)]' 
+                        : 'fluent-glass-subtle text-[var(--fluent-neutral-foreground-1)] hover:border-[var(--fluent-brand-primary)] hover:fluent-glass'
                     }`}
                     onClick={() => {
                       if (currentFormType === "text") {
@@ -1181,22 +1162,22 @@ export default function VideoGenerator() {
                   >
                     <div className="flex items-start space-x-3">
                       <div className="flex-shrink-0 mt-0.5">
-                        <IconComponent className="w-6 h-6 text-primary-400" />
+                        <IconComponent className="w-6 h-6 text-[var(--fluent-brand-primary)]" />
                       </div>
                       <div className="flex-1 text-left min-w-0">
                         <div className="flex items-start justify-between mb-1 gap-2">
                           <h3 className="font-semibold text-sm truncate">{option.label}</h3>
                           <div className="flex items-center space-x-1 flex-shrink-0">
-                            <span className="text-xs bg-primary-600 px-1.5 py-0.5 rounded-full">{option.badge}</span>
-                            <span className="text-xs text-primary-400">{option.credits}c</span>
+                            <span className="text-xs bg-[var(--fluent-brand-primary)] px-1.5 py-0.5 rounded-full text-white">{option.badge}</span>
+                            <span className="text-xs text-[var(--fluent-brand-primary)]">{option.credits}c</span>
                           </div>
                         </div>
-                        <p className="text-xs text-gray-400 leading-tight mb-2">{option.description}</p>
+                        <p className="text-xs text-[var(--fluent-neutral-foreground-3)] leading-tight mb-2">{option.description}</p>
                         <div className="flex flex-wrap gap-1">
                           {option.features.map((feature, index) => (
                             <span 
                               key={index}
-                              className="text-xs bg-dark-500 px-1.5 py-0.5 rounded text-gray-300"
+                              className="text-xs fluent-glass-subtle px-1.5 py-0.5 rounded text-[var(--fluent-neutral-foreground-2)]"
                             >
                               {feature}
                             </span>
@@ -1216,9 +1197,9 @@ export default function VideoGenerator() {
       <Dialog open={showCropper} onOpenChange={setShowCropper}>
         <DialogPortal>
           <DialogOverlay className="fixed inset-0 bg-black/80 z-50" />
-          <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-dark-800 border border-dark-600 rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-auto z-50">
+          <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 fluent-glass-strong rounded-[var(--fluent-border-radius-large)] p-6 max-w-4xl w-full max-h-[90vh] overflow-auto z-50 fluent-shadow-large">
             <DialogHeader>
-              <DialogTitle className="text-xl font-semibold mb-4">Cắt ảnh</DialogTitle>
+              <DialogTitle className="fluent-title-large text-[var(--fluent-neutral-foreground-1)] mb-4">Cắt ảnh</DialogTitle>
             </DialogHeader>
             
             <div className="space-y-4">
