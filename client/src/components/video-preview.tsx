@@ -116,7 +116,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
       if (isPlaying) {
         setShowControls(false);
       }
-    }, 3000);
+    }, 1000);
   };
 
   const formatTime = (seconds: number) => {
