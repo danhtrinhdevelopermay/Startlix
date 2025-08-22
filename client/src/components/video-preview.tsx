@@ -39,6 +39,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [showControls, setShowControls] = useState<boolean>(true);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [videoAspectRatio, setVideoAspectRatio] = useState<number>(16/9);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -215,6 +216,9 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
 
     const handleLoadedMetadata = () => {
       setDuration(video.duration);
+      // Calculate and set video aspect ratio
+      const aspectRatio = video.videoWidth / video.videoHeight;
+      setVideoAspectRatio(aspectRatio);
     };
 
     const handleTimeUpdate = () => {
@@ -270,6 +274,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
       setCurrentTime(0);
       setDuration(0);
       setShowControls(true);
+      setVideoAspectRatio(16/9); // Reset to default until metadata loads
     }
   }, [videoUrl]);
 
@@ -378,7 +383,11 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
         {videoUrl && (
           <div data-testid="video-player">
             <div 
-              className="relative aspect-video rounded-[var(--fluent-border-radius-large)] overflow-hidden bg-black fluent-shadow-medium group cursor-pointer"
+              className="relative w-full rounded-[var(--fluent-border-radius-large)] overflow-hidden bg-black fluent-shadow-medium group cursor-pointer"
+              style={{ 
+                aspectRatio: videoAspectRatio.toString(),
+                maxHeight: videoAspectRatio < 1 ? '70vh' : '50vh' // Limit height for vertical videos
+              }}
               onMouseMove={resetControlsTimeout}
               onMouseLeave={() => {
                 if (isPlaying) {
@@ -389,7 +398,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
             >
               <video 
                 ref={videoRef}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 data-testid="video-element"
                 onDoubleClick={toggleFullscreen}
                 controls={false}
