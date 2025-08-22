@@ -5,34 +5,34 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-all duration-200 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 ripple-container md-typescale-label-large",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--fluent-brand-primary)] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 fluent-body-medium active:scale-[0.96]",
   {
     variants: {
       variant: {
-        // Material Design 3 Filled Button
-        filled: "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] hover:shadow-md hover:shadow-[var(--md-sys-color-primary)]/25 active:shadow-sm",
-        // Material Design 3 Outlined Button  
+        // Fluent Design 2 iOS Primary Button
+        filled: "bg-[var(--fluent-brand-primary)] text-white hover:bg-[var(--fluent-brand-primary-hover)] active:bg-[var(--fluent-brand-primary-pressed)] shadow-[var(--fluent-shadow-4)]",
+        // Fluent Design 2 iOS Outlined Button  
         outlined:
-          "border border-[var(--md-sys-color-outline)] bg-transparent text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary)]/12 active:bg-[var(--md-sys-color-primary)]/20",
-        // Material Design 3 Text Button
-        text: "bg-transparent text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary)]/12 active:bg-[var(--md-sys-color-primary)]/20",
-        // Material Design 3 Tonal Button
-        tonal:
-          "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:shadow-md hover:shadow-[var(--md-sys-color-secondary-container)]/25 active:shadow-sm",
+          "border border-[var(--fluent-neutral-stroke-1)] bg-transparent text-[var(--fluent-brand-primary)] hover:bg-[var(--fluent-neutral-background-2)] active:bg-[var(--fluent-neutral-background-3)] hover:border-[var(--fluent-neutral-stroke-2)]",
+        // Fluent Design 2 iOS Text Button
+        text: "bg-transparent text-[var(--fluent-brand-primary)] hover:bg-[var(--fluent-neutral-background-2)] active:bg-[var(--fluent-neutral-background-3)]",
+        // Fluent Design 2 iOS Subtle Button
+        subtle:
+          "bg-[var(--fluent-neutral-background-2)] text-[var(--fluent-neutral-foreground-1)] hover:bg-[var(--fluent-neutral-background-3)] active:bg-[var(--fluent-neutral-background-4)]",
         // Legacy variants for compatibility
-        default: "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] hover:shadow-md hover:shadow-[var(--md-sys-color-primary)]/25",
+        default: "bg-[var(--fluent-brand-primary)] text-white hover:bg-[var(--fluent-brand-primary-hover)] active:bg-[var(--fluent-brand-primary-pressed)] shadow-[var(--fluent-shadow-4)]",
         destructive:
-          "bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] hover:shadow-md hover:shadow-[var(--md-sys-color-error)]/25",
+          "bg-[var(--fluent-error-primary)] text-white hover:bg-red-600 active:bg-red-700 shadow-[var(--fluent-shadow-4)]",
         secondary:
-          "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:shadow-md",
-        ghost: "bg-transparent hover:bg-[var(--md-sys-color-surface-variant)]/50",
-        link: "text-[var(--md-sys-color-primary)] underline-offset-4 hover:underline",
+          "bg-[var(--fluent-neutral-background-2)] text-[var(--fluent-neutral-foreground-1)] hover:bg-[var(--fluent-neutral-background-3)] active:bg-[var(--fluent-neutral-background-4)]",
+        ghost: "bg-transparent hover:bg-[var(--fluent-neutral-background-2)] active:bg-[var(--fluent-neutral-background-3)]",
+        link: "text-[var(--fluent-brand-primary)] underline-offset-4 hover:underline bg-transparent",
       },
       size: {
-        default: "h-10 px-6 rounded-[var(--md-sys-shape-corner-large)]",
-        sm: "h-8 px-4 rounded-[var(--md-sys-shape-corner-medium)] md-typescale-label-medium",
-        lg: "h-12 px-8 rounded-[var(--md-sys-shape-corner-large)]",
-        icon: "h-10 w-10 rounded-[var(--md-sys-shape-corner-medium)]",
+        default: "min-h-[var(--fluent-touch-target-size)] h-11 px-[var(--fluent-space-horizontal-l)] rounded-[var(--fluent-border-radius-medium)]",
+        sm: "min-h-[32px] h-8 px-[var(--fluent-space-horizontal-m)] rounded-[var(--fluent-border-radius-small)] text-sm",
+        lg: "min-h-[var(--fluent-touch-target-size)] h-12 px-[var(--fluent-space-horizontal-xl)] rounded-[var(--fluent-border-radius-large)]",
+        icon: "min-h-[var(--fluent-touch-target-size)] h-11 w-11 rounded-[var(--fluent-border-radius-medium)]",
       },
     },
     defaultVariants: {
@@ -42,38 +42,21 @@ const buttonVariants = cva(
   }
 )
 
-// Ripple effect function
-const createRipple = (event: React.MouseEvent<HTMLButtonElement>) => {
+// iOS-style haptic feedback and visual feedback
+const createIOSFeedback = (event: React.MouseEvent<HTMLButtonElement>) => {
   const button = event.currentTarget
-  const rect = button.getBoundingClientRect()
-  const size = Math.max(rect.width, rect.height)
-  const x = event.clientX - rect.left - size / 2
-  const y = event.clientY - rect.top - size / 2
   
-  const ripple = document.createElement('span')
-  ripple.className = 'ripple'
-  ripple.style.width = ripple.style.height = size + 'px'
-  ripple.style.left = x + 'px'
-  ripple.style.top = y + 'px'
-  
-  // Check if button has dark background to use appropriate ripple color
-  const computedStyle = window.getComputedStyle(button)
-  const backgroundColor = computedStyle.backgroundColor
-  const isDarkBackground = backgroundColor.includes('rgb') && 
-    backgroundColor.match(/\d+/g)?.slice(0, 3).map(Number).reduce((acc, val) => acc + val, 0)! < 384
-  
-  if (isDarkBackground) {
-    ripple.classList.add('ripple-dark')
+  // Add haptic feedback for iOS (subtle scale animation already handled by CSS)
+  if ('vibrate' in navigator) {
+    navigator.vibrate(1)
   }
   
-  button.appendChild(ripple)
+  // Optional: Add a subtle highlight effect for better visual feedback
+  button.style.transform = 'scale(0.96)'
   
-  // Remove ripple after animation completes
   setTimeout(() => {
-    if (ripple.parentNode) {
-      ripple.parentNode.removeChild(ripple)
-    }
-  }, 600)
+    button.style.transform = ''
+  }, 150)
 }
 
 export interface ButtonProps
@@ -85,8 +68,8 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, onClick, ...props }, ref) => {
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-      // Create ripple effect
-      createRipple(event)
+      // Create iOS-style feedback
+      createIOSFeedback(event)
       
       // Call the original onClick if provided
       if (onClick) {

@@ -248,7 +248,7 @@ export default function VideoGenerator() {
     new Promise<HTMLImageElement>((resolve, reject) => {
       const image = new Image();
       image.addEventListener('load', () => resolve(image));
-      image.addEventListener('error', (error: any) => reject(error));
+      image.addEventListener('error', (error: Event) => reject(error));
       image.src = url;
     });
 
