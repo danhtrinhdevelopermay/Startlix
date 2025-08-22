@@ -517,8 +517,7 @@ export default function VideoGenerator() {
                 disabled={logoutMutation.isPending}
                 data-testid="button-logout"
               >
-                <LogOut className="w-4 h-4 mr-2" />
-                {logoutMutation.isPending ? "Đang xuất..." : "Đăng xuất"}
+                <LogOut className="w-4 h-4" />
               </Button>
             </div>
           </div>
