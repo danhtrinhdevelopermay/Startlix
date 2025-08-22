@@ -20,6 +20,7 @@ import { ChevronDown, Upload, Sparkles, Image, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import loadingGif from "@assets/original-568544560f6ca1076a16e3428302e329_1755778026559.gif";
+import starlixLogo from "@assets/Dự án mới 32 [6F4A9A3]_1755821175424.png";
 
 const textToVideoSchema = z.object({
   prompt: z.string().min(10, "Prompt must be at least 10 characters").max(500, "Prompt must be less than 500 characters"),
@@ -270,9 +271,9 @@ export default function VideoGenerator() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <img src="https://veo3api.ai/logo.png" alt="Veo3 API Logo" className="h-8 w-auto" />
+              <img src={starlixLogo} alt="Starlix Logo" className="h-8 w-auto" />
               <h1 className="text-xl font-bold bg-gradient-to-r from-primary-500 to-purple-400 bg-clip-text text-transparent">
-                Video Generator
+                Starlix
               </h1>
             </div>
             

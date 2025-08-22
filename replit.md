@@ -1,6 +1,6 @@
 # Overview
 
-This is a video generation application built with React and Express that leverages the VEO3 API for AI-powered video creation. The app supports both text-to-video and image-to-video generation with a modern, responsive user interface. Users can create videos from text prompts or upload images with motion descriptions, track their generation history, and manage their credits.
+Starlix is a video generation application built with React and Express that leverages the VEO3 API for AI-powered video creation. The app supports both text-to-video and image-to-video generation with a modern, responsive user interface. Users can create videos from text prompts or upload images with motion descriptions, track their generation history, and manage their credits.
 
 # User Preferences
 
