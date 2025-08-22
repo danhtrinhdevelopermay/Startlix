@@ -392,6 +392,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
                 className="w-full h-full object-cover"
                 data-testid="video-element"
                 onDoubleClick={toggleFullscreen}
+                controls={false}
               >
                 <source src={videoUrl} type="video/mp4" />
                 Trình duyệt của bạn không hỗ trợ video.
