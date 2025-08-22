@@ -29,31 +29,31 @@ function Router() {
   }
 
   return (
-    <Switch>
-      {isAuthenticated ? (
-        // Authenticated routes
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/admin" component={Admin} />
-          {/* Redirect to home if trying to access login/register while authenticated */}
-          <Route path="/login" component={Home} />
-          <Route path="/register" component={Home} />
-          {/* 404 page for unmatched routes */}
-          <Route path="*" component={NotFound} />
-        </>
-      ) : (
-        // Non-authenticated routes
-        <>
-          <Route path="/login" component={Login} />
-          <Route path="/register" component={Register} />
-          {/* Redirect to login for all other routes when not authenticated */}
-          <Route path="/" component={Login} />
-          <Route path="/admin" component={Login} />
-          {/* Redirect all unmatched routes to login */}
-          <Route path="*" component={Login} />
-        </>
-      )}
-    </Switch>
+    <div className="min-h-screen">
+      <Switch>
+        {isAuthenticated ? (
+          // Authenticated routes
+          <>
+            <Route path="/" component={Home} />
+            <Route path="/admin" component={Admin} />
+            {/* Redirect to home if trying to access login/register while authenticated */}
+            <Route path="/login" component={Home} />
+            <Route path="/register" component={Home} />
+          </>
+        ) : (
+          // Non-authenticated routes
+          <>
+            <Route path="/login" component={Login} />
+            <Route path="/register" component={Register} />
+            {/* Redirect to login for all other routes when not authenticated */}
+            <Route path="/" component={Login} />
+            <Route path="/admin" component={Login} />
+            {/* Redirect all unmatched routes to login */}
+            <Route component={Login} />
+          </>
+        )}
+      </Switch>
+    </div>
   );
 }
 
@@ -61,9 +61,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <GradientBackground />
-        <Toaster />
-        <Router />
+        <div className="relative min-h-screen">
+          <GradientBackground />
+          <Toaster />
+          <Router />
+        </div>
       </TooltipProvider>
     </QueryClientProvider>
   );
