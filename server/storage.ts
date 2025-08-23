@@ -746,6 +746,30 @@ export class DbStorage implements IStorage {
     return results[0];
   }
 
+  async getUserByDeviceId(deviceId: string): Promise<User | undefined> {
+    const results = await db.select().from(users).where(eq(users.deviceId, deviceId));
+    return results[0];
+  }
+
+  async checkDeviceRegistration(deviceId: string): Promise<{ canRegister: boolean; reason?: string }> {
+    if (!deviceId) {
+      return { 
+        canRegister: false, 
+        reason: "Device fingerprint không hợp lệ. Vui lòng bật JavaScript và thử lại." 
+      };
+    }
+
+    const existingUser = await this.getUserByDeviceId(deviceId);
+    if (existingUser) {
+      return { 
+        canRegister: false, 
+        reason: "Thiết bị này đã đăng ký tài khoản. Mỗi thiết bị chỉ được phép tạo một tài khoản duy nhất." 
+      };
+    }
+
+    return { canRegister: true };
+  }
+
   async createVideoGeneration(generation: InsertVideoGeneration, creditsUsed: number = 5): Promise<VideoGeneration> {
     // Create full video generation object with all required fields
     const fullGeneration = {
