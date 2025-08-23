@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 
 export interface AuthUser {
   id: string;
@@ -83,6 +84,7 @@ export function useRegister() {
 
 export function useLogout() {
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   
   return useMutation({
     mutationFn: async () => {
@@ -97,9 +99,18 @@ export function useLogout() {
       return response.json();
     },
     onSuccess: () => {
+      // Clear all authentication-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/credits"] });
       queryClient.removeQueries({ queryKey: ["/api/generations"] });
+      
+      // Clear user data immediately to prevent flash of content
+      queryClient.setQueryData(["/api/auth/user"], null);
+      
+      // Navigate to login page immediately
+      setTimeout(() => {
+        setLocation("/login");
+      }, 100);
     }
   });
 }
