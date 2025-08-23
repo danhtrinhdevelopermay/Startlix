@@ -380,7 +380,10 @@ export default function ObjectReplacementPage() {
               </CardHeader>
               <CardContent>
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <form onSubmit={(e) => {
+                    console.log('🔄 Form submit event triggered');
+                    form.handleSubmit(onSubmit)(e);
+                  }} className="space-y-6">
                     {/* Input Image Upload */}
                     <div className="space-y-4">
                       <FormLabel>Ảnh gốc</FormLabel>
@@ -548,14 +551,23 @@ export default function ObjectReplacementPage() {
                       className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                       disabled={objectReplacementMutation.isPending || uploadImageMutation.isPending || !maskDataUrl || !inputImageUrl}
                       data-testid="button-replace-object"
-                      onClick={() => {
+                      onClick={(e) => {
                         console.log('🔄 Replace button clicked:', {
                           isPending: objectReplacementMutation.isPending,
                           isUploading: uploadImageMutation.isPending,
                           hasMask: !!maskDataUrl,
                           hasImageUrl: !!inputImageUrl,
-                          formValues: form.getValues()
+                          formValues: form.getValues(),
+                          formErrors: form.formState.errors,
+                          isValid: form.formState.isValid,
+                          isDirty: form.formState.isDirty
                         });
+                        
+                        // Force form submission if not disabled
+                        if (!objectReplacementMutation.isPending && !uploadImageMutation.isPending && maskDataUrl && inputImageUrl) {
+                          console.log('🔄 Manually triggering form submission');
+                          form.handleSubmit(onSubmit)();
+                        }
                       }}
                     >
                       {objectReplacementMutation.isPending ? (
