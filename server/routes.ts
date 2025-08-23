@@ -884,8 +884,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fileName: validatedData.fileName,
         inputImageUrl: validatedData.inputImageUrl,
         maskImageBase64: validatedData.maskImageBase64,
-        userId: user.id,
-      });
+      }, user.id);
 
       // Deduct credits from user
       await storageInstance.updateUserCredits(user.id, user.credits - totalCredits);

@@ -57,7 +57,7 @@ export interface IStorage {
   getRewardClaims(userId: string): Promise<RewardClaim[]>;
   
   // Object Replacement methods (phot.ai integration)
-  createObjectReplacement(replacement: InsertObjectReplacement): Promise<ObjectReplacement>;
+  createObjectReplacement(replacement: InsertObjectReplacement, userId: string): Promise<ObjectReplacement>;
   updateObjectReplacement(id: string, updates: Partial<ObjectReplacement>): Promise<ObjectReplacement | undefined>;
   getObjectReplacement(id: string): Promise<ObjectReplacement | undefined>;
   getUserObjectReplacements(userId: string): Promise<ObjectReplacement[]>;
@@ -496,11 +496,12 @@ export class MemStorage implements IStorage {
   }
 
   // Object Replacement methods (phot.ai integration)
-  async createObjectReplacement(replacement: InsertObjectReplacement): Promise<ObjectReplacement> {
+  async createObjectReplacement(replacement: InsertObjectReplacement, userId: string): Promise<ObjectReplacement> {
     const id = randomUUID();
     const fullReplacement: ObjectReplacement = {
       ...replacement,
       id,
+      userId,
       status: "pending",
       resultImageUrl: null,
       errorMessage: null,
@@ -862,9 +863,10 @@ export class DbStorage implements IStorage {
   }
 
   // Object Replacement methods (phot.ai integration)
-  async createObjectReplacement(replacement: InsertObjectReplacement): Promise<ObjectReplacement> {
+  async createObjectReplacement(replacement: InsertObjectReplacement, userId: string): Promise<ObjectReplacement> {
     const fullReplacement = {
       ...replacement,
+      userId,
       status: "pending" as const,
       creditsUsed: 2,
     };

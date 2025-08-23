@@ -15,6 +15,7 @@ import { ArrowUploadRegular, ImageRegular, EditRegular, PersonRegular, SignOutRe
 import { Link } from "wouter";
 import { MD3ButtonLoading } from "@/components/md3-loading-indicator";
 import CreditBalance from "@/components/credit-balance";
+import { ObjectReplacement } from "@shared/schema";
 
 const objectReplacementSchema = z.object({
   fileName: z.string().min(1, "Tên file không được để trống"),
@@ -24,21 +25,6 @@ const objectReplacementSchema = z.object({
 });
 
 type ObjectReplacementForm = z.infer<typeof objectReplacementSchema>;
-
-interface ObjectReplacement {
-  id: string;
-  userId: string;
-  fileName: string;
-  prompt: string;
-  inputImageUrl: string;
-  maskImageBase64: string;
-  status: string;
-  resultImageUrl: string | null;
-  errorMessage: string | null;
-  creditsUsed: number;
-  createdAt: string | null;
-  completedAt: string | null;
-}
 
 export default function ObjectReplacementPage() {
   const { user } = useAuth();
