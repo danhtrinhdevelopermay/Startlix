@@ -213,13 +213,48 @@ export default function VideoGenerator() {
     }
   }, []);
 
-  const startDrawing = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Helper function to get coordinates from mouse or touch events
+  const getEventCoordinates = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = e.currentTarget;
+    const rect = canvas.getBoundingClientRect();
+    
+    let clientX: number, clientY: number;
+    
+    if ('touches' in e) {
+      // Touch event
+      if (e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else if (e.changedTouches.length > 0) {
+        clientX = e.changedTouches[0].clientX;
+        clientY = e.changedTouches[0].clientY;
+      } else {
+        return null;
+      }
+    } else {
+      // Mouse event
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  }, []);
+
+  const startDrawing = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
     setIsDrawing(true);
     draw(e);
   }, []);
 
-  const draw = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+  const draw = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing) return;
+    e.preventDefault();
     
     const canvas = maskCanvasRef.current;
     const img = maskImageRef.current;
@@ -228,23 +263,25 @@ export default function VideoGenerator() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
+    const coordinates = getEventCoordinates(e);
+    if (!coordinates) return;
+    
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
     
     ctx.globalCompositeOperation = 'source-over';
     ctx.fillStyle = 'white';
     ctx.beginPath();
-    ctx.arc(x, y, brushSize * scaleX, 0, 2 * Math.PI);
+    ctx.arc(coordinates.x, coordinates.y, brushSize * scaleX, 0, 2 * Math.PI);
     ctx.fill();
     
     setHasMaskDrawn(true);
-  }, [isDrawing, brushSize]);
+  }, [isDrawing, brushSize, getEventCoordinates]);
 
-  const stopDrawing = useCallback(() => {
+  const stopDrawing = useCallback((e?: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (e) {
+      e.preventDefault();
+    }
     setIsDrawing(false);
   }, []);
 
@@ -1579,16 +1616,20 @@ export default function VideoGenerator() {
                                       onMouseMove={draw}
                                       onMouseUp={stopDrawing}
                                       onMouseLeave={stopDrawing}
+                                      onTouchStart={startDrawing}
+                                      onTouchMove={draw}
+                                      onTouchEnd={stopDrawing}
                                       data-testid="mask-canvas"
                                       style={{ 
                                         opacity: 0.6,
-                                        pointerEvents: uploadedImageUrl ? 'auto' : 'none'
+                                        pointerEvents: uploadedImageUrl ? 'auto' : 'none',
+                                        touchAction: 'none'
                                       }}
                                     />
                                   </div>
 
                                   <p className="text-xs text-[var(--fluent-neutral-foreground-3)]">
-                                    Vẽ màu trắng lên những vùng bạn muốn thay đổi. Sử dụng chuột để vẽ.
+                                    Vẽ màu trắng lên những vùng bạn muốn thay đổi. Sử dụng chuột hoặc chạm để vẽ.
                                   </p>
                                 </div>
                               </FormControl>
