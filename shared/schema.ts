@@ -97,12 +97,23 @@ export const externalApiKeys = pgTable("external_api_keys", {
   lastResetAt: timestamp("last_reset_at").defaultNow(), // For monthly reset
 });
 
-// Reward Claims for LinkBulks integration - user claims credits via bypass links
+// Daily usage tracking for link shortening services
+export const dailyLinkUsage = pgTable("daily_link_usage", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: varchar("date").notNull(), // Format: YYYY-MM-DD
+  linkbulksUsage: integer("linkbulks_usage").notNull().default(0), // Max: 2 per day
+  link4mUsage: integer("link4m_usage").notNull().default(0), // Max: 10 per day
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Reward Claims for LinkBulks/Link4m integration - user claims credits via bypass links
 export const rewardClaims = pgTable("reward_claims", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
-  bypassUrl: text("bypass_url").notNull(), // Link vượt từ LinkBulks
+  bypassUrl: text("bypass_url").notNull(), // Link vượt từ LinkBulks hoặc Link4m
   claimToken: varchar("claim_token").notNull().unique(), // Unique token để claim credit
+  serviceUsed: text("service_used").notNull().default("linkbulks"), // "linkbulks" hoặc "link4m"
   rewardAmount: integer("reward_amount").notNull().default(1), // Số credit thưởng
   isClaimed: boolean("is_claimed").notNull().default(false), // Đã claim chưa
   createdAt: timestamp("created_at").defaultNow(),
@@ -206,6 +217,12 @@ export const insertExternalApiKeySchema = createInsertSchema(externalApiKeys).om
   apiType: z.enum(["veo3", "photai"]).default("veo3"),
 });
 
+export const insertDailyLinkUsageSchema = createInsertSchema(dailyLinkUsage).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertRewardClaimSchema = createInsertSchema(rewardClaims).omit({
   id: true,
   bypassUrl: true,
@@ -294,3 +311,5 @@ export type InsertObjectReplacement = z.infer<typeof insertObjectReplacementSche
 export type ObjectReplacement = typeof objectReplacements.$inferSelect;
 export type InsertPhotaiOperation = z.infer<typeof insertPhotaiOperationSchema>;
 export type PhotoaiOperation = typeof photaiOperations.$inferSelect;
+export type InsertDailyLinkUsage = z.infer<typeof insertDailyLinkUsageSchema>;
+export type DailyLinkUsage = typeof dailyLinkUsage.$inferSelect;

@@ -1,7 +1,7 @@
-import { type User, type InsertUser, type VideoGeneration, type InsertVideoGeneration, type ApiKey, type InsertApiKey, type Settings, type InsertSettings, type RewardVideo, type InsertRewardVideo, type VideoWatchHistory, type InsertVideoWatchHistory, type ExternalApiKey, type InsertExternalApiKey, type RewardClaim, type InsertRewardClaim, type ObjectReplacement, type InsertObjectReplacement, type PhotoaiOperation, type InsertPhotaiOperation } from "@shared/schema";
+import { type User, type InsertUser, type VideoGeneration, type InsertVideoGeneration, type ApiKey, type InsertApiKey, type Settings, type InsertSettings, type RewardVideo, type InsertRewardVideo, type VideoWatchHistory, type InsertVideoWatchHistory, type ExternalApiKey, type InsertExternalApiKey, type RewardClaim, type InsertRewardClaim, type DailyLinkUsage, type InsertDailyLinkUsage, type ObjectReplacement, type InsertObjectReplacement, type PhotoaiOperation, type InsertPhotaiOperation } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { users, videoGenerations, apiKeys, settings, rewardVideos, videoWatchHistory, externalApiKeys, rewardClaims, objectReplacements, photaiOperations } from "@shared/schema";
+import { users, videoGenerations, apiKeys, settings, rewardVideos, videoWatchHistory, externalApiKeys, rewardClaims, dailyLinkUsage, objectReplacements, photaiOperations } from "@shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -52,9 +52,10 @@ export interface IStorage {
   resetMonthlyUsage(id: string): Promise<ExternalApiKey | undefined>;
   
   // Reward Claim methods (LinkBulks integration)
-  createRewardClaim(userId: string): Promise<{ claimToken: string; bypassUrl: string }>;
+  createRewardClaim(userId: string): Promise<{ claimToken: string; bypassUrl: string; serviceUsed: string } | { error: string }>;
   claimReward(claimToken: string): Promise<{ success: boolean; userId?: string; rewardAmount?: number }>;
   getRewardClaims(userId: string): Promise<RewardClaim[]>;
+  getDailyLinkUsageStats(): Promise<{ linkbulksUsed: number; link4mUsed: number; linkbulksLimit: number; link4mLimit: number; resetTime: string }>;
   
   // Object Replacement methods (phot.ai integration)
   createObjectReplacement(replacement: InsertObjectReplacement, userId: string): Promise<ObjectReplacement>;
@@ -82,6 +83,7 @@ export class MemStorage implements IStorage {
   private videoWatchHistories: Map<string, VideoWatchHistory>;
   private externalApiKeys: Map<string, ExternalApiKey>;
   private rewardClaims: Map<string, RewardClaim>;
+  private dailyLinkUsage: Map<string, DailyLinkUsage>;
   private objectReplacements: Map<string, ObjectReplacement>;
   private photaiOperations: Map<string, PhotoaiOperation>;
 
@@ -94,6 +96,7 @@ export class MemStorage implements IStorage {
     this.videoWatchHistories = new Map();
     this.externalApiKeys = new Map();
     this.rewardClaims = new Map();
+    this.dailyLinkUsage = new Map();
     this.objectReplacements = new Map();
     this.photaiOperations = new Map();
     
@@ -421,8 +424,14 @@ export class MemStorage implements IStorage {
     return undefined;
   }
 
-  // Reward Claim methods (LinkBulks integration)
-  async createRewardClaim(userId: string): Promise<{ claimToken: string; bypassUrl: string }> {
+  // Reward Claim methods (LinkBulks/Link4m integration)
+  async createRewardClaim(userId: string): Promise<{ claimToken: string; bypassUrl: string; serviceUsed: string } | { error: string }> {
+    // Check if credit system is available
+    const canCreateLink = await this.canCreateRewardLink();
+    if (!canCreateLink.allowed) {
+      return { error: canCreateLink.reason };
+    }
+
     // Generate unique claim token
     const claimToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
     
@@ -452,8 +461,24 @@ export class MemStorage implements IStorage {
     
     const claimUrl = `https://${baseUrl}/api/claim-reward/${claimToken}`;
     
-    // Call real LinkBulks API to create bypass link
-    const bypassUrl = await this.callLinkBulksAPI(claimUrl);
+    // Determine which service to use based on daily limits
+    const serviceToUse = await this.determineServiceToUse();
+    let bypassUrl: string;
+    
+    try {
+      if (serviceToUse === "linkbulks") {
+        bypassUrl = await this.callLinkBulksAPI(claimUrl);
+        await this.incrementDailyUsage("linkbulks");
+      } else if (serviceToUse === "link4m") {
+        bypassUrl = await this.callLink4mAPI(claimUrl);
+        await this.incrementDailyUsage("link4m");
+      } else {
+        return { error: "Hệ thống nhận credit đã đạt giới hạn hàng ngày. Vui lòng thử lại vào ngày mai." };
+      }
+    } catch (error) {
+      console.error(`Error calling ${serviceToUse} API:`, error);
+      return { error: "Không thể tạo link vượt. Vui lòng thử lại sau." };
+    }
     
     const id = randomUUID();
     const claim: RewardClaim = {
@@ -461,6 +486,7 @@ export class MemStorage implements IStorage {
       userId,
       bypassUrl,
       claimToken,
+      serviceUsed: serviceToUse,
       rewardAmount: 1,
       isClaimed: false,
       createdAt: new Date(),
@@ -468,7 +494,7 @@ export class MemStorage implements IStorage {
     };
     
     this.rewardClaims.set(id, claim);
-    return { claimToken, bypassUrl };
+    return { claimToken, bypassUrl, serviceUsed: serviceToUse };
   }
 
   private async callLinkBulksAPI(destinationUrl: string): Promise<string> {
@@ -527,6 +553,23 @@ export class MemStorage implements IStorage {
       const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return bTime - aTime;
     });
+  }
+
+  async getDailyLinkUsageStats(): Promise<{ linkbulksUsed: number; link4mUsed: number; linkbulksLimit: number; link4mLimit: number; resetTime: string }> {
+    const usage = await this.getDailyUsage();
+    
+    // Calculate next reset time (midnight tomorrow)
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    
+    return {
+      linkbulksUsed: usage.linkbulksUsage,
+      link4mUsed: usage.link4mUsage,
+      linkbulksLimit: 2,
+      link4mLimit: 10,
+      resetTime: tomorrow.toISOString(),
+    };
   }
 
   // Object Replacement methods (phot.ai integration)

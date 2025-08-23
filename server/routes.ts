@@ -461,13 +461,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const storageInstance = await storage();
       
-      // Create reward claim and get bypass link from LinkBulks
+      // Create reward claim and get bypass link from LinkBulks/Link4m
       const result = await storageInstance.createRewardClaim(req.user.id);
+      
+      if ('error' in result) {
+        return res.status(429).json({ 
+          success: false,
+          message: result.error 
+        });
+      }
+      
+      const serviceMessage = result.serviceUsed === 'linkbulks' ? 'LinkBulks' : 'Link4m';
       
       res.json({
         success: true,
         bypassUrl: result.bypassUrl,
-        message: "Link vượt đã được tạo! Hãy hoàn thành link để nhận 1 credit."
+        serviceUsed: result.serviceUsed,
+        message: `Link vượt đã được tạo từ ${serviceMessage}! Hãy hoàn thành link để nhận 1 credit.`
       });
     } catch (error) {
       console.error("Error creating reward claim:", error);
@@ -489,6 +499,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Get reward claims error:', error);
       res.status(500).json({ message: "Failed to fetch reward claims" });
+    }
+  });
+
+  // Get daily link usage stats
+  app.get("/api/daily-link-usage", requireAuth, async (req: Request & { user?: User }, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const storageInstance = await storage();
+      const stats = await storageInstance.getDailyLinkUsageStats();
+      
+      res.json(stats);
+    } catch (error) {
+      console.error('Get daily link usage error:', error);
+      res.status(500).json({ message: "Failed to fetch daily usage stats" });
     }
   });
 
