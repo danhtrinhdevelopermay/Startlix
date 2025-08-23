@@ -147,6 +147,42 @@ export default function VideoGenerator() {
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const maskFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Form declarations
+  const textForm = useForm<TextToVideoForm>({
+    resolver: zodResolver(textToVideoSchema),
+    defaultValues: {
+      prompt: "",
+      aspectRatio: "16:9",
+      model: "veo3_fast",
+      watermark: "",
+      hdGeneration: false,
+    },
+  });
+
+  const imageForm = useForm<ImageToVideoForm>({
+    resolver: zodResolver(imageToVideoSchema),
+    defaultValues: {
+      prompt: "",
+      aspectRatio: "16:9",
+      model: "veo3_fast",
+      imageUrl: "",
+    },
+  });
+
+  const generativeFillForm = useForm<GenerativeFillForm>({
+    resolver: zodResolver(generativeFillSchema),
+    defaultValues: {
+      prompt: "",
+      imageUrl: "",
+      maskImageUrl: "",
+      strength: "1.0",
+      samples: 1,
+      model: "lazymixv4-inpaint",
+      steps: 31,
+      scheduler: "DPMSolverMultistepScheduler",
+    },
+  });
   const maskCanvasRef = useRef<HTMLCanvasElement>(null);
   const maskImageRef = useRef<HTMLImageElement>(null);
   
@@ -520,41 +556,6 @@ export default function VideoGenerator() {
   const closePopup = () => {
     setPopup({ isOpen: false, title: "", description: "", type: "error" });
   };
-
-  const textForm = useForm<TextToVideoForm>({
-    resolver: zodResolver(textToVideoSchema),
-    defaultValues: {
-      prompt: "",
-      aspectRatio: "16:9",
-      model: "veo3_fast",
-      watermark: "",
-      hdGeneration: false,
-    },
-  });
-
-  const imageForm = useForm<ImageToVideoForm>({
-    resolver: zodResolver(imageToVideoSchema),
-    defaultValues: {
-      prompt: "",
-      aspectRatio: "16:9",
-      model: "veo3_fast",
-      imageUrl: "",
-    },
-  });
-
-  const generativeFillForm = useForm<GenerativeFillForm>({
-    resolver: zodResolver(generativeFillSchema),
-    defaultValues: {
-      prompt: "",
-      imageUrl: "",
-      maskImageUrl: "",
-      strength: "1.0",
-      samples: 1,
-      model: "lazymixv4-inpaint",
-      steps: 31,
-      scheduler: "DPMSolverMultistepScheduler",
-    },
-  });
 
   // Helper function to create image from URL
   const createImage = (url: string): Promise<HTMLImageElement> =>
