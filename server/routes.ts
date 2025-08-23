@@ -27,7 +27,7 @@ const VEO3_UPLOAD_BASE = "https://veo3apiai.redpandaai.co/api";
 const MODELSLAB_API_BASE = "https://modelslab.com/api/v6";
 const MODELSLAB_API_KEY = "YP3Eius8kY2Vnh5qq8LJzMReG9hsfi1EyJRU5XwN8uac8P2EqPPu67Sv01MA";
 const SEGMIND_API_BASE = "https://api.segmind.com/v1/topaz-video-upscale";
-const PHOTAI_API_BASE = "https://prodapi.phot.ai/external/api/v2";
+const PHOTAI_API_BASE = "https://prodapi.phot.ai/external/api/v3";
 const PHOTAI_API_KEY = "68a9325d0591f3b3f3563aba_b31009ca66406551632b_apyhitools";
 
 // Check API key credits
@@ -897,19 +897,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Fallback to hardcoded API key if no keys configured
         console.log('⚠️ No PhotAI keys configured, using fallback key');
         const photAiPayload = {
-          file_name: validatedData.fileName,
+          source_url: validatedData.inputImageUrl,
           prompt: validatedData.prompt,
-          input_image_link: validatedData.inputImageUrl,
           mask_image: validatedData.maskImageBase64,
         };
 
         console.log('🔄 Calling phot.ai Object Replacer API with fallback key:', {
-          file_name: photAiPayload.file_name,
-          input_image_link: photAiPayload.input_image_link,
+          source_url: photAiPayload.source_url,
+          prompt: photAiPayload.prompt,
           mask_image: photAiPayload.mask_image.substring(0, 100) + '...'
         });
 
-        const response = await fetch(`${PHOTAI_API_BASE}/object-replacer`, {
+        const response = await fetch(`${PHOTAI_API_BASE}/user_activity/replace-object`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -983,20 +982,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`🔑 Trying PhotAI key "${apiKeyRecord.keyName}" (${apiKeyRecord.creditsLimit - apiKeyRecord.creditsUsed} credits available)`);
           
           const photAiPayload = {
-            file_name: validatedData.fileName,
+            source_url: validatedData.inputImageUrl,
             prompt: validatedData.prompt,
-            input_image_link: validatedData.inputImageUrl,
             mask_image: validatedData.maskImageBase64,
           };
 
           console.log('🔄 Calling phot.ai Object Replacer API with payload:', {
-            file_name: photAiPayload.file_name,
-            input_image_link: photAiPayload.input_image_link,
+            source_url: photAiPayload.source_url,
+            prompt: photAiPayload.prompt,
             mask_image: photAiPayload.mask_image.substring(0, 100) + '...',
             apiKey: apiKeyRecord.keyName
           });
 
-          const response = await fetch(`${PHOTAI_API_BASE}/object-replacer`, {
+          const response = await fetch(`${PHOTAI_API_BASE}/user_activity/replace-object`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1231,21 +1229,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const photaiKeys = await storageInstance.getPhotAIApiKeys();
       console.log(`🔑 Found ${photaiKeys.length} available PhotAI API keys`);
       
-      // API endpoint mapping for each tool type (using correct Phot.AI endpoint names)
+      // API endpoint mapping for each tool type (updated for Phot.AI API v3)
       const endpointMap: Record<string, string> = {
-        "background-remover": "bg-remover",
-        "background-replacer": "bg-replacer", 
-        "image-extender": "outpaint",
-        "object-remover": "object-replacer", // Use same as working object-replacer
-        "text-to-art": "text-to-image",
-        "text-to-art-image": "image-to-image", 
-        "upscaler": "upscaler",
-        "ai-photo-enhancer": "enhancer",
-        "ai-light-fix": "light-enhancer",
-        "old-photo-restoration": "photo-restorer", 
-        "color-restoration": "colorizer",
-        "ai-photo-coloriser": "colorizer",
-        "ai-pattern-generator": "pattern-generator",
+        "background-remover": "user_activity/remove-background",
+        "background-replacer": "user_activity/replace-background", 
+        "image-extender": "user_activity/extend-image",
+        "object-remover": "advanced/Object_Remover",
+        "text-to-art": "user_activity/text-to-image",
+        "text-to-art-image": "user_activity/image-to-image", 
+        "upscaler": "user_activity/upscale",
+        "ai-photo-enhancer": "user_activity/enhance",
+        "ai-light-fix": "user_activity/fix-lighting",
+        "old-photo-restoration": "user_activity/restore-photo", 
+        "color-restoration": "user_activity/restore-color",
+        "ai-photo-coloriser": "user_activity/colorize",
+        "ai-pattern-generator": "user_activity/generate-pattern",
       };
 
       const endpoint = endpointMap[validatedData.toolType];
@@ -1270,8 +1268,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         console.log(`🔄 Calling phot.ai ${validatedData.toolType} API with fallback key:`, {
           tool_type: validatedData.toolType,
-          file_name: photAiPayload.file_name,
-          input_image_link: photAiPayload.input_image_link
+          source_url: photAiPayload.source_url
         });
 
         const apiUrl = `${PHOTAI_API_BASE}/${endpoint}`;
@@ -1350,8 +1347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           console.log(`🔄 Calling phot.ai ${validatedData.toolType} API with key ${apiKeyRecord.keyName}:`, {
             tool_type: validatedData.toolType,
-            file_name: photAiPayload.file_name,
-            input_image_link: photAiPayload.input_image_link,
+            source_url: photAiPayload.source_url,
             apiKey: apiKeyRecord.keyName
           });
 
@@ -1443,14 +1439,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Helper function to build API payload based on tool type
+  // Helper function to build API payload based on tool type (updated for API v3)
   function buildPhotAiPayload(data: any) {
     const basePayload = {
-      file_name: data.fileName,
-      input_image_link: data.inputImageUrl,
+      source_url: data.inputImageUrl,  // API v3 uses source_url instead of input_image_link
     };
 
     switch (data.toolType) {
+      case 'background-remover':
+        return basePayload;  // Background remover only needs source_url
       case 'background-replacer':
         return {
           ...basePayload,
