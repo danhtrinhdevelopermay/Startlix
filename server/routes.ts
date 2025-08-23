@@ -918,8 +918,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           body: JSON.stringify(photAiPayload),
         });
 
-        const data = await response.json();
-        console.log('🔄 phot.ai API Response (fallback):', JSON.stringify(data, null, 2));
+        // Check if response is JSON before parsing
+        const contentType = response.headers.get('content-type');
+        let data;
+        
+        if (contentType && contentType.includes('application/json')) {
+          data = await response.json();
+          console.log('🔄 phot.ai API Response (fallback):', JSON.stringify(data, null, 2));
+        } else {
+          // Response is not JSON, likely an error page
+          const textResponse = await response.text();
+          console.log('❌ phot.ai API returned non-JSON response (fallback):', {
+            status: response.status,
+            statusText: response.statusText,
+            contentType,
+            responseText: textResponse.substring(0, 500) + '...'
+          });
+          data = { 
+            error: `API returned ${response.status} ${response.statusText}. Expected JSON but got ${contentType || 'unknown content type'}`,
+            details: textResponse.substring(0, 200)
+          };
+        }
         
         if (!response.ok || data.error) {
           await storageInstance.updateObjectReplacement(replacement.id, {
@@ -986,8 +1005,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
             body: JSON.stringify(photAiPayload),
           });
 
-          const data = await response.json();
-          console.log(`🔄 phot.ai API Response (${apiKeyRecord.keyName}):`, JSON.stringify(data, null, 2));
+          // Check if response is JSON before parsing
+          const contentType = response.headers.get('content-type');
+          let data;
+          
+          if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+            console.log(`🔄 phot.ai API Response (${apiKeyRecord.keyName}):`, JSON.stringify(data, null, 2));
+          } else {
+            // Response is not JSON, likely an error page
+            const textResponse = await response.text();
+            console.log(`❌ phot.ai API returned non-JSON response (${apiKeyRecord.keyName}):`, {
+              status: response.status,
+              statusText: response.statusText,
+              contentType,
+              responseText: textResponse.substring(0, 500) + '...'
+            });
+            data = { 
+              error: `API returned ${response.status} ${response.statusText}. Expected JSON but got ${contentType || 'unknown content type'}`,
+              details: textResponse.substring(0, 200)
+            };
+          }
           
           if (response.ok && !data.error) {
             // Success! Increment API key usage

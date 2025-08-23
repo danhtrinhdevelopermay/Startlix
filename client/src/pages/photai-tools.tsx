@@ -297,9 +297,26 @@ export default function PhotoAIToolsPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/photai-operations"] });
     },
     onError: (error: any) => {
+      let errorMessage = "Không thể xử lý ảnh";
+      
+      if (error.message) {
+        // Check for specific API error types and provide helpful Vietnamese messages
+        if (error.message.includes('Expected JSON but got')) {
+          errorMessage = "Dịch vụ Phot.AI tạm thời không khả dụng. Vui lòng thử lại sau ít phút.";
+        } else if (error.message.includes('API returned non-JSON response')) {
+          errorMessage = "Có lỗi kết nối với dịch vụ xử lý ảnh. Vui lòng kiểm tra kết nối mạng và thử lại.";
+        } else if (error.message.includes('Invalid PhotAI API key')) {
+          errorMessage = "Khóa API Phot.AI không hợp lệ hoặc đã hết hạn. Vui lòng liên hệ quản trị viên.";
+        } else if (error.message.includes('Insufficient credits')) {
+          errorMessage = "Không đủ credits để thực hiện. Vui lòng nạp thêm credits.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "❌ Lỗi xử lý",
-        description: error.message || "Không thể xử lý ảnh",
+        description: errorMessage,
         variant: "destructive",
       });
     },
