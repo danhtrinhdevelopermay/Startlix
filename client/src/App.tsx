@@ -11,7 +11,6 @@ import Register from "@/pages/register";
 import RewardVideos from "@/pages/reward-videos";
 import GetCredit from "@/pages/get-credit";
 import NotFound from "@/pages/not-found";
-import ObjectReplacement from "@/pages/object-replacement";
 import PhotoAITools from "@/pages/photai-tools";
 import GradientBackground from "@/components/GradientBackground";
 import { MD3FullPageLoading } from "@/components/md3-loading-indicator";
@@ -39,7 +38,6 @@ function Router() {
             <Route path="/admin" component={Admin} />
             <Route path="/reward-videos" component={RewardVideos} />
             <Route path="/get-credit" component={GetCredit} />
-            <Route path="/object-replacement" component={ObjectReplacement} />
             <Route path="/photai-tools" component={PhotoAITools} />
             {/* Redirect to home if trying to access login/register while authenticated */}
             <Route path="/login" component={Home} />

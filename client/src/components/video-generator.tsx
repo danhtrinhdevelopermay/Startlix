@@ -739,31 +739,8 @@ export default function VideoGenerator() {
               {/* Credit Balance */}
               <CreditBalance />
               
+              
               {/* Object Replacement Button */}
-              <Link href="/object-replacement">
-                <Button 
-                  variant="outlined"
-                  size="sm"
-                  className="hidden sm:flex"
-                  data-testid="nav-object-replacement"
-                >
-                  <EditRegular className="w-4 h-4 mr-1 sm:mr-2" />
-                  <span className="hidden md:inline">Thay thế đối tượng</span>
-                </Button>
-              </Link>
-              
-              {/* Mobile Object Replacement Button */}
-              <Link href="/object-replacement" className="sm:hidden">
-                <Button 
-                  variant="text"
-                  size="sm"
-                  data-testid="nav-object-replacement-mobile"
-                >
-                  <EditRegular className="w-4 h-4" />
-                </Button>
-              </Link>
-              
-              {/* Phot.AI Tools Button */}
               <Link href="/photai-tools">
                 <Button 
                   variant="outlined"
@@ -771,19 +748,19 @@ export default function VideoGenerator() {
                   className="hidden sm:flex"
                   data-testid="nav-photai-tools"
                 >
-                  <WandRegular className="w-4 h-4 mr-1 sm:mr-2" />
-                  <span className="hidden md:inline">Phot.AI Tools</span>
+                  <EditRegular className="w-4 h-4 mr-1 sm:mr-2" />
+                  <span className="hidden md:inline">Thay thế đối tượng</span>
                 </Button>
               </Link>
               
-              {/* Mobile Phot.AI Tools Button */}
+              {/* Mobile Object Replacement Button */}
               <Link href="/photai-tools" className="sm:hidden">
                 <Button 
                   variant="text"
                   size="sm"
                   data-testid="nav-photai-tools-mobile"
                 >
-                  <WandRegular className="w-4 h-4" />
+                  <EditRegular className="w-4 h-4" />
                 </Button>
               </Link>
               
