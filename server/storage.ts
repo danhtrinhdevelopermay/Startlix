@@ -8,9 +8,11 @@ import bcrypt from "bcryptjs";
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByDeviceId(deviceId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserCredits(userId: string, credits: number): Promise<User | undefined>;
   validateUserPassword(username: string, password: string): Promise<User | null>;
+  checkDeviceRegistration(deviceId: string): Promise<{ canRegister: boolean; reason?: string }>;
   
   createVideoGeneration(generation: InsertVideoGeneration, creditsUsed?: number): Promise<VideoGeneration>;
   updateVideoGeneration(id: string, updates: Partial<VideoGeneration>): Promise<VideoGeneration | undefined>;
@@ -123,7 +125,13 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
     const hashedPassword = await bcrypt.hash(insertUser.password, 10);
-    const user: User = { ...insertUser, id, password: hashedPassword, credits: 1 };
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      password: hashedPassword, 
+      credits: 1,
+      createdAt: new Date()
+    };
     this.users.set(id, user);
     return user;
   }
@@ -144,6 +152,29 @@ export class MemStorage implements IStorage {
       return updatedUser;
     }
     return undefined;
+  }
+
+  async getUserByDeviceId(deviceId: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.deviceId === deviceId);
+  }
+
+  async checkDeviceRegistration(deviceId: string): Promise<{ canRegister: boolean; reason?: string }> {
+    if (!deviceId) {
+      return { 
+        canRegister: false, 
+        reason: "Device fingerprint không hợp lệ. Vui lòng bật JavaScript và thử lại." 
+      };
+    }
+
+    const existingUser = await this.getUserByDeviceId(deviceId);
+    if (existingUser) {
+      return { 
+        canRegister: false, 
+        reason: "Thiết bị này đã đăng ký tài khoản. Mỗi thiết bị chỉ được phép tạo một tài khoản duy nhất." 
+      };
+    }
+
+    return { canRegister: true };
   }
 
   async createVideoGeneration(generation: InsertVideoGeneration, creditsUsed: number = 5): Promise<VideoGeneration> {

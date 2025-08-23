@@ -59,7 +59,7 @@ export function useRegister() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (userData: { username: string; password: string }): Promise<AuthResponse> => {
+    mutationFn: async (userData: { username: string; password: string; deviceId?: string }): Promise<AuthResponse> => {
       const response = await fetch('/api/register', {
         method: 'POST',
         body: JSON.stringify(userData),
@@ -78,6 +78,27 @@ export function useRegister() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/credits"] });
+    }
+  });
+}
+
+export function useCheckDevice() {
+  return useMutation({
+    mutationFn: async (data: { deviceId: string }): Promise<{ canRegister: boolean; reason?: string }> => {
+      const response = await fetch('/api/check-device', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.reason || 'Không thể kiểm tra thiết bị');
+      }
+      
+      return response.json();
     }
   });
 }

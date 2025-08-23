@@ -346,6 +346,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add user to request middleware
   app.use(addUserToRequest);
   // Auth endpoints
+  // Check device registration endpoint
+  app.post("/api/check-device", async (req, res) => {
+    try {
+      const { deviceId } = req.body;
+      
+      if (!deviceId) {
+        return res.status(400).json({ 
+          canRegister: false, 
+          reason: "Device fingerprint không hợp lệ. Vui lòng bật JavaScript và thử lại." 
+        });
+      }
+      
+      const storageInstance = await storage();
+      const result = await storageInstance.checkDeviceRegistration(deviceId);
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Check device error:", error);
+      res.status(500).json({ 
+        canRegister: false, 
+        reason: "Không thể kiểm tra thiết bị. Vui lòng thử lại." 
+      });
+    }
+  });
+
   app.post("/api/register", async (req, res) => {
     try {
       const validatedData = insertUserSchema.parse(req.body);
@@ -355,6 +380,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existingUser = await storageInstance.getUserByUsername(validatedData.username);
       if (existingUser) {
         return res.status(400).json({ message: "Username already exists" });
+      }
+      
+      // Check device registration
+      if (validatedData.deviceId) {
+        const deviceCheck = await storageInstance.checkDeviceRegistration(validatedData.deviceId);
+        if (!deviceCheck.canRegister) {
+          return res.status(409).json({ message: deviceCheck.reason });
+        }
       }
       
       const user = await storageInstance.createUser(validatedData);

@@ -1,20 +1,50 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useRegister } from "@/hooks/useAuth";
+import { useRegister, useCheckDevice } from "@/hooks/useAuth";
 import { PersonAddRegular } from "@fluentui/react-icons";
 import { MD3ButtonLoading } from "@/components/md3-loading-indicator";
+import { getDeviceFingerprint } from "@/lib/deviceFingerprint";
 
 export default function Register() {
   const [, setLocation] = useLocation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [deviceId, setDeviceId] = useState<string>("");
+  const [deviceCheckError, setDeviceCheckError] = useState<string>("");
+  const [isGeneratingFingerprint, setIsGeneratingFingerprint] = useState(true);
+  
   const registerMutation = useRegister();
+  const checkDeviceMutation = useCheckDevice();
+
+  // Generate device fingerprint on component mount
+  useEffect(() => {
+    const generateFingerprint = async () => {
+      try {
+        setIsGeneratingFingerprint(true);
+        const fingerprint = await getDeviceFingerprint();
+        setDeviceId(fingerprint);
+        
+        // Check if device can register
+        const deviceCheck = await checkDeviceMutation.mutateAsync({ deviceId: fingerprint });
+        if (!deviceCheck.canRegister) {
+          setDeviceCheckError(deviceCheck.reason || "Thiết bị này không thể đăng ký.");
+        }
+      } catch (error) {
+        console.error("Device fingerprint error:", error);
+        setDeviceCheckError("Không thể xác minh thiết bị. Vui lòng bật JavaScript và thử lại.");
+      } finally {
+        setIsGeneratingFingerprint(false);
+      }
+    };
+
+    generateFingerprint();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,8 +61,12 @@ export default function Register() {
       return;
     }
 
+    if (!deviceId || deviceCheckError) {
+      return;
+    }
+
     try {
-      await registerMutation.mutateAsync({ username, password });
+      await registerMutation.mutateAsync({ username, password, deviceId });
       setLocation("/");
     } catch (error) {
       // Error is handled by the mutation
@@ -54,6 +88,22 @@ export default function Register() {
               <Alert variant="destructive">
                 <AlertDescription>
                   {(registerMutation.error as any)?.message || "Đăng ký thất bại"}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {deviceCheckError && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  {deviceCheckError}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {isGeneratingFingerprint && (
+              <Alert>
+                <AlertDescription>
+                  Đang kiểm tra thiết bị... Vui lòng chờ một chút.
                 </AlertDescription>
               </Alert>
             )}
@@ -115,7 +165,10 @@ export default function Register() {
                 registerMutation.isPending || 
                 password !== confirmPassword || 
                 username.length < 3 || 
-                password.length < 6
+                password.length < 6 ||
+                isGeneratingFingerprint ||
+                !!deviceCheckError ||
+                !deviceId
               }
               data-testid="button-register"
             >

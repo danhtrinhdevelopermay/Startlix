@@ -8,6 +8,8 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   credits: integer("credits").notNull().default(1),
+  deviceId: varchar("device_id", { length: 255 }), // Device fingerprint for preventing multiple accounts
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const apiKeys = pgTable("api_keys", {
@@ -159,6 +161,7 @@ export const photaiOperations = pgTable("photai_operations", {
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  deviceId: true,
 });
 
 export const insertApiKeySchema = createInsertSchema(apiKeys).omit({
