@@ -939,7 +939,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         }
         
-        if (!response.ok || data.error) {
+        if (!response.ok || data.status_code !== 200 || data.message !== "success") {
           await storageInstance.updateObjectReplacement(replacement.id, {
             status: "failed",
             errorMessage: data.error || data.message || 'Object replacement failed',
@@ -949,19 +949,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           throw new Error(data.error || data.message || 'Object replacement failed');
         }
 
-        // Handle response
-        if (data.status === "pending" && data.order_id) {
+        // API v3 returns immediate results with output_image
+        if (data.output_image) {
+          const resultImageUrl = data.output_image;
           await storageInstance.updateObjectReplacement(replacement.id, {
-            status: "pending",
-            errorMessage: JSON.stringify({ order_id: data.order_id, status: data.status, apiKeyUsed: "fallback" }),
+            status: "completed",
+            resultImageUrl,
+            completedAt: new Date(),
           });
 
-          res.json({
+          res.json({ 
             replacementId: replacement.id,
-            status: "pending",
-            message: "Object replacement request submitted successfully",
+            resultImageUrl,
             creditsUsed: totalCredits,
-            order_id: data.order_id,
+            status: "completed",
             apiKeyUsed: "fallback"
           });
           return;
@@ -1025,30 +1026,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             };
           }
           
-          if (response.ok && !data.error) {
+          if (response.ok && data.status_code === 200 && data.message === "success") {
             // Success! Increment API key usage
             await storageInstance.incrementExternalApiKeyUsage(apiKeyRecord.id, 1);
             usedApiKey = apiKeyRecord;
             
-            // Handle response
-            if (data.status === "pending" && data.order_id) {
-              await storageInstance.updateObjectReplacement(replacement.id, {
-                status: "pending",
-                errorMessage: JSON.stringify({ order_id: data.order_id, status: data.status, apiKeyUsed: apiKeyRecord.keyName }),
-              });
-
-              res.json({
-                replacementId: replacement.id,
-                status: "pending",
-                message: "Object replacement request submitted successfully",
-                creditsUsed: totalCredits,
-                order_id: data.order_id,
-                apiKeyUsed: apiKeyRecord.keyName
-              });
-              return;
-            } else if (data.result_url || data.output_url || data.image_url) {
-              // Immediate result
-              const resultImageUrl = data.result_url || data.output_url || data.image_url;
+            // API v3 returns immediate results with output_image
+            if (data.output_image) {
+              const resultImageUrl = data.output_image;
               await storageInstance.updateObjectReplacement(replacement.id, {
                 status: "completed",
                 resultImageUrl,
@@ -1065,7 +1050,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               return;
             }
           } else {
-            lastError = data.error || data.message || 'Unknown API error';
+            lastError = data.error || data.message || 'API error';
             console.log(`❌ PhotAI key "${apiKeyRecord.keyName}" failed:`, lastError);
             continue;
           }
@@ -1297,24 +1282,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           throw new Error(`API returned non-JSON response: ${responseText.substring(0, 200)}...`);
         }
         
-        if (response.ok && !data.error) {
-          if (data.status === "pending" && data.order_id) {
-            await storageInstance.updatePhotaiOperation(operation.id, {
-              status: "pending",
-              errorMessage: JSON.stringify({ order_id: data.order_id, status: data.status, apiKeyUsed: 'fallback' }),
-            });
-
-            res.json({
-              operationId: operation.id,
-              status: "pending",
-              message: `${validatedData.toolType} request submitted successfully`,
-              creditsUsed: totalCredits,
-              order_id: data.order_id,
-              apiKeyUsed: 'fallback'
-            });
-            return;
-          } else if (data.result_url || data.output_url || data.image_url) {
-            const resultImageUrl = data.result_url || data.output_url || data.image_url;
+        if (response.ok && data.status_code === 200 && data.message === "success") {
+          // API v3 returns immediate results with output_image
+          if (data.output_image) {
+            const resultImageUrl = data.output_image;
             await storageInstance.updatePhotaiOperation(operation.id, {
               status: "completed",
               resultImageUrl,
@@ -1331,7 +1302,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return;
           }
         } else {
-          lastError = data.error || data.message || 'Unknown API error';
+          lastError = data.error || data.message || 'API error';
           throw new Error(lastError);
         }
       }
@@ -1377,27 +1348,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             throw new Error(`API returned non-JSON response: ${responseText.substring(0, 200)}...`);
           }
           
-          if (response.ok && !data.error) {
+          if (response.ok && data.status_code === 200 && data.message === "success") {
             await storageInstance.incrementExternalApiKeyUsage(apiKeyRecord.id, 1);
             usedApiKey = apiKeyRecord;
             
-            if (data.status === "pending" && data.order_id) {
-              await storageInstance.updatePhotaiOperation(operation.id, {
-                status: "pending",
-                errorMessage: JSON.stringify({ order_id: data.order_id, status: data.status, apiKeyUsed: apiKeyRecord.keyName }),
-              });
-
-              res.json({
-                operationId: operation.id,
-                status: "pending",
-                message: `${validatedData.toolType} request submitted successfully`,
-                creditsUsed: totalCredits,
-                order_id: data.order_id,
-                apiKeyUsed: apiKeyRecord.keyName
-              });
-              return;
-            } else if (data.result_url || data.output_url || data.image_url) {
-              const resultImageUrl = data.result_url || data.output_url || data.image_url;
+            // API v3 returns immediate results with output_image
+            if (data.output_image) {
+              const resultImageUrl = data.output_image;
               await storageInstance.updatePhotaiOperation(operation.id, {
                 status: "completed",
                 resultImageUrl,
@@ -1414,7 +1371,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               return;
             }
           } else {
-            lastError = data.error || data.message || 'Unknown API error';
+            lastError = data.error || data.message || 'API error';
             console.log(`❌ PhotAI key "${apiKeyRecord.keyName}" failed:`, lastError);
             continue;
           }
