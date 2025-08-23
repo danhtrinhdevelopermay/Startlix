@@ -1193,21 +1193,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const photaiKeys = await storageInstance.getPhotAIApiKeys();
       console.log(`🔑 Found ${photaiKeys.length} available PhotAI API keys`);
       
-      // API endpoint mapping for each tool type
+      // API endpoint mapping for each tool type (using correct Phot.AI endpoint names)
       const endpointMap: Record<string, string> = {
         "background-remover": "bg-remover",
         "background-replacer": "bg-replacer", 
-        "image-extender": "image-extender",
+        "image-extender": "outpaint",
         "object-remover": "object-remover",
-        "text-to-art": "text-to-art",
-        "text-to-art-image": "text-to-art-image",
+        "text-to-art": "text-to-image",
+        "text-to-art-image": "image-to-image",
         "upscaler": "upscaler",
-        "ai-photo-enhancer": "ai-photo-enhancer",
-        "ai-light-fix": "ai-light-fix",
-        "old-photo-restoration": "old-photo-restoration",
-        "color-restoration": "color-restoration",
-        "ai-photo-coloriser": "ai-photo-coloriser",
-        "ai-pattern-generator": "ai-pattern-generator",
+        "ai-photo-enhancer": "enhance",
+        "ai-light-fix": "lighting",
+        "old-photo-restoration": "restore",
+        "color-restoration": "colorize",
+        "ai-photo-coloriser": "colorize",
+        "ai-pattern-generator": "pattern",
       };
 
       const endpoint = endpointMap[validatedData.toolType];
@@ -1218,8 +1218,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let lastError = '';
       let usedApiKey: any = null;
       
-      // Build payload based on tool type
-      const photAiPayload = buildPhotAiPayload(validatedData);
+      // Build payload based on tool type  
+      // Convert relative URL to full URL for Phot.AI API
+      const fullImageUrl = validatedData.inputImageUrl.startsWith('http') 
+        ? validatedData.inputImageUrl 
+        : `${req.protocol}://${req.get('host')}${validatedData.inputImageUrl}`;
+      
+      const photAiPayload = buildPhotAiPayload({...validatedData, inputImageUrl: fullImageUrl});
 
       if (photaiKeys.length === 0) {
         // Fallback to hardcoded API key if no keys configured
@@ -1231,6 +1236,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           input_image_link: photAiPayload.input_image_link
         });
 
+        console.log(`🔗 Full API URL: https://prodapi.phot.ai/external/api/v2/${endpoint}`);
+        console.log(`📦 Payload:`, JSON.stringify(photAiPayload, null, 2));
+        
         const response = await fetch(`https://prodapi.phot.ai/external/api/v2/${endpoint}`, {
           method: 'POST',
           headers: {
@@ -1240,8 +1248,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           body: JSON.stringify(photAiPayload),
         });
 
-        const data = await response.json();
-        console.log(`🔄 phot.ai API Response (fallback):`, JSON.stringify(data, null, 2));
+        console.log(`📡 Response status: ${response.status} ${response.statusText}`);
+        const responseText = await response.text();
+        console.log(`📄 Raw response:`, responseText.substring(0, 500));
+        
+        let data;
+        try {
+          data = JSON.parse(responseText);
+          console.log(`🔄 phot.ai API Response (fallback):`, JSON.stringify(data, null, 2));
+        } catch (e) {
+          console.log(`❌ Failed to parse JSON response:`, e);
+          throw new Error(`API returned non-JSON response: ${responseText.substring(0, 200)}...`);
+        }
         
         if (response.ok && !data.error) {
           if (data.status === "pending" && data.order_id) {
