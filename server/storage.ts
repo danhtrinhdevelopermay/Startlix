@@ -427,7 +427,29 @@ export class MemStorage implements IStorage {
     const claimToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
     
     // Create claim URL that points to our claim endpoint
-    const baseUrl = process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:5000';
+    // Support multiple hosting platforms
+    let baseUrl: string;
+    
+    if (process.env.REPLIT_DOMAINS) {
+      // Replit environment
+      baseUrl = process.env.REPLIT_DOMAINS.split(',')[0];
+    } else if (process.env.RENDER_EXTERNAL_URL) {
+      // Render environment
+      baseUrl = process.env.RENDER_EXTERNAL_URL.replace('https://', '').replace('http://', '');
+    } else if (process.env.RAILWAY_STATIC_URL) {
+      // Railway environment
+      baseUrl = process.env.RAILWAY_STATIC_URL.replace('https://', '').replace('http://', '');
+    } else if (process.env.VERCEL_URL) {
+      // Vercel environment
+      baseUrl = process.env.VERCEL_URL;
+    } else if (process.env.APP_URL) {
+      // Custom APP_URL environment variable
+      baseUrl = process.env.APP_URL.replace('https://', '').replace('http://', '');
+    } else {
+      // Local development fallback
+      baseUrl = 'localhost:5000';
+    }
+    
     const claimUrl = `https://${baseUrl}/api/claim-reward/${claimToken}`;
     
     // Call real LinkBulks API to create bypass link
@@ -855,7 +877,29 @@ export class DbStorage implements IStorage {
     const claimToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
     
     // Create claim URL that points to our claim endpoint
-    const baseUrl = process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:5000';
+    // Support multiple hosting platforms
+    let baseUrl: string;
+    
+    if (process.env.REPLIT_DOMAINS) {
+      // Replit environment
+      baseUrl = process.env.REPLIT_DOMAINS.split(',')[0];
+    } else if (process.env.RENDER_EXTERNAL_URL) {
+      // Render environment
+      baseUrl = process.env.RENDER_EXTERNAL_URL.replace('https://', '').replace('http://', '');
+    } else if (process.env.RAILWAY_STATIC_URL) {
+      // Railway environment
+      baseUrl = process.env.RAILWAY_STATIC_URL.replace('https://', '').replace('http://', '');
+    } else if (process.env.VERCEL_URL) {
+      // Vercel environment
+      baseUrl = process.env.VERCEL_URL;
+    } else if (process.env.APP_URL) {
+      // Custom APP_URL environment variable
+      baseUrl = process.env.APP_URL.replace('https://', '').replace('http://', '');
+    } else {
+      // Local development fallback
+      baseUrl = 'localhost:5000';
+    }
+    
     const claimUrl = `https://${baseUrl}/api/claim-reward/${claimToken}`;
     
     // Call real LinkBulks API to create bypass link
