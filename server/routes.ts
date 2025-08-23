@@ -1198,16 +1198,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "background-remover": "bg-remover",
         "background-replacer": "bg-replacer", 
         "image-extender": "outpaint",
-        "object-remover": "object-remover",
+        "object-remover": "object-replacer", // Use same as working object-replacer
         "text-to-art": "text-to-image",
-        "text-to-art-image": "image-to-image",
+        "text-to-art-image": "image-to-image", 
         "upscaler": "upscaler",
-        "ai-photo-enhancer": "enhance",
-        "ai-light-fix": "lighting",
-        "old-photo-restoration": "restore",
-        "color-restoration": "colorize",
-        "ai-photo-coloriser": "colorize",
-        "ai-pattern-generator": "pattern",
+        "ai-photo-enhancer": "enhancer",
+        "ai-light-fix": "light-enhancer",
+        "old-photo-restoration": "photo-restorer", 
+        "color-restoration": "colorizer",
+        "ai-photo-coloriser": "colorizer",
+        "ai-pattern-generator": "pattern-generator",
       };
 
       const endpoint = endpointMap[validatedData.toolType];
@@ -1236,10 +1236,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           input_image_link: photAiPayload.input_image_link
         });
 
-        console.log(`🔗 Full API URL: https://prodapi.phot.ai/external/api/v2/${endpoint}`);
+        const apiUrl = `${PHOTAI_API_BASE}/${endpoint}`;
+        console.log(`🔗 Full API URL: ${apiUrl}`);
         console.log(`📦 Payload:`, JSON.stringify(photAiPayload, null, 2));
         
-        const response = await fetch(`https://prodapi.phot.ai/external/api/v2/${endpoint}`, {
+        const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1316,7 +1317,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             apiKey: apiKeyRecord.keyName
           });
 
-          const response = await fetch(`https://prodapi.phot.ai/external/api/v2/${endpoint}`, {
+          const apiUrl = `${PHOTAI_API_BASE}/${endpoint}`;
+          console.log(`🔗 Full API URL: ${apiUrl}`);
+          console.log(`📦 Payload:`, JSON.stringify(photAiPayload, null, 2));
+
+          const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1325,8 +1330,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             body: JSON.stringify(photAiPayload),
           });
 
-          const data = await response.json();
-          console.log(`🔄 phot.ai API Response (${apiKeyRecord.keyName}):`, JSON.stringify(data, null, 2));
+          console.log(`📡 Response status: ${response.status} ${response.statusText}`);
+          const responseText = await response.text();
+          console.log(`📄 Raw response:`, responseText.substring(0, 500));
+          
+          let data;
+          try {
+            data = JSON.parse(responseText);
+            console.log(`🔄 phot.ai API Response (${apiKeyRecord.keyName}):`, JSON.stringify(data, null, 2));
+          } catch (e) {
+            console.log(`❌ Failed to parse JSON response:`, e);
+            throw new Error(`API returned non-JSON response: ${responseText.substring(0, 200)}...`);
+          }
           
           if (response.ok && !data.error) {
             await storageInstance.incrementExternalApiKeyUsage(apiKeyRecord.id, 1);
