@@ -1652,6 +1652,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
               completedAt,
             });
           }
+          
+          // Return the updated response with correct structure
+          res.json({
+            ...data.data,
+            status,
+            response: {
+              ...data.data.response,
+              resultUrls
+            }
+          });
+          return;
         } else if (data.data.successFlag === -1) {
           status = "failed";
           errorMessage = data.data.errorMessage || "Generation failed";
@@ -1660,6 +1671,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             status,
             errorMessage,
           });
+          
+          // Return failed status
+          res.json({
+            ...data.data,
+            status,
+            errorMessage
+          });
+          return;
         }
       }
 

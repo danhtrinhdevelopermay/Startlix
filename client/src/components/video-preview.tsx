@@ -129,14 +129,19 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
     queryKey: ["/api/video-status", pollingTaskId],
     enabled: !!pollingTaskId,
     refetchInterval: (query) => {
+      console.log(`🔄 Polling check for ${pollingTaskId}:`, query.state.data);
+      
       // Stop polling if completed or failed
       if (query.state.data?.successFlag === 1 || query.state.data?.successFlag === -1) {
+        console.log(`⏹️ Stopping poll for ${pollingTaskId} - successFlag: ${query.state.data?.successFlag}`);
         return false;
       }
       // Stop polling if there's a credits error
       if (query.state.error) {
+        console.log(`⏹️ Stopping poll for ${pollingTaskId} - error:`, query.state.error);
         return false;
       }
+      console.log(`🔄 Continuing poll for ${pollingTaskId} - polling every 5s`);
       return 5000; // Poll every 5 seconds
     },
   });
@@ -165,23 +170,43 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
   }, [startTime, pollingTaskId, videoUrl]);
 
   useEffect(() => {
-    if (videoStatus?.successFlag === 1 && videoStatus?.response?.resultUrls?.[0]) {
+    console.log(`📊 VideoStatus update for ${pollingTaskId}:`, videoStatus);
+    
+    if (videoStatus?.successFlag === 1) {
+      console.log(`✅ Video completed for ${pollingTaskId}!`);
       setProgress(100);
-      const url = videoStatus.response.resultUrls[0];
-      onVideoLoad(url);
-      toast({
-        title: "Tạo video thành công!",
-        description: "Video của bạn đã sẵn sàng để xem trước.",
-      });
+      
+      // Check for resultUrls in response
+      const resultUrls = videoStatus?.response?.resultUrls;
+      console.log(`📹 Result URLs:`, resultUrls);
+      
+      if (resultUrls && resultUrls.length > 0) {
+        const url = resultUrls[0];
+        console.log(`🎬 Loading video URL: ${url}`);
+        onVideoLoad(url);
+        toast({
+          title: "Tạo video thành công!",
+          description: "Video của bạn đã sẵn sàng để xem trước.",
+        });
+      } else {
+        console.warn(`⚠️ Video completed but no result URLs found for ${pollingTaskId}`);
+        toast({
+          title: "Video hoàn thành!",
+          description: "Video đã được tạo thành công nhưng đang tải URL...",
+        });
+      }
     } else if (videoStatus?.successFlag === -1) {
+      console.log(`❌ Video failed for ${pollingTaskId}`);
       setProgress(0);
       showPopup(
         "Máy chủ quá tải", 
         "Máy chủ đang xử lý quá nhiều yêu cầu. Vui lòng thử lại sau vài phút.", 
         "error"
       );
+    } else if (videoStatus?.successFlag === 0) {
+      console.log(`⏳ Video still processing for ${pollingTaskId}`);
     }
-  }, [videoStatus, onVideoLoad, toast]);
+  }, [videoStatus, onVideoLoad, toast, pollingTaskId]);
 
   // Handle API errors (insufficient credits)
   useEffect(() => {
