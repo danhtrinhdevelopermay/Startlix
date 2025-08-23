@@ -48,14 +48,14 @@ app.use((req, res, next) => {
     throw err;
   });
 
+  // Serve uploaded images in both development and production
+  const uploadsPath = path.join(process.cwd(), 'client', 'public', 'uploads');
+  app.use('/uploads', express.static(uploadsPath));
+
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
   if (app.get("env") === "development") {
-    // Serve uploaded images in development mode
-    const uploadsPath = path.join(process.cwd(), 'client', 'public', 'uploads');
-    app.use('/uploads', express.static(uploadsPath));
-    
     await setupVite(app, server);
   } else {
     serveStatic(app);
