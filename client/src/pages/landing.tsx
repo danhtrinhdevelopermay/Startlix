@@ -137,7 +137,7 @@ export default function Landing() {
                 Tạo Video Miễn Phí
               </Button>
             </Link>
-            <Button size="lg" variant="outlined" className="border-white/20 text-white hover:bg-white/10 px-8 py-6 text-lg">
+            <Button size="lg" variant="outlined" className="border-white/40 text-white hover:bg-white/20 bg-black/20 backdrop-blur-sm px-8 py-6 text-lg">
               Xem Demo
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
@@ -244,7 +244,7 @@ export default function Landing() {
                   ))}
                 </ul>
                 <Link href="/register">
-                  <Button className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20">
+                  <Button className="w-full bg-gray-800/80 hover:bg-gray-700/80 text-white border-gray-600/50">
                     Bắt Đầu Miễn Phí
                   </Button>
                 </Link>
@@ -310,7 +310,7 @@ export default function Landing() {
                     </li>
                   ))}
                 </ul>
-                <Button className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20">
+                <Button className="w-full bg-gray-800/80 hover:bg-gray-700/80 text-white border-gray-600/50">
                   Liên Hệ Sales
                 </Button>
               </CardContent>
