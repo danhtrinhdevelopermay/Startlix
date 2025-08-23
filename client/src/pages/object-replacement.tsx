@@ -170,9 +170,27 @@ export default function ObjectReplacementPage() {
         if (ctx) {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
+        
+        console.log('🎨 Canvas initialized:', { 
+          width: canvas.width, 
+          height: canvas.height,
+          displayWidth: canvas.style.width,
+          displayHeight: canvas.style.height
+        });
       };
     }
   }, [inputImagePreview]);
+
+  // Debug useEffect to monitor state changes
+  useEffect(() => {
+    console.log('🔍 State changed:', {
+      inputImageFile: !!inputImageFile,
+      inputImageUrl,
+      maskDataUrl: !!maskDataUrl,
+      formValues: form.getValues(),
+      formErrors: form.formState.errors
+    });
+  }, [inputImageFile, inputImageUrl, maskDataUrl, form]);
 
   const getEventPosition = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -546,39 +564,49 @@ export default function ObjectReplacementPage() {
                       </div>
                     )}
 
-                    <Button
-                      type="submit"
-                      className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-                      disabled={objectReplacementMutation.isPending || uploadImageMutation.isPending || !maskDataUrl || !inputImageUrl}
-                      data-testid="button-replace-object"
-                      onClick={(e) => {
-                        console.log('🔄 Replace button clicked:', {
-                          isPending: objectReplacementMutation.isPending,
-                          isUploading: uploadImageMutation.isPending,
-                          hasMask: !!maskDataUrl,
-                          hasImageUrl: !!inputImageUrl,
-                          formValues: form.getValues(),
-                          formErrors: form.formState.errors,
-                          isValid: form.formState.isValid,
-                          isDirty: form.formState.isDirty
-                        });
-                        
-                        // Force form submission if not disabled
-                        if (!objectReplacementMutation.isPending && !uploadImageMutation.isPending && maskDataUrl && inputImageUrl) {
-                          console.log('🔄 Manually triggering form submission');
-                          form.handleSubmit(onSubmit)();
-                        }
-                      }}
-                    >
-                      {objectReplacementMutation.isPending ? (
-                        <MD3ButtonLoading label="Đang thay thế đối tượng..." />
-                      ) : (
-                        <>
-                          <SparkleRegular className="w-4 h-4 mr-2" />
-                          Thay thế đối tượng (2 credits)
-                        </>
-                      )}
-                    </Button>
+                    <div className="space-y-2">
+                      {/* Debug info */}
+                      <div className="text-xs text-gray-500 p-2 bg-gray-100 dark:bg-gray-700 rounded">
+                        Debug: isPending={objectReplacementMutation.isPending ? 'true' : 'false'}, 
+                        isUploading={uploadImageMutation.isPending ? 'true' : 'false'}, 
+                        hasMask={maskDataUrl ? 'true' : 'false'}, 
+                        hasImageUrl={inputImageUrl ? 'true' : 'false'}
+                      </div>
+                      
+                      <Button
+                        type="submit"
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                        disabled={objectReplacementMutation.isPending || uploadImageMutation.isPending || !maskDataUrl || !inputImageUrl}
+                        data-testid="button-replace-object"
+                        onClick={(e) => {
+                          console.log('🔄 Replace button clicked:', {
+                            isPending: objectReplacementMutation.isPending,
+                            isUploading: uploadImageMutation.isPending,
+                            hasMask: !!maskDataUrl,
+                            hasImageUrl: !!inputImageUrl,
+                            formValues: form.getValues(),
+                            formErrors: form.formState.errors,
+                            isValid: form.formState.isValid,
+                            isDirty: form.formState.isDirty
+                          });
+                          
+                          // Force form submission if not disabled
+                          if (!objectReplacementMutation.isPending && !uploadImageMutation.isPending && maskDataUrl && inputImageUrl) {
+                            console.log('🔄 Manually triggering form submission');
+                            form.handleSubmit(onSubmit)();
+                          }
+                        }}
+                      >
+                        {objectReplacementMutation.isPending ? (
+                          <MD3ButtonLoading label="Đang thay thế đối tượng..." />
+                        ) : (
+                          <>
+                            <SparkleRegular className="w-4 h-4 mr-2" />
+                            Thay thế đối tượng (2 credits)
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </form>
                 </Form>
               </CardContent>
