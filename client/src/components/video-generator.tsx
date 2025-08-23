@@ -1014,8 +1014,9 @@ export default function VideoGenerator() {
 
                       <Button
                         type="submit"
+                        variant="3d-primary"
                         disabled={generateVideoMutation.isPending}
-                        className="w-full h-14 fluent-button-primary fluent-title-medium"
+                        className="w-full h-14 fluent-title-medium"
                         data-testid="button-generate-text-video"
                       >
                         <SparkleRegular className="w-5 h-5 mr-2" />
@@ -1225,8 +1226,9 @@ export default function VideoGenerator() {
 
                       <Button
                         type="submit"
+                        variant="3d-primary"
                         disabled={generateVideoMutation.isPending || !uploadedImageUrl}
-                        className="w-full h-14 fluent-button-primary fluent-title-medium"
+                        className="w-full h-14 fluent-title-medium"
                         data-testid="button-generate-image-video"
                       >
                         <ImageRegular className="w-5 h-5 mr-2" />

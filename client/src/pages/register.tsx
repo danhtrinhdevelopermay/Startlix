@@ -160,6 +160,7 @@ export default function Register() {
             
             <Button 
               type="submit" 
+              variant="3d-primary"
               className="w-full" 
               disabled={
                 registerMutation.isPending || 

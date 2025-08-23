@@ -77,6 +77,7 @@ export default function Login() {
             
             <Button 
               type="submit" 
+              variant="3d-primary"
               className="w-full" 
               disabled={loginMutation.isPending}
               data-testid="button-login"

@@ -820,6 +820,112 @@
     }
   }
   
+  /* 3D Button Styles - Modern Elevated Design */
+  .btn-3d {
+    position: relative;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+    
+    /* Main 3D shadow effect */
+    box-shadow: 
+      0 8px 16px rgba(0, 0, 0, 0.15),
+      0 4px 8px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-3d:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 12px 24px rgba(0, 0, 0, 0.2),
+      0 6px 12px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-3d:active {
+    transform: translateY(1px);
+    box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.2),
+      0 2px 4px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  /* Primary 3D Button - Purple like in image */
+  .btn-3d-primary {
+    background: linear-gradient(135deg, #E879F9 0%, #C084FC 50%, #A855F7 100%);
+    color: #1F2937;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+  }
+
+  .btn-3d-primary:hover {
+    background: linear-gradient(135deg, #F0ABFC 0%, #C084FC 50%, #9333EA 100%);
+  }
+
+  /* Secondary 3D Button - Light like in image */
+  .btn-3d-secondary {
+    background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 50%, #E2E8F0 100%);
+    color: #1E293B;
+    border: 2px solid rgba(148, 163, 184, 0.3);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  }
+
+  .btn-3d-secondary:hover {
+    background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 50%, #F1F5F9 100%);
+  }
+
+  /* Dark mode adjustments */
+  .dark .btn-3d-primary {
+    background: linear-gradient(135deg, #A855F7 0%, #8B5CF6 50%, #7C3AED 100%);
+    color: #F8FAFC;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+
+  .dark .btn-3d-secondary {
+    background: linear-gradient(135deg, #374151 0%, #4B5563 50%, #6B7280 100%);
+    color: #F9FAFB;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Size variants */
+  .btn-3d-sm {
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 12px;
+  }
+
+  .btn-3d-md {
+    padding: 12px 24px;
+    font-size: 16px;
+    border-radius: 14px;
+  }
+
+  .btn-3d-lg {
+    padding: 16px 32px;
+    font-size: 18px;
+    border-radius: 18px;
+  }
+
+  /* Icon support */
+  .btn-3d .icon {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 8px;
+  }
+
+  .btn-3d .icon svg {
+    width: 20px;
+    height: 20px;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+  }
+
   /* Premium 3D Generation Button Styles */
   .premium-gen-button {
     --white: #ffe7ff;

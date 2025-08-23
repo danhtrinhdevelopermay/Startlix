@@ -19,6 +19,9 @@ const buttonVariants = cva(
         // Fluent Design 2 iOS Subtle Button
         subtle:
           "fluent-glass-subtle text-[var(--fluent-neutral-foreground-1)] hover:fluent-glass hover:transform hover:-translate-y-1 fluent-shadow-soft",
+        // 3D Button variants - Modern elevated design like in the image
+        "3d-primary": "btn-3d btn-3d-primary btn-3d-md",
+        "3d-secondary": "btn-3d btn-3d-secondary btn-3d-md",
         // Legacy variants for compatibility
         default: "fluent-button-primary text-white hover:scale-105 active:scale-95 fluent-shadow-soft",
         destructive:
