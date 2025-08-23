@@ -21,7 +21,7 @@ import { useAuth, useLogout } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import starlixLogo from "@assets/Dự án mới 32 [6F4A9A3]_1755821175424.png";
+import logoUrl from "@/assets/logo.png";
 import ReactCrop, { centerCrop, makeAspectCrop, type Crop, type PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 
@@ -720,7 +720,7 @@ export default function VideoGenerator() {
           <div className="flex items-center justify-between h-16">
             {/* Logo Section */}
             <div className="flex items-center space-x-3 sm:space-x-4 flex-shrink-0">
-              <img src={starlixLogo} alt="Starlix Logo" className="h-8 sm:h-10 w-auto" />
+              <img src={logoUrl} alt="Starlix Logo" className="h-8 sm:h-10 w-auto" />
               <h1 className="fluent-title-medium text-[var(--fluent-brand-primary)]">
                 Starlix
               </h1>
@@ -1307,7 +1307,7 @@ export default function VideoGenerator() {
           {/* Producer Information */}
           <div className="text-center mb-6">
             <div className="flex items-center justify-center space-x-3 mb-3">
-              <img src={starlixLogo} alt="Starlix Logo" className="h-6 w-auto" />
+              <img src={logoUrl} alt="Starlix Logo" className="h-6 w-auto" />
               <span className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)]">Starlix</span>
             </div>
             <p className="fluent-body-small text-[var(--fluent-neutral-foreground-3)] mb-3">
