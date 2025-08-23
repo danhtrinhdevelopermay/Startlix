@@ -880,7 +880,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create object replacement record  
       const replacement = await storageInstance.createObjectReplacement({
-        ...validatedData,
+        prompt: validatedData.prompt,
+        fileName: validatedData.fileName,
+        inputImageUrl: validatedData.inputImageUrl,
+        maskImageBase64: validatedData.maskImageBase64,
         userId: user.id,
       });
 
@@ -1802,6 +1805,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const storageInstance = await storage();
       const externalApiKey = await storageInstance.createExternalApiKey({
         keyName,
+        apiType: "veo3" as const,
         userId: userId || null,
         creditsLimit: Number(creditsLimit) || 100,
         isActive: true
@@ -1865,24 +1869,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if PhotAI API key is valid by testing it
       try {
-        const testResponse = await fetch(`${PHOTAI_API_BASE}/user-info`, {
+        // Use the correct PhotAI endpoint for validation
+        const testResponse = await fetch('https://prodapi.phot.ai/external/api/v2/user_activity', {
           method: 'GET',
           headers: {
             'x-api-key': apiKey,
+            'Content-Type': 'application/json',
           },
         });
         
         if (!testResponse.ok) {
-          return res.status(400).json({ message: "Invalid PhotAI API key" });
+          console.log(`PhotAI API key validation failed: ${testResponse.status} ${testResponse.statusText}`);
+          return res.status(400).json({ message: `Invalid PhotAI API key - Status: ${testResponse.status}` });
         }
-      } catch (error) {
-        return res.status(400).json({ message: "Failed to validate PhotAI API key" });
+
+        const responseData = await testResponse.json();
+        console.log('PhotAI API key validation successful:', responseData);
+      } catch (error: any) {
+        console.error('PhotAI API key validation error:', error);
+        return res.status(400).json({ message: `Failed to validate PhotAI API key: ${error?.message || 'Unknown error'}` });
       }
       
       const storageInstance = await storage();
       // Store as external API key with metadata to identify as PhotAI
       const photaiApiKey = await storageInstance.createExternalApiKey({
         keyName: `[PhotAI] ${keyName}`,
+        apiType: "photai" as const,
         userId: null,
         creditsLimit: Number(creditsLimit) || 100,
         isActive: true
@@ -1929,7 +1941,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       
       const storageInstance = await storage();
-      const success = await storageInstance.deleteExternalApiKey?.(id);
+      const success = await storageInstance.deleteExternalApiKey(id);
       
       if (!success) {
         return res.status(404).json({ message: "PhotAI API key not found" });

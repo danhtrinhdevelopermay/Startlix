@@ -755,6 +755,20 @@ export class DbStorage implements IStorage {
     return results[0];
   }
 
+  async deleteExternalApiKey(id: string): Promise<boolean> {
+    const results = await db.delete(externalApiKeys).where(eq(externalApiKeys.id, id));
+    return (results.rowCount || 0) > 0;
+  }
+
+  async getPhotAIApiKeys(): Promise<ExternalApiKey[]> {
+    return await db.select().from(externalApiKeys)
+      .where(and(
+        eq(externalApiKeys.apiType, 'photai'),
+        eq(externalApiKeys.isActive, true)
+      ))
+      .orderBy(desc(sql`(credits_limit - credits_used)`)); // Sort by available credits
+  }
+
   // Reward Claim methods (LinkBulks integration)
   async createRewardClaim(userId: string): Promise<{ claimToken: string; bypassUrl: string }> {
     // Generate unique claim token
