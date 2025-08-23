@@ -4,7 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { LinkRegular, CopyRegular, CheckmarkRegular } from "@fluentui/react-icons";
+import { Link2, Copy, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function GetCreditPage() {
@@ -63,7 +63,7 @@ export default function GetCreditPage() {
         <Card className="shadow-lg border-0 bg-white/70 dark:bg-gray-800/70 backdrop-blur">
           <CardHeader className="text-center pb-6">
             <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white flex items-center justify-center gap-2">
-              <LinkRegular className="w-6 h-6 text-blue-600" />
+              <Link2 className="w-6 h-6 text-blue-600" />
               Nhận Thêm Credit
             </CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-300 mt-2">
@@ -87,7 +87,7 @@ export default function GetCreditPage() {
                   </>
                 ) : (
                   <>
-                    <LinkRegular className="w-5 h-5 mr-2" />
+                    <Link2 className="w-5 h-5 mr-2" />
                     Nhận Thêm Credit (1 Credit)
                   </>
                 )}
@@ -118,7 +118,7 @@ export default function GetCreditPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <LinkRegular className="w-5 h-5 text-blue-600" />
+              <Link2 className="w-5 h-5 text-blue-600" />
               Link Vượt Đã Sẵn Sàng
             </DialogTitle>
             <DialogDescription>
@@ -142,12 +142,12 @@ export default function GetCreditPage() {
               >
                 {copied ? (
                   <>
-                    <CheckmarkRegular className="w-4 h-4 mr-2" />
+                    <Check className="w-4 h-4 mr-2" />
                     Đã sao chép
                   </>
                 ) : (
                   <>
-                    <CopyRegular className="w-4 h-4 mr-2" />
+                    <Copy className="w-4 h-4 mr-2" />
                     Sao chép
                   </>
                 )}

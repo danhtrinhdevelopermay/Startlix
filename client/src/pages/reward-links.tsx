@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient, apiRequest } from '@/lib/queryClient';
-import { LinkRegular, CopyRegular, CheckmarkCircleRegular, ClockRegular, MoneyRegular } from '@fluentui/react-icons';
+import { Link2, Copy, CheckCircle, Clock, DollarSign } from 'lucide-react';
 
 const createLinkSchema = z.object({
   targetUrl: z.string().url("Vui lòng nhập URL hợp lệ"),
@@ -113,7 +113,7 @@ export default function RewardLinksPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-4 flex items-center gap-3">
-          <LinkRegular className="w-8 h-8 text-blue-500" />
+          <Link2 className="w-8 h-8 text-blue-500" />
           Link Vượt - Kiếm Credit
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
@@ -125,7 +125,7 @@ export default function RewardLinksPage() {
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <MoneyRegular className="h-5 w-5" />
+            <DollarSign className="h-5 w-5" />
             Tạo Link Vượt Mới
           </CardTitle>
         </CardHeader>
@@ -136,7 +136,7 @@ export default function RewardLinksPage() {
               className="w-full"
               data-testid="button-create-link"
             >
-              <LinkRegular className="w-4 h-4 mr-2" />
+              <Link2 className="w-4 h-4 mr-2" />
               Tạo Link Vượt
             </Button>
           ) : (
@@ -189,7 +189,7 @@ export default function RewardLinksPage() {
                     {createLinkMutation.isPending ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                     ) : (
-                      <LinkRegular className="w-4 h-4 mr-2" />
+                      <Link2 className="w-4 h-4 mr-2" />
                     )}
                     Tạo Link
                   </Button>
@@ -218,7 +218,7 @@ export default function RewardLinksPage() {
         {rewardLinks.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
-              <LinkRegular className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <Link2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">Chưa có link nào</h3>
               <p className="text-gray-600">Tạo link vượt đầu tiên để bắt đầu kiếm credit!</p>
             </CardContent>
@@ -234,12 +234,12 @@ export default function RewardLinksPage() {
                         <Badge variant={link.isUsed ? "secondary" : "default"}>
                           {link.isUsed ? (
                             <>
-                              <CheckmarkCircleRegular className="w-3 h-3 mr-1" />
+                              <CheckCircle className="w-3 h-3 mr-1" />
                               Đã Sử Dụng
                             </>
                           ) : (
                             <>
-                              <ClockRegular className="w-3 h-3 mr-1" />
+                              <Clock className="w-3 h-3 mr-1" />
                               Chờ Sử Dụng
                             </>
                           )}
@@ -273,7 +273,7 @@ export default function RewardLinksPage() {
                         onClick={() => copyToClipboard(link.bypassUrl, "link vượt")}
                         data-testid={`button-copy-bypass-${link.id}`}
                       >
-                        <CopyRegular className="w-3 h-3 mr-1" />
+                        <Copy className="w-3 h-3 mr-1" />
                         Copy
                       </Button>
                     </div>

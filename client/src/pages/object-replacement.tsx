@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth, useLogout } from "@/hooks/useAuth";
-import { ArrowUploadRegular, ImageRegular, EditRegular, PersonRegular, SignOutRegular, SparkleRegular, LinkRegular, EraserRegular, PaintBrushRegular, ArrowUndoRegular, DeleteRegular } from "@fluentui/react-icons";
+import { Upload, Image, Edit, User, LogOut, Sparkles, Link2, Eraser, Paintbrush, Undo, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { MD3ButtonLoading } from "@/components/md3-loading-indicator";
 import CreditBalance from "@/components/credit-balance";
@@ -401,7 +401,7 @@ export default function ObjectReplacementPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
-              <ImageRegular className="w-8 h-8 text-purple-600" />
+              <Image className="w-8 h-8 text-purple-600" />
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 Thay thế đối tượng AI
               </h1>
@@ -412,20 +412,20 @@ export default function ObjectReplacementPage() {
               
               <Link to="/">
                 <Button variant="ghost" size="sm" data-testid="button-home">
-                  <SparkleRegular className="w-4 h-4 mr-2" />
+                  <Sparkles className="w-4 h-4 mr-2" />
                   Tạo video
                 </Button>
               </Link>
               
               <Link to="/get-credit">
                 <Button variant="ghost" size="sm" data-testid="button-get-credit">
-                  <LinkRegular className="w-4 h-4 mr-2" />
+                  <Link2 className="w-4 h-4 mr-2" />
                   Nhận credit
                 </Button>
               </Link>
 
               <div className="flex items-center space-x-2">
-                <PersonRegular className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                 <span className="text-sm text-gray-600 dark:text-gray-400">
                   {user?.username}
                 </span>
@@ -435,7 +435,7 @@ export default function ObjectReplacementPage() {
                   onClick={handleLogout}
                   data-testid="button-logout"
                 >
-                  <SignOutRegular className="w-4 h-4" />
+                  <LogOut className="w-4 h-4" />
                 </Button>
               </div>
             </div>
@@ -450,7 +450,7 @@ export default function ObjectReplacementPage() {
             <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-0 shadow-lg">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <EditRegular className="w-5 h-5 text-purple-600" />
+                  <Edit className="w-5 h-5 text-purple-600" />
                   Thay thế đối tượng trong ảnh
                 </CardTitle>
               </CardHeader>
@@ -482,7 +482,7 @@ export default function ObjectReplacementPage() {
                           </div>
                         ) : (
                           <div className="space-y-2">
-                            <ArrowUploadRegular className="w-12 h-12 text-gray-400 mx-auto" />
+                            <Upload className="w-12 h-12 text-gray-400 mx-auto" />
                             <p className="text-gray-600 dark:text-gray-400">
                               Nhấp để tải lên ảnh gốc
                             </p>
@@ -548,7 +548,7 @@ export default function ObjectReplacementPage() {
                               onClick={() => setDrawingMode('draw')}
                               data-testid="button-draw-mode"
                             >
-                              <PaintBrushRegular className="w-4 h-4 mr-2" />
+                              <Paintbrush className="w-4 h-4 mr-2" />
                               Vẽ
                             </Button>
                             <Button
@@ -558,7 +558,7 @@ export default function ObjectReplacementPage() {
                               onClick={() => setDrawingMode('erase')}
                               data-testid="button-erase-mode"
                             >
-                              <EraserRegular className="w-4 h-4 mr-2" />
+                              <Eraser className="w-4 h-4 mr-2" />
                               Xóa
                             </Button>
                           </div>
@@ -583,7 +583,7 @@ export default function ObjectReplacementPage() {
                             onClick={clearCanvas}
                             data-testid="button-clear-mask"
                           >
-                            <DeleteRegular className="w-4 h-4 mr-2" />
+                            <Trash2 className="w-4 h-4 mr-2" />
                             Xóa hết
                           </Button>
                         </div>
@@ -671,7 +671,7 @@ export default function ObjectReplacementPage() {
                           <MD3ButtonLoading label="Đang thay thế đối tượng..." />
                         ) : (
                           <>
-                            <SparkleRegular className="w-4 h-4 mr-2" />
+                            <Sparkles className="w-4 h-4 mr-2" />
                             Thay thế đối tượng (2 credits)
                           </>
                         )}
@@ -696,7 +696,7 @@ export default function ObjectReplacementPage() {
                   </div>
                 ) : replacements.length === 0 ? (
                   <div className="text-center py-8">
-                    <ImageRegular className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <Image className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-600 dark:text-gray-400">
                       Chưa có thao tác thay thế nào
                     </p>

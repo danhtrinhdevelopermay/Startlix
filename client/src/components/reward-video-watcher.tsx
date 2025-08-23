@@ -4,7 +4,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlayRegular, PauseRegular, GiftRegular, CheckmarkCircleRegular } from '@fluentui/react-icons';
+import { Play, Pause, Gift, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface RewardVideo {
@@ -213,7 +213,7 @@ export default function RewardVideoWatcher({ video, onRewardClaimed, onClose }: 
         <CardTitle className="flex items-center justify-between">
           <span>{video.title}</span>
           <div className="flex items-center gap-2">
-            <GiftRegular className="w-5 h-5 text-yellow-500" />
+            <Gift className="w-5 h-5 text-yellow-500" />
             <span className="text-yellow-500 font-semibold">{video.creditsReward} Credit</span>
           </div>
         </CardTitle>
@@ -245,7 +245,7 @@ export default function RewardVideoWatcher({ video, onRewardClaimed, onClose }: 
                   className="bg-white/20 hover:bg-white/30"
                   data-testid="play-pause-button"
                 >
-                  {isPlaying ? <PauseRegular className="w-4 h-4" /> : <PlayRegular className="w-4 h-4" />}
+                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                 </Button>
                 
                 <div className="flex-1 text-white text-sm">
@@ -280,7 +280,7 @@ export default function RewardVideoWatcher({ video, onRewardClaimed, onClose }: 
         {/* Completion Status */}
         {isCompleted && canClaimReward && (
           <div className="bg-green-100 dark:bg-green-900/20 border border-green-300 dark:border-green-700 rounded-lg p-4 text-center">
-            <CheckmarkCircleRegular className="w-8 h-8 text-green-500 mx-auto mb-2" />
+            <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
             <p className="text-green-800 dark:text-green-200 font-semibold mb-3">
               Chúc mừng! Bạn đã hoàn thành xem video!
             </p>
@@ -298,7 +298,7 @@ export default function RewardVideoWatcher({ video, onRewardClaimed, onClose }: 
         {/* Already Claimed */}
         {watchHistory?.rewardClaimed && (
           <div className="bg-blue-100 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-4 text-center">
-            <CheckmarkCircleRegular className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+            <CheckCircle className="w-8 h-8 text-blue-500 mx-auto mb-2" />
             <p className="text-blue-800 dark:text-blue-200 font-semibold">
               Bạn đã nhận phần thưởng cho video này rồi!
             </p>

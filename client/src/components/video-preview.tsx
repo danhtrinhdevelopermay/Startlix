@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { PlayRegular, ArrowDownloadRegular, PauseRegular, SpeakerMuteRegular, Speaker2Regular, FullScreenMaximizeRegular } from "@fluentui/react-icons";
+import { Play, Download, Pause, VolumeX, Volume2, Maximize } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ErrorPopup from "@/components/error-popup";
 import MD3LoadingIndicator from "./md3-loading-indicator";
@@ -362,7 +362,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
               <div className="mb-6">
                 <div className="relative inline-block">
                   <div className="absolute inset-0 bg-gradient-to-r from-[var(--fluent-brand-primary)] to-[var(--fluent-brand-secondary)] rounded-full blur-lg opacity-30"></div>
-                  <PlayRegular className="w-16 h-16 text-[var(--fluent-brand-primary)] relative z-10" />
+                  <Play className="w-16 h-16 text-[var(--fluent-brand-primary)] relative z-10" />
                 </div>
               </div>
               <p className="fluent-body-medium text-[var(--fluent-neutral-foreground-2)]">Video đã tạo sẽ hiển thị ở đây</p>
@@ -448,9 +448,9 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
                     data-testid="button-play-pause-center"
                   >
                     {isPlaying ? (
-                      <PauseRegular className="w-8 h-8" />
+                      <Pause className="w-8 h-8" />
                     ) : (
-                      <PlayRegular className="w-8 h-8" />
+                      <Play className="w-8 h-8" />
                     )}
                   </button>
                 </div>
@@ -494,9 +494,9 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
                         data-testid="button-play-pause"
                       >
                         {isPlaying ? (
-                          <PauseRegular className="w-5 h-5" />
+                          <Pause className="w-5 h-5" />
                         ) : (
-                          <PlayRegular className="w-5 h-5" />
+                          <Play className="w-5 h-5" />
                         )}
                       </button>
 
@@ -511,9 +511,9 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
                           data-testid="button-mute"
                         >
                           {isMuted || volume === 0 ? (
-                            <SpeakerMuteRegular className="w-5 h-5" />
+                            <VolumeX className="w-5 h-5" />
                           ) : (
-                            <Speaker2Regular className="w-5 h-5" />
+                            <Volume2 className="w-5 h-5" />
                           )}
                         </button>
                         
@@ -552,7 +552,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
                         className="hover:text-[var(--fluent-brand-primary)] transition-colors duration-200"
                         data-testid="button-fullscreen"
                       >
-                        <FullScreenMaximizeRegular className="w-5 h-5" />
+                        <Maximize className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
@@ -578,7 +578,7 @@ export default function VideoPreview({ videoUrl, taskId, onVideoLoad }: VideoPre
                   className="fluent-glass-subtle hover:fluent-glass border-[var(--fluent-neutral-stroke-1)] text-[var(--fluent-neutral-foreground-1)] hover:text-[var(--fluent-brand-primary)] transition-all duration-200"
                   data-testid="button-download"
                 >
-                  <ArrowDownloadRegular className="w-4 h-4 mr-2" />
+                  <Download className="w-4 h-4 mr-2" />
                   Tải xuống
                 </Button>
                 {taskId && (

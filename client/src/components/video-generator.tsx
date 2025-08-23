@@ -16,7 +16,7 @@ import CreditBalance from "@/components/credit-balance";
 import VideoPreview from "@/components/video-preview";
 import GenerationHistory from "@/components/generation-history";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDownRegular, ArrowUploadRegular, SparkleRegular, ImageRegular, DocumentRegular, SignOutRegular, PersonRegular, DesktopRegular, PhoneRegular, SquareRegular, FlashRegular, TrophyRegular, DismissRegular, EditRegular, CutRegular, LinkRegular, WandRegular } from "@fluentui/react-icons";
+import { ChevronDown, Upload, Sparkles, Image, FileText, LogOut, User, Monitor, Smartphone, Square, Zap, Trophy, X, Edit, Scissors, Link2, Wand2 } from "lucide-react";
 import { useAuth, useLogout } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -52,7 +52,7 @@ const aspectRatioOptions = [
     value: "16:9",
     label: "Ngang",
     description: "Định dạng rộng, hoàn hảo cho xem trên máy tính và YouTube",
-    icon: DesktopRegular,
+    icon: Monitor,
     preview: "████████████",
     dimensions: "1920 × 1080"
   },
@@ -60,7 +60,7 @@ const aspectRatioOptions = [
     value: "9:16", 
     label: "Dọc",
     description: "Định dạng dọc, lý tưởng cho xem trên điện thoại và TikTok",
-    icon: PhoneRegular,
+    icon: Smartphone,
     preview: "████\n████\n████",
     dimensions: "1080 × 1920"
   },
@@ -68,7 +68,7 @@ const aspectRatioOptions = [
     value: "1:1",
     label: "Vuông", 
     description: "Định dạng vuông hoàn hảo cho Instagram và mạng xã hội",
-    icon: SquareRegular,
+    icon: Square,
     preview: "████████\n████████",
     dimensions: "1080 × 1080"
   }
@@ -80,7 +80,7 @@ const modelOptions = [
     value: "veo3",
     label: "STLix Cao cấp",
     description: "Tạo video AI chất lượng cao nhất với chi tiết vượt trội và tự động nâng cao chất lượng",
-    icon: TrophyRegular,
+    icon: Trophy,
     badge: "Chất lượng tốt nhất",
     features: ["Độ phân giải 4K", "AI tiên tiến", "Tự động nâng cao chất lượng"],
     credits: 5
@@ -89,7 +89,7 @@ const modelOptions = [
     value: "veo3_fast",
     label: "STLix Nhanh",
     description: "Tạo nhanh với chất lượng tốt, hoàn hảo cho nguyên mẫu nhanh",
-    icon: FlashRegular,
+    icon: Zap,
     badge: "Tạo nhanh",
     features: ["Độ phân giải HD", "Xử lý nhanh", "Chất lượng tốt"],
     credits: 3
@@ -730,7 +730,7 @@ export default function VideoGenerator() {
             <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3 flex-shrink-0">
               {/* User Info */}
               <div className="hidden sm:flex items-center space-x-2 mr-1 md:mr-2">
-                <PersonRegular className="w-4 h-4 text-[var(--fluent-brand-primary)]" />
+                <User className="w-4 h-4 text-[var(--fluent-brand-primary)]" />
                 <span className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)] truncate max-w-[100px]">
                   {user?.username}
                 </span>
@@ -748,7 +748,7 @@ export default function VideoGenerator() {
                   className="hidden sm:flex"
                   data-testid="nav-photai-tools"
                 >
-                  <EditRegular className="w-4 h-4 mr-1 sm:mr-2" />
+                  <Edit className="w-4 h-4 mr-1 sm:mr-2" />
                   <span className="hidden md:inline">Thay thế đối tượng</span>
                 </Button>
               </Link>
@@ -760,7 +760,7 @@ export default function VideoGenerator() {
                   size="sm"
                   data-testid="nav-photai-tools-mobile"
                 >
-                  <EditRegular className="w-4 h-4" />
+                  <Edit className="w-4 h-4" />
                 </Button>
               </Link>
               
@@ -772,7 +772,7 @@ export default function VideoGenerator() {
                   className="hidden sm:flex"
                   data-testid="nav-reward-videos"
                 >
-                  <TrophyRegular className="w-4 h-4 mr-1 sm:mr-2" />
+                  <Trophy className="w-4 h-4 mr-1 sm:mr-2" />
                   <span className="hidden md:inline">Video Thưởng</span>
                 </Button>
               </Link>
@@ -784,7 +784,7 @@ export default function VideoGenerator() {
                   size="sm"
                   data-testid="nav-reward-videos-mobile"
                 >
-                  <TrophyRegular className="w-4 h-4" />
+                  <Trophy className="w-4 h-4" />
                 </Button>
               </Link>
               
@@ -796,7 +796,7 @@ export default function VideoGenerator() {
                   className="hidden sm:flex"
                   data-testid="nav-get-credit"
                 >
-                  <LinkRegular className="w-4 h-4 mr-1 sm:mr-2" />
+                  <Link2 className="w-4 h-4 mr-1 sm:mr-2" />
                   <span className="hidden md:inline">Nhận Credit</span>
                 </Button>
               </Link>
@@ -808,7 +808,7 @@ export default function VideoGenerator() {
                   size="sm"
                   data-testid="nav-get-credit-mobile"
                 >
-                  <LinkRegular className="w-4 h-4" />
+                  <Link2 className="w-4 h-4" />
                 </Button>
               </Link>
               
@@ -821,7 +821,7 @@ export default function VideoGenerator() {
                 data-testid="button-logout"
                 className="flex-shrink-0"
               >
-                <SignOutRegular className="w-4 h-4" />
+                <LogOut className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -845,7 +845,7 @@ export default function VideoGenerator() {
                   data-testid="tab-text-to-video"
                 >
                   <div className="flex items-center justify-center space-x-1 sm:space-x-2">
-                    <DocumentRegular className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span className="text-xs sm:text-sm">Văn bản</span>
                   </div>
                 </button>
@@ -859,7 +859,7 @@ export default function VideoGenerator() {
                   data-testid="tab-image-to-video"
                 >
                   <div className="flex items-center justify-center space-x-1 sm:space-x-2">
-                    <ImageRegular className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <Image className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span className="text-xs sm:text-sm">Tạo Video</span>
                   </div>
                 </button>
@@ -894,7 +894,7 @@ export default function VideoGenerator() {
                                   {isExpandingPrompt && expandingPromptType === 'text' ? (
                                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                   ) : (
-                                    <EditRegular className="w-4 h-4" />
+                                    <Edit className="w-4 h-4" />
                                   )}
                                 </button>
                               </div>
@@ -929,7 +929,7 @@ export default function VideoGenerator() {
                                   <span className="fluent-body-medium">
                                     {field.value ? aspectRatioOptions.find(opt => opt.value === field.value)?.label : "Chọn tỷ lệ khung hình"}
                                   </span>
-                                  <ChevronDownRegular className="h-4 w-4" />
+                                  <ChevronDown className="h-4 w-4" />
                                 </Button>
                               </FormControl>
                               <FormMessage />
@@ -957,7 +957,7 @@ export default function VideoGenerator() {
                                   <span className="fluent-body-medium">
                                     {field.value ? modelOptions.find(opt => opt.value === field.value)?.label : "Chọn mô hình AI"}
                                   </span>
-                                  <ChevronDownRegular className="h-4 w-4" />
+                                  <ChevronDown className="h-4 w-4" />
                                 </Button>
                               </FormControl>
                               <FormMessage />
@@ -969,7 +969,7 @@ export default function VideoGenerator() {
                       <Collapsible>
                         <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-[var(--fluent-neutral-foreground-2)] hover:text-[var(--fluent-neutral-foreground-1)] transition-colors">
                           Tùy chọn nâng cao
-                          <ChevronDownRegular className="w-5 h-5 transform transition-transform data-[state=open]:rotate-180" />
+                          <ChevronDown className="w-5 h-5 transform transition-transform data-[state=open]:rotate-180" />
                         </CollapsibleTrigger>
                         <CollapsibleContent className="mt-4 space-y-4 pl-4">
                           <FormField
@@ -1019,7 +1019,7 @@ export default function VideoGenerator() {
                         className="w-full h-14 fluent-title-medium"
                         data-testid="button-generate-text-video"
                       >
-                        <SparkleRegular className="w-5 h-5 mr-2" />
+                        <Sparkles className="w-5 h-5 mr-2" />
                         <span>
                           {generateVideoMutation.isPending ? "Đang tạo..." : "Tạo Video"}
                         </span>
@@ -1058,7 +1058,7 @@ export default function VideoGenerator() {
                                     onChange={handleFileUpload}
                                     data-testid="input-file-upload"
                                   />
-                                  <ArrowUploadRegular className="w-12 h-12 text-[var(--fluent-neutral-foreground-3)] mx-auto mb-4" />
+                                  <Upload className="w-12 h-12 text-[var(--fluent-neutral-foreground-3)] mx-auto mb-4" />
                                   <div className="text-sm text-[var(--fluent-neutral-foreground-2)]">
                                     <span className="text-[var(--fluent-brand-primary)] font-medium">Nhấn để tải lên</span> hoặc kéo thả
                                   </div>
@@ -1090,7 +1090,7 @@ export default function VideoGenerator() {
                                       className="fluent-glass-subtle text-[var(--fluent-neutral-foreground-1)] hover:fluent-glass"
                                       data-testid="button-change-image"
                                     >
-                                      <EditRegular className="w-4 h-4 mr-2" />
+                                      <Edit className="w-4 h-4 mr-2" />
                                       Thay đổi ảnh
                                     </Button>
                                     
@@ -1102,7 +1102,7 @@ export default function VideoGenerator() {
                                       className="fluent-glass-subtle text-[var(--fluent-neutral-foreground-1)] hover:fluent-glass"
                                       data-testid="button-crop-image"
                                     >
-                                      <CutRegular className="w-4 h-4 mr-2" />
+                                      <Scissors className="w-4 h-4 mr-2" />
                                       Cắt ảnh
                                     </Button>
                                     
@@ -1114,7 +1114,7 @@ export default function VideoGenerator() {
                                       className="bg-red-600/20 border-red-500 text-red-400 hover:bg-red-600/30"
                                       data-testid="button-remove-image"
                                     >
-                                      <DismissRegular className="w-4 h-4 mr-2" />
+                                      <X className="w-4 h-4 mr-2" />
                                       Hủy ảnh
                                     </Button>
                                   </div>
@@ -1160,7 +1160,7 @@ export default function VideoGenerator() {
                                   {isExpandingPrompt && expandingPromptType === 'image' ? (
                                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                   ) : (
-                                    <EditRegular className="w-4 h-4" />
+                                    <Edit className="w-4 h-4" />
                                   )}
                                 </button>
                               </div>
@@ -1189,7 +1189,7 @@ export default function VideoGenerator() {
                                   data-testid="button-select-image-aspect-ratio"
                                 >
                                   {field.value ? aspectRatioOptions.find(opt => opt.value === field.value)?.label : "Chọn tỷ lệ khung hình"}
-                                  <ChevronDownRegular className="h-4 w-4" />
+                                  <ChevronDown className="h-4 w-4" />
                                 </Button>
                               </FormControl>
                               <FormMessage />
@@ -1215,7 +1215,7 @@ export default function VideoGenerator() {
                                   data-testid="button-select-image-model"
                                 >
                                   {field.value ? modelOptions.find(opt => opt.value === field.value)?.label : "Chọn mô hình AI"}
-                                  <ChevronDownRegular className="h-4 w-4" />
+                                  <ChevronDown className="h-4 w-4" />
                                 </Button>
                               </FormControl>
                               <FormMessage />
@@ -1231,7 +1231,7 @@ export default function VideoGenerator() {
                         className="w-full h-14 fluent-title-medium"
                         data-testid="button-generate-image-video"
                       >
-                        <ImageRegular className="w-5 h-5 mr-2" />
+                        <Image className="w-5 h-5 mr-2" />
                         <span>
                           {generateVideoMutation.isPending ? "Đang tạo hiệu ứng..." : "Tạo hiệu ứng cho Ảnh"}
                         </span>
@@ -1272,7 +1272,7 @@ export default function VideoGenerator() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="fluent-glass rounded-[var(--fluent-border-radius-large)] p-6 text-center">
               <div className="w-12 h-12 bg-gradient-to-r from-[var(--fluent-brand-primary)] to-[var(--fluent-brand-secondary)] rounded-[var(--fluent-border-radius-medium)] flex items-center justify-center mx-auto mb-4">
-                <SparkleRegular className="w-6 h-6" />
+                <Sparkles className="w-6 h-6" />
               </div>
               <h3 className="fluent-title-small mb-2">Siêu Nhanh</h3>
               <p className="fluent-body-small text-[var(--fluent-neutral-foreground-3)]">Tạo video trong vài phút với API STLix được tối ưu hóa của chúng tôi</p>
@@ -1566,7 +1566,7 @@ export default function VideoGenerator() {
                         {isSTLixPremiumDisabled && (
                           <div className="mt-2 p-2 bg-red-900/20 border border-red-600 rounded-md">
                             <div className="flex items-center space-x-2">
-                              <DismissRegular className="w-3 h-3 text-red-400" />
+                              <X className="w-3 h-3 text-red-400" />
                               <span className="text-xs text-red-300 font-medium">
                                 Mô hình đang bảo trì
                               </span>

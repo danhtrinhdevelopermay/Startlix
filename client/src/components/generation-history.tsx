@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PlayRegular, ArrowDownloadRegular, ArrowClockwiseRegular, ErrorCircleRegular, ClockRegular } from "@fluentui/react-icons";
+import { Play, Download, RotateCcw, AlertCircle, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface GenerationHistoryProps {
@@ -19,11 +19,11 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
       case "completed":
         return <div className="w-3 h-3 bg-green-400 rounded-full" />;
       case "processing":
-        return <ArrowClockwiseRegular className="w-3 h-3 text-yellow-400 animate-spin" />;
+        return <RotateCcw className="w-3 h-3 text-yellow-400 animate-spin" />;
       case "failed":
-        return <ErrorCircleRegular className="w-3 h-3 text-red-400" />;
+        return <AlertCircle className="w-3 h-3 text-red-400" />;
       default:
-        return <ClockRegular className="w-3 h-3 text-gray-400" />;
+        return <Clock className="w-3 h-3 text-gray-400" />;
     }
   };
 
@@ -65,7 +65,7 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
           <h3 className="font-semibold text-lg">Lịch sử tạo video</h3>
         </div>
         <div className="p-4 flex items-center justify-center">
-          <ArrowClockwiseRegular className="w-6 h-6 text-primary-500 animate-spin" />
+          <RotateCcw className="w-6 h-6 text-primary-500 animate-spin" />
         </div>
       </div>
     );
@@ -85,7 +85,7 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
           <div className="text-center py-12 text-[var(--fluent-neutral-foreground-3)]">
             <div className="mb-4">
               <div className="w-16 h-16 mx-auto rounded-full fluent-glass-subtle flex items-center justify-center">
-                <ClockRegular className="w-8 h-8 text-[var(--fluent-brand-primary)]" />
+                <Clock className="w-8 h-8 text-[var(--fluent-brand-primary)]" />
               </div>
             </div>
             <p className="fluent-body-medium text-[var(--fluent-neutral-foreground-2)]">Chưa có video nào</p>
@@ -161,7 +161,7 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
                       title="Xem trước"
                       data-testid="button-preview"
                     >
-                      <PlayRegular className="w-4 h-4 text-[var(--fluent-brand-primary)]" />
+                      <Play className="w-4 h-4 text-[var(--fluent-brand-primary)]" />
                     </Button>
                     <Button
                       size="sm"
@@ -171,7 +171,7 @@ export default function GenerationHistory({ onSelectVideo }: GenerationHistoryPr
                       title="Tải xuống"
                       data-testid="button-download-history"
                     >
-                      <ArrowDownloadRegular className="w-4 h-4 text-[var(--fluent-brand-primary)]" />
+                      <Download className="w-4 h-4 text-[var(--fluent-brand-primary)]" />
                     </Button>
                   </div>
                 )}

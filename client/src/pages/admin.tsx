@@ -12,7 +12,7 @@ import { useForm } from "react-hook-form";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { SettingsRegular, KeyRegular, AddRegular, EyeRegular, EyeOffRegular, DeleteRegular, ArrowClockwiseRegular, CheckmarkCircleRegular, DismissCircleRegular, ErrorCircleRegular } from "@fluentui/react-icons";
+import { Settings, Key, Plus, Eye, EyeOff, Trash2, RotateCcw, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { type ApiKey, type ExternalApiKey } from "@shared/schema";
 import { MD3ButtonLoading } from "@/components/md3-loading-indicator";
 
@@ -338,12 +338,12 @@ export default function Admin() {
 
   const getStatusBadge = (apiKey: ApiKey) => {
     if (!apiKey.isActive) {
-      return <Badge variant="secondary" className="flex items-center gap-1"><DismissCircleRegular className="w-3 h-3" />Tắt</Badge>;
+      return <Badge variant="secondary" className="flex items-center gap-1"><XCircle className="w-3 h-3" />Tắt</Badge>;
     }
     if (apiKey.credits > 0) {
-      return <Badge variant="default" className="flex items-center gap-1 bg-green-600"><CheckmarkCircleRegular className="w-3 h-3" />Hoạt động</Badge>;
+      return <Badge variant="default" className="flex items-center gap-1 bg-green-600"><CheckCircle className="w-3 h-3" />Hoạt động</Badge>;
     }
-    return <Badge variant="destructive" className="flex items-center gap-1"><ErrorCircleRegular className="w-3 h-3" />Hết credit</Badge>;
+    return <Badge variant="destructive" className="flex items-center gap-1"><AlertCircle className="w-3 h-3" />Hết credit</Badge>;
   };
 
   const formatDate = (date: Date | string | null) => {
@@ -358,7 +358,7 @@ export default function Admin() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-3">
-            <SettingsRegular className="w-8 h-8 text-primary-500" />
+            <Settings className="w-8 h-8 text-primary-500" />
             <div>
               <h1 className="text-3xl font-bold">Quản trị STLIX API</h1>
               <p className="text-gray-400 mt-1">Quản lý API keys và kiểm tra credits tự động</p>
@@ -376,7 +376,7 @@ export default function Admin() {
                 data-testid="loading-check-credits"
               />
             ) : (
-              <ArrowClockwiseRegular className="w-4 h-4 mr-2" />
+              <RotateCcw className="w-4 h-4 mr-2" />
             )}
             Kiểm tra Credits
           </Button>
@@ -388,7 +388,7 @@ export default function Admin() {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
-                  <CheckmarkCircleRegular className="w-6 h-6 text-white" />
+                  <CheckCircle className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold">Hệ thống Load Balancing hoạt động</h3>
@@ -421,7 +421,7 @@ export default function Admin() {
                     {summary?.totalKeys || apiKeys.length}
                   </p>
                 </div>
-                <KeyRegular className="w-8 h-8 text-primary-500" />
+                <Key className="w-8 h-8 text-primary-500" />
               </div>
             </CardContent>
           </Card>
@@ -435,7 +435,7 @@ export default function Admin() {
                     {summary?.activeKeys || apiKeys.filter((k: ApiKey) => k.isActive && k.credits > 0).length}
                   </p>
                 </div>
-                <CheckmarkCircleRegular className="w-8 h-8 text-green-500" />
+                <CheckCircle className="w-8 h-8 text-green-500" />
               </div>
             </CardContent>
           </Card>
@@ -465,7 +465,7 @@ export default function Admin() {
                     {summary?.emptyKeys || apiKeys.filter((k: ApiKey) => k.credits === 0).length}
                   </p>
                 </div>
-                <ErrorCircleRegular className="w-8 h-8 text-red-500" />
+                <AlertCircle className="w-8 h-8 text-red-500" />
               </div>
             </CardContent>
           </Card>
@@ -517,7 +517,7 @@ export default function Admin() {
           <Card className="fluent-glass">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <KeyRegular className="w-5 h-5" />
+                <Key className="w-5 h-5" />
                 <span>Cấu hình STLix API Key</span>
               </CardTitle>
               <CardDescription>
@@ -566,7 +566,7 @@ export default function Admin() {
           <Card className="fluent-glass">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <AddRegular className="w-5 h-5" />
+                <Plus className="w-5 h-5" />
                 <span>Thêm API Key</span>
               </CardTitle>
               <CardDescription>
@@ -689,7 +689,7 @@ export default function Admin() {
               {settings?.find((s: any) => s.key === "VEO3_PREMIUM_ENABLED")?.value !== "true" && (
                 <div className="p-3 bg-yellow-900/20 border border-yellow-600 rounded-lg">
                   <div className="flex items-center space-x-2">
-                    <ErrorCircleRegular className="w-4 h-4 text-yellow-400" />
+                    <AlertCircle className="w-4 h-4 text-yellow-400" />
                     <span className="text-sm text-yellow-300">
                       Mô hình STLix Cao Cấp hiện đang ở chế độ bảo trì
                     </span>
@@ -758,9 +758,9 @@ export default function Admin() {
                             data-testid={`button-toggle-show-${apiKey.id}`}
                           >
                             {showApiKey[apiKey.id] ? (
-                              <EyeOffRegular className="w-3 h-3" />
+                              <EyeOff className="w-3 h-3" />
                             ) : (
-                              <EyeRegular className="w-3 h-3" />
+                              <Eye className="w-3 h-3" />
                             )}
                           </Button>
                         </div>
@@ -793,7 +793,7 @@ export default function Admin() {
                             className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
                             data-testid={`button-delete-${apiKey.id}`}
                           >
-                            <DeleteRegular className="w-4 h-4" />
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </TableCell>
@@ -809,7 +809,7 @@ export default function Admin() {
         <Card className="bg-dark-700 border-dark-600">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <ErrorCircleRegular className="w-5 h-5 text-blue-400" />
+              <AlertCircle className="w-5 h-5 text-blue-400" />
               Test FFmpeg Enhancement
             </CardTitle>
             <CardDescription>
@@ -853,7 +853,7 @@ export default function Admin() {
                     />
                   ) : (
                     <>
-                      <CheckmarkCircleRegular className="w-4 h-4 mr-2" />
+                      <CheckCircle className="w-4 h-4 mr-2" />
                       Test FFmpeg Enhancement
                     </>
                   )}
@@ -936,7 +936,7 @@ export default function Admin() {
         <Card className="bg-dark-700 border-dark-600">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <KeyRegular className="h-5 w-5" />
+              <Key className="h-5 w-5" />
               External API Keys
             </CardTitle>
             <CardDescription>
@@ -1027,7 +1027,7 @@ export default function Admin() {
                   className="bg-blue-600 hover:bg-blue-700"
                   data-testid="button-create-external-key"
                 >
-                  <AddRegular className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 mr-2" />
                   Tạo API Key
                 </Button>
               </form>
@@ -1068,7 +1068,7 @@ export default function Admin() {
                                 onClick={() => setShowApiKey({ ...showApiKey, [key.id]: !showApiKey[key.id] })}
                                 data-testid={`button-toggle-key-${key.id}`}
                               >
-                                {showApiKey[key.id] ? <EyeOffRegular className="h-4 w-4" /> : <EyeRegular className="h-4 w-4" />}
+                                {showApiKey[key.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                               </Button>
                             </div>
                           </TableCell>
@@ -1116,9 +1116,9 @@ export default function Admin() {
                                 data-testid={`button-toggle-status-${key.id}`}
                               >
                                 {key.isActive ? (
-                                  <DismissCircleRegular className="h-4 w-4 text-orange-400" />
+                                  <XCircle className="h-4 w-4 text-orange-400" />
                                 ) : (
-                                  <CheckmarkCircleRegular className="h-4 w-4 text-green-400" />
+                                  <CheckCircle className="h-4 w-4 text-green-400" />
                                 )}
                               </Button>
                               <Button
@@ -1142,7 +1142,7 @@ export default function Admin() {
                                 }}
                                 data-testid={`button-reset-usage-${key.id}`}
                               >
-                                <ArrowClockwiseRegular className="h-4 w-4 text-blue-400" />
+                                <RotateCcw className="h-4 w-4 text-blue-400" />
                               </Button>
                             </div>
                           </TableCell>
@@ -1160,7 +1160,7 @@ export default function Admin() {
         <Card className="bg-dark-700 border-dark-600">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <KeyRegular className="w-5 h-5 text-purple-400" />
+              <Key className="w-5 h-5 text-purple-400" />
               Quản lý PhotAI API Keys
             </CardTitle>
             <CardDescription>
@@ -1241,7 +1241,7 @@ export default function Admin() {
                     />
                   ) : (
                     <>
-                      <AddRegular className="h-4 w-4 mr-2" />
+                      <Plus className="h-4 w-4 mr-2" />
                       Thêm PhotAI Key
                     </>
                   )}
@@ -1252,7 +1252,7 @@ export default function Admin() {
             {/* PhotAI API keys list */}
             {photaiKeys.length === 0 ? (
               <div className="text-center py-8">
-                <KeyRegular className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <Key className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-400">Chưa có PhotAI API key nào</p>
                 <p className="text-sm text-gray-500 mt-2">
                   Thêm PhotAI API key để hệ thống có thể sử dụng tính năng thay thế đối tượng
@@ -1287,7 +1287,7 @@ export default function Admin() {
                             onClick={() => setShowApiKey({ ...showApiKey, [key.id]: !showApiKey[key.id] })}
                             data-testid={`button-toggle-photai-key-${key.id}`}
                           >
-                            {showApiKey[key.id] ? <EyeOffRegular className="h-4 w-4" /> : <EyeRegular className="h-4 w-4" />}
+                            {showApiKey[key.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </Button>
                         </div>
                       </TableCell>
@@ -1325,7 +1325,7 @@ export default function Admin() {
                             className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
                             data-testid={`button-delete-photai-${key.id}`}
                           >
-                            <DeleteRegular className="w-4 h-4" />
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </TableCell>

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useRegister, useCheckDevice } from "@/hooks/useAuth";
-import { PersonAddRegular } from "@fluentui/react-icons";
+import { UserPlus } from "lucide-react";
 import { MD3ButtonLoading } from "@/components/md3-loading-indicator";
 import { getDeviceFingerprint } from "@/lib/deviceFingerprint";
 
@@ -183,7 +183,7 @@ export default function Register() {
                 </>
               ) : (
                 <>
-                  <PersonAddRegular className="mr-2 h-4 w-4" />
+                  <UserPlus className="mr-2 h-4 w-4" />
                   Đăng ký
                 </>
               )}

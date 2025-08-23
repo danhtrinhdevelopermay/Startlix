@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
-import { DismissRegular } from "@fluentui/react-icons"
+import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -45,7 +45,7 @@ const DialogContent = React.forwardRef<
     >
       {children}
       <DialogPrimitive.Close className="absolute right-4 top-4 rounded-[var(--md-sys-shape-corner-small)] w-6 h-6 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:text-[var(--md-sys-color-on-surface)] transition-colors duration-200 focus:outline-none focus:bg-[var(--md-sys-color-surface-variant)] disabled:pointer-events-none">
-        <DismissRegular className="h-4 w-4" />
+        <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>

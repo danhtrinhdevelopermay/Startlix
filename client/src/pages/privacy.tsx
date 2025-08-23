@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowLeftRegular } from "@fluentui/react-icons";
+import { ArrowLeft } from "lucide-react";
 import logoUrl from "@/assets/logo.png";
 
 export default function Privacy() {
@@ -17,7 +17,7 @@ export default function Privacy() {
           </div>
           <Link href="/">
             <Button variant="ghost" className="text-white hover:bg-white/10">
-              <ArrowLeftRegular className="w-4 h-4 mr-2" />
+              <ArrowLeft className="w-4 h-4 mr-2" />
               Quay lại
             </Button>
           </Link>
