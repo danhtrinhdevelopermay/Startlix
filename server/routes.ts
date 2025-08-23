@@ -923,20 +923,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error(data.error || data.message || 'Object replacement failed');
       }
 
-      // Update replacement with result (assuming phot.ai returns result URL)
-      const resultImageUrl = data.result_url || data.output_url || data.image_url;
-      await storageInstance.updateObjectReplacement(replacement.id, {
-        status: "completed",
-        resultImageUrl,
-        completedAt: new Date(),
-      });
+      // Handle phot.ai response (can be immediate result or pending status)
+      if (data.status === "pending" && data.order_id) {
+        // Store order_id for status checking
+        await storageInstance.updateObjectReplacement(replacement.id, {
+          status: "pending",
+          errorMessage: JSON.stringify({ order_id: data.order_id, status: data.status }), // Temporary storage for order_id
+        });
 
-      res.json({ 
-        replacementId: replacement.id,
-        resultImageUrl,
-        creditsUsed: totalCredits,
-        status: "completed"
-      });
+        res.json({
+          replacementId: replacement.id,
+          status: "pending",
+          message: "Object replacement request submitted successfully",
+          creditsUsed: totalCredits,
+          order_id: data.order_id
+        });
+      } else if (data.result_url || data.output_url || data.image_url) {
+        // Immediate result (less common)
+        const resultImageUrl = data.result_url || data.output_url || data.image_url;
+        await storageInstance.updateObjectReplacement(replacement.id, {
+          status: "completed",
+          resultImageUrl,
+          completedAt: new Date(),
+        });
+
+        res.json({ 
+          replacementId: replacement.id,
+          resultImageUrl,
+          creditsUsed: totalCredits,
+          status: "completed"
+        });
+      } else {
+        // Unexpected response format
+        throw new Error('Unexpected API response format');
+      }
     } catch (error) {
       console.error('Object Replacement error:', error);
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to replace object" });
@@ -951,7 +971,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const storageInstance = await storage();
-      const replacements = await storageInstance.getUserObjectReplacements(req.user.id);
+      let replacements = await storageInstance.getUserObjectReplacements(req.user.id);
+      
+      // Check status for pending replacements
+      for (const replacement of replacements) {
+        if ((replacement.status === "pending" || replacement.status === "processing") && replacement.id) {
+          try {
+            console.log(`🔍 Checking status for object replacement ${replacement.id}`);
+            
+            // Extract order_id from result or error message if stored
+            let orderId = null;
+            if (replacement.errorMessage && replacement.errorMessage.includes('"order_id"')) {
+              try {
+                const errorData = JSON.parse(replacement.errorMessage);
+                orderId = errorData.order_id;
+              } catch (e) {
+                // Try to extract from different format
+              }
+            }
+            
+            if (orderId) {
+              console.log(`🔍 Found order_id ${orderId} for replacement ${replacement.id}`);
+              
+              // Check status with phot.ai API
+              const statusResponse = await fetch(`${PHOTAI_API_BASE}/order/${orderId}`, {
+                method: 'GET',
+                headers: {
+                  'x-api-key': PHOTAI_API_KEY,
+                },
+              });
+              
+              if (statusResponse.ok) {
+                const statusData = await statusResponse.json();
+                console.log(`🔍 Status check response for ${orderId}:`, statusData);
+                
+                if (statusData.status === "completed" && statusData.result_url) {
+                  // Update replacement with result
+                  await storageInstance.updateObjectReplacement(replacement.id, {
+                    status: "completed",
+                    resultImageUrl: statusData.result_url,
+                    completedAt: new Date(),
+                  });
+                  
+                  console.log(`✅ Object replacement ${replacement.id} completed with result: ${statusData.result_url}`);
+                } else if (statusData.status === "failed") {
+                  // Update replacement with error
+                  await storageInstance.updateObjectReplacement(replacement.id, {
+                    status: "failed",
+                    errorMessage: statusData.error || "Object replacement failed",
+                    completedAt: new Date(),
+                  });
+                  
+                  console.log(`❌ Object replacement ${replacement.id} failed: ${statusData.error}`);
+                }
+              }
+            }
+          } catch (error) {
+            console.error(`❌ Error checking status for replacement ${replacement.id}:`, error);
+          }
+        }
+      }
+      
+      // Fetch updated replacements
+      replacements = await storageInstance.getUserObjectReplacements(req.user.id);
       
       res.json(replacements);
     } catch (error) {

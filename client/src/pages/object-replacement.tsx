@@ -66,9 +66,16 @@ export default function ObjectReplacementPage() {
     },
   });
 
-  // Fetch user's object replacements
+  // Fetch user's object replacements with auto-refresh for pending items
   const { data: replacements = [], isLoading: replacementsLoading } = useQuery<ObjectReplacement[]>({
     queryKey: ["/api/object-replacements"],
+    refetchInterval: (query) => {
+      // Auto-refresh every 5 seconds if there are pending replacements
+      const pendingExists = query.state.data?.some((replacement: ObjectReplacement) => 
+        replacement.status === "pending" || replacement.status === "processing"
+      );
+      return pendingExists ? 5000 : false; // 5 seconds refresh if pending, otherwise stop
+    },
   });
 
   // Upload image mutation
