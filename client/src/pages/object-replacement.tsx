@@ -446,18 +446,28 @@ export default function ObjectReplacementPage() {
                       name="prompt"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Mô tả đối tượng thay thế</FormLabel>
+                          <FormLabel>Mô tả đối tượng thay thế *</FormLabel>
                           <FormControl>
                             <Input
                               placeholder="Ví dụ: một chiếc xe hơi màu đỏ, một chú chó golden retriever, một cái cây..."
                               data-testid="input-prompt"
                               {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                console.log('🔄 Prompt changed:', e.target.value, 'Length:', e.target.value.length);
+                              }}
                             />
                           </FormControl>
                           <FormDescription>
-                            Mô tả những gì bạn muốn thay thế vào vùng đã vẽ mask (5-200 ký tự)
+                            Mô tả những gì bạn muốn thay thế vào vùng đã vẽ mask (cần ít nhất 5 ký tự). 
+                            Hiện tại: <strong>{field.value?.length || 0}/200 ký tự</strong>
                           </FormDescription>
                           <FormMessage />
+                          {form.formState.errors.prompt && (
+                            <div className="text-red-500 text-sm font-medium bg-red-50 dark:bg-red-900/20 p-2 rounded">
+                              ❌ {form.formState.errors.prompt.message}
+                            </div>
+                          )}
                         </FormItem>
                       )}
                     />
@@ -570,7 +580,9 @@ export default function ObjectReplacementPage() {
                         Debug: isPending={objectReplacementMutation.isPending ? 'true' : 'false'}, 
                         isUploading={uploadImageMutation.isPending ? 'true' : 'false'}, 
                         hasMask={maskDataUrl ? 'true' : 'false'}, 
-                        hasImageUrl={inputImageUrl ? 'true' : 'false'}
+                        hasImageUrl={inputImageUrl ? 'true' : 'false'}, 
+                        promptLength={form.watch('prompt')?.length || 0}, 
+                        hasErrors={Object.keys(form.formState.errors).length > 0 ? 'true' : 'false'}
                       </div>
                       
                       <Button
