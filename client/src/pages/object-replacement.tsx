@@ -66,17 +66,55 @@ export default function ObjectReplacementPage() {
     },
   });
 
+  // Track previous replacements to detect status changes
+  const [previousReplacements, setPreviousReplacements] = useState<ObjectReplacement[]>([]);
+
   // Fetch user's object replacements with auto-refresh for pending items
   const { data: replacements = [], isLoading: replacementsLoading } = useQuery<ObjectReplacement[]>({
     queryKey: ["/api/object-replacements"],
     refetchInterval: (query) => {
-      // Auto-refresh every 5 seconds if there are pending replacements
+      // Auto-refresh every 3 seconds if there are pending replacements (faster refresh)
       const pendingExists = query.state.data?.some((replacement: ObjectReplacement) => 
         replacement.status === "pending" || replacement.status === "processing"
       );
-      return pendingExists ? 5000 : false; // 5 seconds refresh if pending, otherwise stop
+      return pendingExists ? 3000 : false; // 3 seconds refresh if pending, otherwise stop
     },
   });
+
+  // Effect to detect when replacements complete and show notifications
+  useEffect(() => {
+    if (previousReplacements.length > 0 && replacements.length > 0) {
+      replacements.forEach((current) => {
+        const previous = previousReplacements.find(p => p.id === current.id);
+        
+        // Check if status changed from pending/processing to completed
+        if (previous && 
+            (previous.status === "pending" || previous.status === "processing") &&
+            current.status === "completed" && current.resultImageUrl) {
+          
+          toast({
+            title: "🎉 Xử lý hoàn thành!",
+            description: `Hình ảnh "${current.fileName}" đã được thay thế thành công. Kết quả đã sẵn sàng!`,
+          });
+        }
+        
+        // Check if status changed to failed
+        if (previous && 
+            (previous.status === "pending" || previous.status === "processing") &&
+            current.status === "failed") {
+          
+          toast({
+            title: "❌ Xử lý thất bại",
+            description: `Không thể xử lý "${current.fileName}". ${current.errorMessage || 'Vui lòng thử lại.'}`,
+            variant: "destructive",
+          });
+        }
+      });
+    }
+    
+    // Update previous replacements for next comparison
+    setPreviousReplacements(replacements);
+  }, [replacements]); // Remove previousReplacements and toast from dependency array to avoid infinite loop
 
   // Upload image mutation
   const uploadImageMutation = useMutation({
@@ -671,50 +709,146 @@ export default function ObjectReplacementPage() {
                     {replacements.map((replacement) => (
                       <div
                         key={replacement.id}
-                        className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                        className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white/50 dark:bg-gray-800/50"
                       >
-                        <div className="flex justify-between items-start mb-2">
-                          <p className="font-medium text-sm">{replacement.fileName}</p>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs ${
-                              replacement.status === "completed"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                : replacement.status === "failed"
-                                ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                            }`}
-                          >
-                            {replacement.status === "completed" ? "Hoàn thành" : 
-                             replacement.status === "failed" ? "Thất bại" : "Đang xử lý"}
-                          </span>
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm">{replacement.fileName}</p>
+                            {replacement.prompt && (
+                              <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                                "{replacement.prompt.substring(0, 30)}{replacement.prompt.length > 30 ? '...' : ''}"
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {(replacement.status === "pending" || replacement.status === "processing") && (
+                              <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                                <span className="text-xs text-purple-600 dark:text-purple-400">
+                                  Đang xử lý...
+                                </span>
+                              </div>
+                            )}
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                replacement.status === "completed"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                  : replacement.status === "failed"
+                                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                  : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                              }`}
+                            >
+                              {replacement.status === "completed" ? "Hoàn thành" : 
+                               replacement.status === "failed" ? "Thất bại" : "Đang xử lý"}
+                            </span>
+                          </div>
                         </div>
+
+                        {/* Progress indicator for pending/processing */}
+                        {(replacement.status === "pending" || replacement.status === "processing") && (
+                          <div className="mb-3">
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                              <div className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full animate-pulse" style={{ width: '65%' }}></div>
+                            </div>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                              Hình ảnh đang được AI xử lý, vui lòng chờ...
+                            </p>
+                          </div>
+                        )}
                         
                         {replacement.resultImageUrl && (
-                          <div className="space-y-2">
-                            <img
-                              src={replacement.resultImageUrl}
-                              alt="Kết quả"
-                              className="w-full max-h-48 object-contain rounded-lg"
-                            />
-                            <Button
-                              variant="outlined"
-                              size="sm"
-                              onClick={() => window.open(replacement.resultImageUrl!, "_blank")}
-                              className="w-full"
-                            >
-                              Xem ảnh kết quả
-                            </Button>
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              {/* Original image */}
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">Ảnh gốc:</p>
+                                <img
+                                  src={replacement.inputImageUrl}
+                                  alt="Ảnh gốc"
+                                  className="w-full h-32 object-cover rounded-lg"
+                                />
+                              </div>
+                              {/* Result image */}
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">Kết quả:</p>
+                                <img
+                                  src={replacement.resultImageUrl}
+                                  alt="Kết quả"
+                                  className="w-full h-32 object-cover rounded-lg border-2 border-green-200 dark:border-green-700"
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="flex gap-2">
+                              <Button
+                                variant="filled"
+                                size="sm"
+                                onClick={() => window.open(replacement.resultImageUrl!, "_blank")}
+                                className="flex-1"
+                                data-testid={`button-view-result-${replacement.id}`}
+                              >
+                                🔍 Xem toàn màn hình
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                size="sm"
+                                onClick={() => {
+                                  // Pre-fill form with existing data for refinement
+                                  if (replacement.inputImageUrl) {
+                                    setInputImageUrl(replacement.inputImageUrl);
+                                    setInputImagePreview(replacement.inputImageUrl);
+                                    form.setValue("inputImageUrl", replacement.inputImageUrl);
+                                    form.setValue("fileName", replacement.fileName);
+                                    form.setValue("prompt", replacement.prompt);
+                                  }
+                                  toast({
+                                    title: "📝 Sẵn sàng chỉnh sửa",
+                                    description: "Đã tải dữ liệu, bạn có thể vẽ mask mới và thay đổi mô tả để tạo phiên bản khác",
+                                  });
+                                }}
+                                className="flex-1"
+                                data-testid={`button-edit-more-${replacement.id}`}
+                              >
+                                ✏️ Chỉnh sửa thêm
+                              </Button>
+                            </div>
                           </div>
                         )}
                         
                         {replacement.errorMessage && (
-                          <p className="text-red-600 dark:text-red-400 text-sm mt-2">
-                            {replacement.errorMessage}
-                          </p>
+                          <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                            <p className="text-red-600 dark:text-red-400 text-sm">
+                              ❌ {replacement.errorMessage}
+                            </p>
+                            <Button
+                              variant="outlined"
+                              size="sm"
+                              onClick={() => {
+                                // Pre-fill form to retry
+                                if (replacement.inputImageUrl) {
+                                  setInputImageUrl(replacement.inputImageUrl);
+                                  setInputImagePreview(replacement.inputImageUrl);
+                                  form.setValue("inputImageUrl", replacement.inputImageUrl);
+                                  form.setValue("fileName", replacement.fileName);
+                                  form.setValue("prompt", replacement.prompt);
+                                }
+                                toast({
+                                  title: "🔄 Sẵn sàng thử lại",
+                                  description: "Đã tải lại dữ liệu, hãy thử vẽ mask khác hoặc thay đổi mô tả",
+                                });
+                              }}
+                              className="mt-2"
+                              data-testid={`button-retry-${replacement.id}`}
+                            >
+                              🔄 Thử lại
+                            </Button>
+                          </div>
                         )}
                         
-                        <div className="flex justify-between items-center mt-2 text-xs text-gray-500 dark:text-gray-400">
-                          <span>Credits: {replacement.creditsUsed}</span>
+                        <div className="flex justify-between items-center mt-3 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+                          <span className="flex items-center gap-1">
+                            💎 Credits: {replacement.creditsUsed}
+                          </span>
                           <span>
                             {replacement.createdAt && new Date(replacement.createdAt).toLocaleString('vi-VN')}
                           </span>
