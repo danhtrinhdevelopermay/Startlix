@@ -8,7 +8,6 @@ import Home from "@/pages/home";
 import Admin from "@/pages/admin";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
-import RewardVideos from "@/pages/reward-videos";
 import GetCredit from "@/pages/get-credit";
 import NotFound from "@/pages/not-found";
 import PhotoAITools from "@/pages/photai-tools";
@@ -39,7 +38,6 @@ function Router() {
           <>
             <Route path="/" component={Home} />
             <Route path="/admin" component={Admin} />
-            <Route path="/reward-videos" component={RewardVideos} />
             <Route path="/get-credit" component={GetCredit} />
             <Route path="/photai-tools" component={PhotoAITools} />
             {/* Redirect to home if trying to access login/register while authenticated */}
@@ -57,7 +55,6 @@ function Router() {
             {/* Redirect authenticated routes to landing when not authenticated */}
             <Route path="/admin" component={Landing} />
             <Route path="/home" component={Landing} />
-            <Route path="/reward-videos" component={Landing} />
             <Route path="/get-credit" component={Landing} />
             <Route path="/photai-tools" component={Landing} />
           </>

@@ -764,30 +764,6 @@ export default function VideoGenerator() {
                 </Button>
               </Link>
               
-              {/* Video Thưởng Button */}
-              <Link href="/reward-videos">
-                <Button 
-                  variant="outlined"
-                  size="sm"
-                  className="hidden sm:flex"
-                  data-testid="nav-reward-videos"
-                >
-                  <Trophy className="w-4 h-4 mr-1 sm:mr-2" />
-                  <span className="hidden md:inline">Video Thưởng</span>
-                </Button>
-              </Link>
-              
-              {/* Mobile Video Thưởng Button */}
-              <Link href="/reward-videos" className="sm:hidden">
-                <Button 
-                  variant="text"
-                  size="sm"
-                  data-testid="nav-reward-videos-mobile"
-                >
-                  <Trophy className="w-4 h-4" />
-                </Button>
-              </Link>
-              
               {/* Nhận Credit Button */}
               <Link href="/get-credit">
                 <Button 
