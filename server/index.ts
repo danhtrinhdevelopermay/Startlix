@@ -45,7 +45,13 @@ app.use((req, res, next) => {
     const message = err.message || "Internal Server Error";
 
     res.status(status).json({ message });
-    throw err;
+    
+    // Only throw in development to avoid crashing in production
+    if (process.env.NODE_ENV === 'development') {
+      throw err;
+    } else {
+      console.error('Error:', err);
+    }
   });
 
   // Serve uploaded images in both development and production
