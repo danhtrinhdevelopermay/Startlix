@@ -1,16 +1,16 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth, useLogout } from "@/hooks/useAuth";
-import { ArrowUploadRegular, ImageRegular, EditRegular, PersonRegular, SignOutRegular, SparkleRegular, LinkRegular } from "@fluentui/react-icons";
+import { ArrowUploadRegular, ImageRegular, EditRegular, PersonRegular, SignOutRegular, SparkleRegular, LinkRegular, EraserRegular, PaintBrushRegular, ArrowUndoRegular, DeleteRegular } from "@fluentui/react-icons";
 import { Link } from "wouter";
 import { MD3ButtonLoading } from "@/components/md3-loading-indicator";
 import CreditBalance from "@/components/credit-balance";
@@ -18,7 +18,7 @@ import CreditBalance from "@/components/credit-balance";
 const objectReplacementSchema = z.object({
   fileName: z.string().min(1, "Tên file không được để trống"),
   inputImageUrl: z.string().url("URL ảnh không hợp lệ"), 
-  maskImageBase64: z.string().min(1, "Mask image không được để trống"),
+  maskImageBase64: z.string().min(1, "Vui lòng vẽ mask trên ảnh"),
 });
 
 type ObjectReplacementForm = z.infer<typeof objectReplacementSchema>;
@@ -42,12 +42,16 @@ export default function ObjectReplacementPage() {
   const logoutMutation = useLogout();
   const { toast } = useToast();
   const [inputImageFile, setInputImageFile] = useState<File | null>(null);
-  const [maskImageFile, setMaskImageFile] = useState<File | null>(null);
   const [inputImagePreview, setInputImagePreview] = useState<string>("");
-  const [maskImagePreview, setMaskImagePreview] = useState<string>("");
   const [inputImageUrl, setInputImageUrl] = useState<string>("");
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [brushSize, setBrushSize] = useState(20);
+  const [drawingMode, setDrawingMode] = useState<'draw' | 'erase'>('draw');
+  const [maskDataUrl, setMaskDataUrl] = useState<string>("");
+  
   const inputFileRef = useRef<HTMLInputElement>(null);
-  const maskFileRef = useRef<HTMLInputElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
 
   const form = useForm<ObjectReplacementForm>({
     resolver: zodResolver(objectReplacementSchema),
@@ -84,7 +88,7 @@ export default function ObjectReplacementPage() {
         form.setValue("fileName", file.name);
         toast({
           title: "✅ Tải ảnh thành công",
-          description: "Ảnh gốc đã được tải lên",
+          description: "Ảnh gốc đã được tải lên. Bây giờ hãy vẽ mask.",
         });
       }
     },
@@ -113,10 +117,10 @@ export default function ObjectReplacementPage() {
       // Reset form after successful replacement
       form.reset();
       setInputImageFile(null);
-      setMaskImageFile(null);
       setInputImagePreview("");
-      setMaskImagePreview("");
       setInputImageUrl("");
+      setMaskDataUrl("");
+      clearCanvas();
     },
     onError: (error: any) => {
       toast({
@@ -127,6 +131,86 @@ export default function ObjectReplacementPage() {
     },
   });
 
+  // Initialize canvas when image loads
+  useEffect(() => {
+    if (inputImagePreview && canvasRef.current && imageRef.current) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      const img = imageRef.current;
+      
+      img.onload = () => {
+        // Set canvas size to match image
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        
+        // Set canvas display size
+        const containerWidth = canvas.parentElement?.clientWidth || 400;
+        const scale = Math.min(containerWidth / img.naturalWidth, 400 / img.naturalHeight);
+        canvas.style.width = `${img.naturalWidth * scale}px`;
+        canvas.style.height = `${img.naturalHeight * scale}px`;
+        
+        // Clear canvas with transparent background
+        if (ctx) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      };
+    }
+  }, [inputImagePreview]);
+
+  const startDrawing = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    setIsDrawing(true);
+    draw(e);
+  }, [brushSize, drawingMode]);
+
+  const stopDrawing = useCallback(() => {
+    setIsDrawing(false);
+    updateMaskData();
+  }, []);
+
+  const draw = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+    
+    ctx.globalCompositeOperation = drawingMode === 'draw' ? 'source-over' : 'destination-out';
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.arc(x, y, brushSize, 0, Math.PI * 2);
+    ctx.fill();
+  }, [isDrawing, brushSize, drawingMode]);
+
+  const updateMaskData = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const dataUrl = canvas.toDataURL('image/png');
+    setMaskDataUrl(dataUrl);
+    form.setValue("maskImageBase64", dataUrl);
+  }, [form]);
+
+  const clearCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setMaskDataUrl("");
+    form.setValue("maskImageBase64", "");
+  }, [form]);
+
   const handleInputImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -134,28 +218,26 @@ export default function ObjectReplacementPage() {
       const previewUrl = URL.createObjectURL(file);
       setInputImagePreview(previewUrl);
       uploadImageMutation.mutate(file);
-    }
-  };
-
-  const handleMaskImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setMaskImageFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const base64 = e.target?.result as string;
-        setMaskImagePreview(base64);
-        form.setValue("maskImageBase64", base64);
-      };
-      reader.readAsDataURL(file);
+      // Clear any existing mask
+      setMaskDataUrl("");
+      form.setValue("maskImageBase64", "");
     }
   };
 
   const onSubmit = (data: ObjectReplacementForm) => {
-    if (!inputImageFile || !maskImageFile) {
+    if (!inputImageFile) {
       toast({
         title: "❌ Thiếu ảnh",
-        description: "Vui lòng tải lên cả ảnh gốc và ảnh mask",
+        description: "Vui lòng tải lên ảnh gốc",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!maskDataUrl) {
+      toast({
+        title: "❌ Thiếu mask",
+        description: "Vui lòng vẽ mask trên ảnh để chỉ định vùng cần thay thế",
         variant: "destructive",
       });
       return;
@@ -219,7 +301,7 @@ export default function ObjectReplacementPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Upload and Configuration */}
+          {/* Upload and Drawing Tools */}
           <div className="space-y-6">
             <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-0 shadow-lg">
               <CardHeader>
@@ -242,6 +324,7 @@ export default function ObjectReplacementPage() {
                         {inputImagePreview ? (
                           <div className="space-y-2">
                             <img
+                              ref={imageRef}
                               src={inputImagePreview}
                               alt="Input preview"
                               className="max-h-48 mx-auto rounded-lg"
@@ -268,50 +351,108 @@ export default function ObjectReplacementPage() {
                       />
                     </div>
 
-                    {/* Mask Image Upload */}
-                    <div className="space-y-4">
-                      <FormLabel>Ảnh mask (vùng cần thay thế)</FormLabel>
-                      <FormDescription>
-                        Tải lên ảnh mask màu trắng để chỉ định vùng cần thay thế. Vùng màu trắng sẽ được thay thế bằng nội dung mới.
-                      </FormDescription>
-                      <div
-                        className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-purple-400 transition-colors"
-                        onClick={() => maskFileRef.current?.click()}
-                        data-testid="upload-mask-image"
-                      >
-                        {maskImagePreview ? (
-                          <div className="space-y-2">
-                            <img
-                              src={maskImagePreview}
-                              alt="Mask preview"
-                              className="max-h-48 mx-auto rounded-lg"
-                            />
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {maskImageFile?.name}
-                            </p>
+                    {/* Drawing Tools */}
+                    {inputImagePreview && (
+                      <div className="space-y-4">
+                        <FormLabel>Vẽ mask (vùng cần thay thế)</FormLabel>
+                        <FormDescription>
+                          Vẽ trực tiếp lên ảnh để chỉ định vùng cần thay thế. Vùng màu trắng sẽ được thay thế.
+                        </FormDescription>
+                        
+                        {/* Drawing Controls */}
+                        <div className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              type="button"
+                              variant={drawingMode === 'draw' ? 'filled' : 'outlined'}
+                              size="sm"
+                              onClick={() => setDrawingMode('draw')}
+                              data-testid="button-draw-mode"
+                            >
+                              <PaintBrushRegular className="w-4 h-4 mr-2" />
+                              Vẽ
+                            </Button>
+                            <Button
+                              type="button"
+                              variant={drawingMode === 'erase' ? 'filled' : 'outlined'}
+                              size="sm"
+                              onClick={() => setDrawingMode('erase')}
+                              data-testid="button-erase-mode"
+                            >
+                              <EraserRegular className="w-4 h-4 mr-2" />
+                              Xóa
+                            </Button>
                           </div>
-                        ) : (
+                          
+                          <div className="flex items-center space-x-2 flex-1">
+                            <span className="text-sm">Kích thước:</span>
+                            <Slider
+                              value={[brushSize]}
+                              onValueChange={(value) => setBrushSize(value[0])}
+                              max={50}
+                              min={5}
+                              step={1}
+                              className="flex-1"
+                            />
+                            <span className="text-sm w-8">{brushSize}</span>
+                          </div>
+                          
+                          <Button
+                            type="button"
+                            variant="outlined"
+                            size="sm"
+                            onClick={clearCanvas}
+                            data-testid="button-clear-mask"
+                          >
+                            <DeleteRegular className="w-4 h-4 mr-2" />
+                            Xóa hết
+                          </Button>
+                        </div>
+
+                        {/* Drawing Canvas */}
+                        <div className="relative bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
+                          <div className="relative inline-block">
+                            <img
+                              src={inputImagePreview}
+                              alt="Input for drawing"
+                              className="max-w-full h-auto rounded-lg"
+                              style={{ maxHeight: '400px' }}
+                            />
+                            <canvas
+                              ref={canvasRef}
+                              className="absolute top-0 left-0 cursor-crosshair rounded-lg"
+                              onMouseDown={startDrawing}
+                              onMouseUp={stopDrawing}
+                              onMouseMove={draw}
+                              onMouseLeave={stopDrawing}
+                              style={{ 
+                                background: 'transparent',
+                                maxHeight: '400px'
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Mask Preview */}
+                        {maskDataUrl && (
                           <div className="space-y-2">
-                            <ArrowUploadRegular className="w-12 h-12 text-gray-400 mx-auto" />
-                            <p className="text-gray-600 dark:text-gray-400">
-                              Nhấp để tải lên ảnh mask
-                            </p>
+                            <FormLabel>Xem trước mask</FormLabel>
+                            <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
+                              <img
+                                src={maskDataUrl}
+                                alt="Mask preview"
+                                className="max-h-32 mx-auto rounded-lg"
+                              />
+                            </div>
                           </div>
                         )}
                       </div>
-                      <input
-                        ref={maskFileRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleMaskImageUpload}
-                        className="hidden"
-                      />
-                    </div>
+                    )}
 
                     <Button
                       type="submit"
                       className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-                      disabled={objectReplacementMutation.isPending || uploadImageMutation.isPending}
+                      disabled={objectReplacementMutation.isPending || uploadImageMutation.isPending || !maskDataUrl}
                       data-testid="button-replace-object"
                     >
                       {objectReplacementMutation.isPending ? (
