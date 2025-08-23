@@ -87,8 +87,9 @@ export default function ObjectReplacementPage() {
     },
     onSuccess: (data, file) => {
       if (file === inputImageFile) {
-        setInputImageUrl(data.imageUrl);
-        form.setValue("inputImageUrl", data.imageUrl);
+        const imageUrl = data.downloadUrl || data.imageUrl;
+        setInputImageUrl(imageUrl);
+        form.setValue("inputImageUrl", imageUrl);
         form.setValue("fileName", file.name);
         toast({
           title: "✅ Tải ảnh thành công",
@@ -108,15 +109,18 @@ export default function ObjectReplacementPage() {
   // Object replacement mutation
   const objectReplacementMutation = useMutation({
     mutationFn: async (data: ObjectReplacementForm) => {
+      console.log('🔄 Making API request with data:', data);
       const response = await apiRequest("POST", "/api/object-replacement", data);
+      console.log('✅ API response received:', response);
       return response;
     },
     onSuccess: (data: any) => {
+      console.log('✅ Object replacement successful:', data);
       queryClient.invalidateQueries({ queryKey: ["/api/object-replacements"] });
       queryClient.invalidateQueries({ queryKey: ["/api/credits"] });
       toast({
         title: "✅ Thay thế đối tượng thành công",
-        description: `Đã hoàn thành! Sử dụng ${data.creditsUsed} credits.`,
+        description: `Đã hoàn thành! Sử dụng ${data.creditsUsed || 2} credits.`,
       });
       // Reset form after successful replacement
       form.reset();
@@ -127,9 +131,18 @@ export default function ObjectReplacementPage() {
       clearCanvas();
     },
     onError: (error: any) => {
+      console.error('❌ Object replacement error:', error);
+      let errorMessage = "Không thể thay thế đối tượng";
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       toast({
         title: "❌ Lỗi thay thế đối tượng",
-        description: error.message || "Không thể thay thế đối tượng",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -253,6 +266,14 @@ export default function ObjectReplacementPage() {
   };
 
   const onSubmit = (data: ObjectReplacementForm) => {
+    console.log('🔄 Form submission started:', data);
+    console.log('🔄 Form state:', {
+      inputImageFile: !!inputImageFile,
+      inputImageUrl,
+      maskDataUrl: !!maskDataUrl,
+      formData: data
+    });
+    
     if (!inputImageFile) {
       toast({
         title: "❌ Thiếu ảnh",
@@ -270,7 +291,26 @@ export default function ObjectReplacementPage() {
       });
       return;
     }
+
+    if (!data.inputImageUrl) {
+      toast({
+        title: "❌ Lỗi URL ảnh",
+        description: "URL ảnh không hợp lệ. Vui lòng tải lại ảnh.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!data.prompt || data.prompt.trim().length < 5) {
+      toast({
+        title: "❌ Thiếu mô tả",
+        description: "Vui lòng nhập mô tả chi tiết về đối tượng muốn thay thế (ít nhất 5 ký tự)",
+        variant: "destructive",
+      });
+      return;
+    }
     
+    console.log('✅ All validation passed, submitting request');
     objectReplacementMutation.mutate(data);
   };
 
@@ -506,8 +546,17 @@ export default function ObjectReplacementPage() {
                     <Button
                       type="submit"
                       className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-                      disabled={objectReplacementMutation.isPending || uploadImageMutation.isPending || !maskDataUrl}
+                      disabled={objectReplacementMutation.isPending || uploadImageMutation.isPending || !maskDataUrl || !inputImageUrl}
                       data-testid="button-replace-object"
+                      onClick={() => {
+                        console.log('🔄 Replace button clicked:', {
+                          isPending: objectReplacementMutation.isPending,
+                          isUploading: uploadImageMutation.isPending,
+                          hasMask: !!maskDataUrl,
+                          hasImageUrl: !!inputImageUrl,
+                          formValues: form.getValues()
+                        });
+                      }}
                     >
                       {objectReplacementMutation.isPending ? (
                         <MD3ButtonLoading label="Đang thay thế đối tượng..." />
