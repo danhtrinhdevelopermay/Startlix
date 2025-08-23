@@ -157,18 +157,47 @@ export default function ObjectReplacementPage() {
     }
   }, [inputImagePreview]);
 
-  const startDrawing = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+  const getEventPosition = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    let clientX, clientY;
+    
+    if ('touches' in e) {
+      // Touch event
+      const touch = e.touches[0] || e.changedTouches[0];
+      clientX = touch.clientX;
+      clientY = touch.clientY;
+    } else {
+      // Mouse event
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+    
+    return { x, y };
+  }, []);
+
+  const startDrawing = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault(); // Prevent scrolling on touch
     setIsDrawing(true);
     draw(e);
-  }, [brushSize, drawingMode]);
+  }, []);
 
   const stopDrawing = useCallback(() => {
     setIsDrawing(false);
     updateMaskData();
   }, []);
 
-  const draw = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+  const draw = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing) return;
+    e.preventDefault(); // Prevent scrolling on touch
     
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -176,19 +205,14 @@ export default function ObjectReplacementPage() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
+    const { x, y } = getEventPosition(e);
     
     ctx.globalCompositeOperation = drawingMode === 'draw' ? 'source-over' : 'destination-out';
     ctx.fillStyle = 'white';
     ctx.beginPath();
     ctx.arc(x, y, brushSize, 0, Math.PI * 2);
     ctx.fill();
-  }, [isDrawing, brushSize, drawingMode]);
+  }, [isDrawing, brushSize, drawingMode, getEventPosition]);
 
   const updateMaskData = useCallback(() => {
     const canvas = canvasRef.current;
@@ -420,14 +444,18 @@ export default function ObjectReplacementPage() {
                             />
                             <canvas
                               ref={canvasRef}
-                              className="absolute top-0 left-0 cursor-crosshair rounded-lg"
+                              className="absolute top-0 left-0 cursor-crosshair rounded-lg touch-none"
                               onMouseDown={startDrawing}
                               onMouseUp={stopDrawing}
                               onMouseMove={draw}
                               onMouseLeave={stopDrawing}
+                              onTouchStart={startDrawing}
+                              onTouchEnd={stopDrawing}
+                              onTouchMove={draw}
                               style={{ 
                                 background: 'transparent',
-                                maxHeight: '400px'
+                                maxHeight: '400px',
+                                touchAction: 'none'
                               }}
                             />
                           </div>
