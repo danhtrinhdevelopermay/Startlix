@@ -57,8 +57,11 @@ function Router() {
             {/* Redirect authenticated routes to landing when not authenticated */}
             <Route path="/admin" component={Landing} />
             <Route path="/home" component={Landing} />
-            {/* Redirect all unmatched routes to landing */}
-            <Route component={Landing} />
+            <Route path="/reward-videos" component={Landing} />
+            <Route path="/get-credit" component={Landing} />
+            <Route path="/photai-tools" component={Landing} />
+            {/* 404 page for unmatched routes */}
+            <Route component={NotFound} />
           </>
         )}
       </Switch>
