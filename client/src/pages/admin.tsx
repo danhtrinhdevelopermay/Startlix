@@ -247,10 +247,7 @@ export default function Admin() {
   // Create PhotAI API key mutation
   const createPhotaiApiKeyMutation = useMutation({
     mutationFn: async (data: { keyName: string; apiKey: string; creditsLimit: number }) => {
-      return apiRequest("/api/admin/photai-api-keys", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("POST", "/api/admin/photai-api-keys", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/photai-api-keys"] });
@@ -272,10 +269,7 @@ export default function Admin() {
   // Toggle PhotAI API key mutation
   const togglePhotaiApiKeyMutation = useMutation({
     mutationFn: async (data: { id: string; isActive: boolean }) => {
-      return apiRequest("/api/admin/photai-api-keys/" + data.id, {
-        method: "PATCH",
-        body: JSON.stringify({ isActive: data.isActive }),
-      });
+      return apiRequest("PATCH", "/api/admin/photai-api-keys/" + data.id, { isActive: data.isActive });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/photai-api-keys"] });
@@ -296,9 +290,7 @@ export default function Admin() {
   // Delete PhotAI API key mutation
   const deletePhotaiApiKeyMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest("/api/admin/photai-api-keys/" + id, {
-        method: "DELETE",
-      });
+      return apiRequest("DELETE", "/api/admin/photai-api-keys/" + id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/photai-api-keys"] });
