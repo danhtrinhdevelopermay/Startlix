@@ -16,7 +16,7 @@ import CreditBalance from "@/components/credit-balance";
 import VideoPreview from "@/components/video-preview";
 import GenerationHistory from "@/components/generation-history";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDownRegular, ArrowUploadRegular, SparkleRegular, ImageRegular, DocumentRegular, SignOutRegular, PersonRegular, DesktopRegular, PhoneRegular, SquareRegular, FlashRegular, TrophyRegular, DismissRegular, EditRegular, CutRegular, LinkRegular } from "@fluentui/react-icons";
+import { ChevronDownRegular, ArrowUploadRegular, SparkleRegular, ImageRegular, DocumentRegular, SignOutRegular, PersonRegular, DesktopRegular, PhoneRegular, SquareRegular, FlashRegular, TrophyRegular, DismissRegular, EditRegular, CutRegular, LinkRegular, WandRegular } from "@fluentui/react-icons";
 import { useAuth, useLogout } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -760,6 +760,30 @@ export default function VideoGenerator() {
                   data-testid="nav-object-replacement-mobile"
                 >
                   <EditRegular className="w-4 h-4" />
+                </Button>
+              </Link>
+              
+              {/* Phot.AI Tools Button */}
+              <Link href="/photai-tools">
+                <Button 
+                  variant="outlined"
+                  size="sm"
+                  className="hidden sm:flex"
+                  data-testid="nav-photai-tools"
+                >
+                  <WandRegular className="w-4 h-4 mr-1 sm:mr-2" />
+                  <span className="hidden md:inline">Phot.AI Tools</span>
+                </Button>
+              </Link>
+              
+              {/* Mobile Phot.AI Tools Button */}
+              <Link href="/photai-tools" className="sm:hidden">
+                <Button 
+                  variant="text"
+                  size="sm"
+                  data-testid="nav-photai-tools-mobile"
+                >
+                  <WandRegular className="w-4 h-4" />
                 </Button>
               </Link>
               

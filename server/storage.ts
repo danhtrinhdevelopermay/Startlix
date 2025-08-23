@@ -1,7 +1,7 @@
-import { type User, type InsertUser, type VideoGeneration, type InsertVideoGeneration, type ApiKey, type InsertApiKey, type Settings, type InsertSettings, type RewardVideo, type InsertRewardVideo, type VideoWatchHistory, type InsertVideoWatchHistory, type ExternalApiKey, type InsertExternalApiKey, type RewardClaim, type InsertRewardClaim, type ObjectReplacement, type InsertObjectReplacement } from "@shared/schema";
+import { type User, type InsertUser, type VideoGeneration, type InsertVideoGeneration, type ApiKey, type InsertApiKey, type Settings, type InsertSettings, type RewardVideo, type InsertRewardVideo, type VideoWatchHistory, type InsertVideoWatchHistory, type ExternalApiKey, type InsertExternalApiKey, type RewardClaim, type InsertRewardClaim, type ObjectReplacement, type InsertObjectReplacement, type PhotoaiOperation, type InsertPhotaiOperation } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { users, videoGenerations, apiKeys, settings, rewardVideos, videoWatchHistory, externalApiKeys, rewardClaims, objectReplacements } from "@shared/schema";
+import { users, videoGenerations, apiKeys, settings, rewardVideos, videoWatchHistory, externalApiKeys, rewardClaims, objectReplacements, photaiOperations } from "@shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -61,6 +61,16 @@ export interface IStorage {
   updateObjectReplacement(id: string, updates: Partial<ObjectReplacement>): Promise<ObjectReplacement | undefined>;
   getObjectReplacement(id: string): Promise<ObjectReplacement | undefined>;
   getUserObjectReplacements(userId: string): Promise<ObjectReplacement[]>;
+  
+  // Phot.AI Operations methods (general tools)
+  createPhotaiOperation(operation: InsertPhotaiOperation, userId: string): Promise<PhotoaiOperation>;
+  updatePhotaiOperation(id: string, updates: Partial<PhotoaiOperation>): Promise<PhotoaiOperation | undefined>;
+  getPhotaiOperation(id: string): Promise<PhotoaiOperation | undefined>;
+  getUserPhotaiOperations(userId: string): Promise<PhotoaiOperation[]>;
+  
+  // Get PhotAI API keys (shared by both object replacement and general operations)
+  getPhotAIApiKeys(): Promise<ExternalApiKey[]>;
+  deleteExternalApiKey(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -73,6 +83,7 @@ export class MemStorage implements IStorage {
   private externalApiKeys: Map<string, ExternalApiKey>;
   private rewardClaims: Map<string, RewardClaim>;
   private objectReplacements: Map<string, ObjectReplacement>;
+  private photaiOperations: Map<string, PhotoaiOperation>;
 
   constructor() {
     this.users = new Map();
@@ -84,6 +95,7 @@ export class MemStorage implements IStorage {
     this.externalApiKeys = new Map();
     this.rewardClaims = new Map();
     this.objectReplacements = new Map();
+    this.photaiOperations = new Map();
     
     // Create a default user for demo purposes
     const defaultUser: User = {
@@ -535,6 +547,73 @@ export class MemStorage implements IStorage {
       return bTime - aTime;
     });
   }
+
+  // Phot.AI Operations methods (general tools)
+  async createPhotaiOperation(operation: InsertPhotaiOperation, userId: string): Promise<PhotoaiOperation> {
+    const id = randomUUID();
+    
+    // Determine credits based on tool type
+    const creditsMap: Record<string, number> = {
+      "background-remover": 1,
+      "background-replacer": 2,
+      "image-extender": 1,
+      "object-remover": 2,
+      "text-to-art": 1,
+      "text-to-art-image": 1,
+      "upscaler": 1,
+      "ai-photo-enhancer": 2,
+      "ai-light-fix": 1,
+      "old-photo-restoration": 2,
+      "color-restoration": 1,
+      "ai-photo-coloriser": 1,
+      "ai-pattern-generator": 2,
+    };
+    
+    const creditsUsed = creditsMap[operation.toolType] || 1;
+    
+    const fullOperation: PhotoaiOperation = {
+      ...operation,
+      id,
+      userId,
+      prompt: operation.prompt || null,
+      maskImageBase64: operation.maskImageBase64 || null,
+      backgroundPrompt: operation.backgroundPrompt || null,
+      extendDirection: operation.extendDirection || null,
+      upscaleMethod: operation.upscaleMethod || null,
+      status: "pending",
+      resultImageUrl: null,
+      errorMessage: null,
+      creditsUsed,
+      createdAt: new Date(),
+      completedAt: null,
+    };
+    this.photaiOperations.set(id, fullOperation);
+    return fullOperation;
+  }
+
+  async updatePhotaiOperation(id: string, updates: Partial<PhotoaiOperation>): Promise<PhotoaiOperation | undefined> {
+    const operation = this.photaiOperations.get(id);
+    if (operation) {
+      const updatedOperation = { ...operation, ...updates };
+      this.photaiOperations.set(id, updatedOperation);
+      return updatedOperation;
+    }
+    return undefined;
+  }
+
+  async getPhotaiOperation(id: string): Promise<PhotoaiOperation | undefined> {
+    return this.photaiOperations.get(id);
+  }
+
+  async getUserPhotaiOperations(userId: string): Promise<PhotoaiOperation[]> {
+    const operations = Array.from(this.photaiOperations.values()).filter(operation => operation.userId === userId);
+    return operations.sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
+  }
+
 }
 
 export class DbStorage implements IStorage {
@@ -886,6 +965,56 @@ export class DbStorage implements IStorage {
 
   async getUserObjectReplacements(userId: string): Promise<ObjectReplacement[]> {
     return await db.select().from(objectReplacements).where(eq(objectReplacements.userId, userId)).orderBy(desc(objectReplacements.createdAt));
+  }
+
+  // Phot.AI Operations methods (general tools)
+  async createPhotaiOperation(operation: InsertPhotaiOperation, userId: string): Promise<PhotoaiOperation> {
+    // Determine credits based on tool type
+    const creditsMap: Record<string, number> = {
+      "background-remover": 1,
+      "background-replacer": 2,
+      "image-extender": 1,
+      "object-remover": 2,
+      "text-to-art": 1,
+      "text-to-art-image": 1,
+      "upscaler": 1,
+      "ai-photo-enhancer": 2,
+      "ai-light-fix": 1,
+      "old-photo-restoration": 2,
+      "color-restoration": 1,
+      "ai-photo-coloriser": 1,
+      "ai-pattern-generator": 2,
+    };
+    
+    const creditsUsed = creditsMap[operation.toolType] || 1;
+    
+    const fullOperation = {
+      ...operation,
+      userId,
+      prompt: operation.prompt || null,
+      maskImageBase64: operation.maskImageBase64 || null,
+      backgroundPrompt: operation.backgroundPrompt || null,
+      extendDirection: operation.extendDirection || null,
+      upscaleMethod: operation.upscaleMethod || null,
+      status: "pending" as const,
+      creditsUsed,
+    };
+    const results = await db.insert(photaiOperations).values(fullOperation).returning();
+    return results[0];
+  }
+
+  async updatePhotaiOperation(id: string, updates: Partial<PhotoaiOperation>): Promise<PhotoaiOperation | undefined> {
+    const results = await db.update(photaiOperations).set(updates).where(eq(photaiOperations.id, id)).returning();
+    return results[0];
+  }
+
+  async getPhotaiOperation(id: string): Promise<PhotoaiOperation | undefined> {
+    const results = await db.select().from(photaiOperations).where(eq(photaiOperations.id, id));
+    return results[0];
+  }
+
+  async getUserPhotaiOperations(userId: string): Promise<PhotoaiOperation[]> {
+    return await db.select().from(photaiOperations).where(eq(photaiOperations.userId, userId)).orderBy(desc(photaiOperations.createdAt));
   }
 }
 

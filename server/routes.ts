@@ -4,7 +4,7 @@ import session from "express-session";
 import ConnectPgSimple from "connect-pg-simple";
 import { storage } from "./storage";
 import { db } from "./db";
-import { insertVideoGenerationSchema, insertUserSchema, insertRewardVideoSchema, insertVideoWatchHistorySchema, type User, type ExternalApiKey, insertRewardClaimSchema, type RewardClaim, insertObjectReplacementSchema } from "@shared/schema";
+import { insertVideoGenerationSchema, insertUserSchema, insertRewardVideoSchema, insertVideoWatchHistorySchema, type User, type ExternalApiKey, insertRewardClaimSchema, type RewardClaim, insertObjectReplacementSchema, insertPhotaiOperationSchema, type PhotoaiOperation } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
 import FormData from "form-data";
@@ -27,7 +27,7 @@ const VEO3_UPLOAD_BASE = "https://veo3apiai.redpandaai.co/api";
 const MODELSLAB_API_BASE = "https://modelslab.com/api/v6";
 const MODELSLAB_API_KEY = "YP3Eius8kY2Vnh5qq8LJzMReG9hsfi1EyJRU5XwN8uac8P2EqPPu67Sv01MA";
 const SEGMIND_API_BASE = "https://api.segmind.com/v1/topaz-video-upscale";
-const PHOTAI_API_BASE = "https://prodapi.phot.ai/external/api/v2/user_activity";
+const PHOTAI_API_BASE = "https://prodapi.phot.ai/external/api/v2";
 const PHOTAI_API_KEY = "68a9325d0591f3b3f3563aba_b31009ca66406551632b_apyhitools";
 
 // Check API key credits
@@ -1119,6 +1119,362 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching object replacements:', error);
       res.status(500).json({ message: "Failed to fetch object replacements" });
+    }
+  });
+
+  // Unified Phot.AI Tools endpoint
+  app.post("/api/photai-tools", requireAuth, async (req: Request & { user?: User }, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const storageInstance = await storage();
+      const user = req.user;
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      console.log('🔄 Phot.AI Tool Request:', {
+        body: req.body,
+        user: user?.username,
+        userId: user?.id
+      });
+
+      const validatedData = insertPhotaiOperationSchema.parse(req.body);
+      
+      console.log('✅ Validation passed:', validatedData);
+      
+      // Credits mapping for each tool type
+      const creditsMap: Record<string, number> = {
+        "background-remover": 1,
+        "background-replacer": 2,
+        "image-extender": 1,
+        "object-remover": 2,
+        "text-to-art": 1,
+        "text-to-art-image": 1,
+        "upscaler": 1,
+        "ai-photo-enhancer": 2,
+        "ai-light-fix": 1,
+        "old-photo-restoration": 2,
+        "color-restoration": 1,
+        "ai-photo-coloriser": 1,
+        "ai-pattern-generator": 2,
+      };
+      
+      const totalCredits = creditsMap[validatedData.toolType] || 1;
+      
+      // Check if user has enough credits
+      if (user.credits < totalCredits) {
+        return res.status(402).json({ 
+          message: "Insufficient credits", 
+          required: totalCredits, 
+          available: user.credits 
+        });
+      }
+
+      // Create operation record  
+      const operation = await storageInstance.createPhotaiOperation({
+        toolType: validatedData.toolType,
+        fileName: validatedData.fileName,
+        prompt: validatedData.prompt,
+        inputImageUrl: validatedData.inputImageUrl,
+        maskImageBase64: validatedData.maskImageBase64,
+        backgroundPrompt: validatedData.backgroundPrompt,
+        extendDirection: validatedData.extendDirection,
+        upscaleMethod: validatedData.upscaleMethod,
+      }, user.id);
+
+      // Deduct credits from user
+      await storageInstance.updateUserCredits(user.id, user.credits - totalCredits);
+
+      // Get available PhotAI API keys
+      const photaiKeys = await storageInstance.getPhotAIApiKeys();
+      console.log(`🔑 Found ${photaiKeys.length} available PhotAI API keys`);
+      
+      // API endpoint mapping for each tool type
+      const endpointMap: Record<string, string> = {
+        "background-remover": "bg-remover",
+        "background-replacer": "bg-replacer", 
+        "image-extender": "image-extender",
+        "object-remover": "object-remover",
+        "text-to-art": "text-to-art",
+        "text-to-art-image": "text-to-art-image",
+        "upscaler": "upscaler",
+        "ai-photo-enhancer": "ai-photo-enhancer",
+        "ai-light-fix": "ai-light-fix",
+        "old-photo-restoration": "old-photo-restoration",
+        "color-restoration": "color-restoration",
+        "ai-photo-coloriser": "ai-photo-coloriser",
+        "ai-pattern-generator": "ai-pattern-generator",
+      };
+
+      const endpoint = endpointMap[validatedData.toolType];
+      if (!endpoint) {
+        return res.status(400).json({ message: "Invalid tool type" });
+      }
+
+      let lastError = '';
+      let usedApiKey: any = null;
+      
+      // Build payload based on tool type
+      const photAiPayload = buildPhotAiPayload(validatedData);
+
+      if (photaiKeys.length === 0) {
+        // Fallback to hardcoded API key if no keys configured
+        console.log('⚠️ No PhotAI keys configured, using fallback key');
+
+        console.log(`🔄 Calling phot.ai ${validatedData.toolType} API with fallback key:`, {
+          tool_type: validatedData.toolType,
+          file_name: photAiPayload.file_name,
+          input_image_link: photAiPayload.input_image_link
+        });
+
+        const response = await fetch(`https://prodapi.phot.ai/external/api/v2/${endpoint}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': PHOTAI_API_KEY,
+          },
+          body: JSON.stringify(photAiPayload),
+        });
+
+        const data = await response.json();
+        console.log(`🔄 phot.ai API Response (fallback):`, JSON.stringify(data, null, 2));
+        
+        if (response.ok && !data.error) {
+          if (data.status === "pending" && data.order_id) {
+            await storageInstance.updatePhotaiOperation(operation.id, {
+              status: "pending",
+              errorMessage: JSON.stringify({ order_id: data.order_id, status: data.status, apiKeyUsed: 'fallback' }),
+            });
+
+            res.json({
+              operationId: operation.id,
+              status: "pending",
+              message: `${validatedData.toolType} request submitted successfully`,
+              creditsUsed: totalCredits,
+              order_id: data.order_id,
+              apiKeyUsed: 'fallback'
+            });
+            return;
+          } else if (data.result_url || data.output_url || data.image_url) {
+            const resultImageUrl = data.result_url || data.output_url || data.image_url;
+            await storageInstance.updatePhotaiOperation(operation.id, {
+              status: "completed",
+              resultImageUrl,
+              completedAt: new Date(),
+            });
+
+            res.json({ 
+              operationId: operation.id,
+              resultImageUrl,
+              creditsUsed: totalCredits,
+              status: "completed",
+              apiKeyUsed: 'fallback'
+            });
+            return;
+          }
+        } else {
+          lastError = data.error || data.message || 'Unknown API error';
+          throw new Error(lastError);
+        }
+      }
+      
+      // Try using configured API keys
+      for (const apiKeyRecord of photaiKeys) {
+        try {
+          const availableCredits = apiKeyRecord.creditsLimit - apiKeyRecord.creditsUsed;
+          if (availableCredits < 1) {
+            console.log(`❌ PhotAI key "${apiKeyRecord.keyName}" has no available credits`);
+            continue;
+          }
+
+          console.log(`🔄 Calling phot.ai ${validatedData.toolType} API with key ${apiKeyRecord.keyName}:`, {
+            tool_type: validatedData.toolType,
+            file_name: photAiPayload.file_name,
+            input_image_link: photAiPayload.input_image_link,
+            apiKey: apiKeyRecord.keyName
+          });
+
+          const response = await fetch(`https://prodapi.phot.ai/external/api/v2/${endpoint}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': apiKeyRecord.apiKey,
+            },
+            body: JSON.stringify(photAiPayload),
+          });
+
+          const data = await response.json();
+          console.log(`🔄 phot.ai API Response (${apiKeyRecord.keyName}):`, JSON.stringify(data, null, 2));
+          
+          if (response.ok && !data.error) {
+            await storageInstance.incrementExternalApiKeyUsage(apiKeyRecord.id, 1);
+            usedApiKey = apiKeyRecord;
+            
+            if (data.status === "pending" && data.order_id) {
+              await storageInstance.updatePhotaiOperation(operation.id, {
+                status: "pending",
+                errorMessage: JSON.stringify({ order_id: data.order_id, status: data.status, apiKeyUsed: apiKeyRecord.keyName }),
+              });
+
+              res.json({
+                operationId: operation.id,
+                status: "pending",
+                message: `${validatedData.toolType} request submitted successfully`,
+                creditsUsed: totalCredits,
+                order_id: data.order_id,
+                apiKeyUsed: apiKeyRecord.keyName
+              });
+              return;
+            } else if (data.result_url || data.output_url || data.image_url) {
+              const resultImageUrl = data.result_url || data.output_url || data.image_url;
+              await storageInstance.updatePhotaiOperation(operation.id, {
+                status: "completed",
+                resultImageUrl,
+                completedAt: new Date(),
+              });
+
+              res.json({ 
+                operationId: operation.id,
+                resultImageUrl,
+                creditsUsed: totalCredits,
+                status: "completed",
+                apiKeyUsed: apiKeyRecord.keyName
+              });
+              return;
+            }
+          } else {
+            lastError = data.error || data.message || 'Unknown API error';
+            console.log(`❌ PhotAI key "${apiKeyRecord.keyName}" failed:`, lastError);
+            continue;
+          }
+        } catch (error) {
+          lastError = error instanceof Error ? error.message : 'Network error';
+          console.log(`❌ PhotAI key "${apiKeyRecord.keyName}" network error:`, lastError);
+          continue;
+        }
+      }
+      
+      // If we get here, all API keys failed
+      await storageInstance.updatePhotaiOperation(operation.id, {
+        status: "failed",
+        errorMessage: lastError || 'All PhotAI API keys failed',
+      });
+      await storageInstance.updateUserCredits(user.id, user.credits);
+      throw new Error(lastError || 'All PhotAI API keys failed');
+
+    } catch (error) {
+      console.error('Phot.AI Tool error:', error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to process request" });
+    }
+  });
+
+  // Helper function to build API payload based on tool type
+  function buildPhotAiPayload(data: any) {
+    const basePayload = {
+      file_name: data.fileName,
+      input_image_link: data.inputImageUrl,
+    };
+
+    switch (data.toolType) {
+      case 'background-replacer':
+        return {
+          ...basePayload,
+          prompt: data.backgroundPrompt || data.prompt,
+          mask_image: data.maskImageBase64,
+        };
+      case 'image-extender':
+        return {
+          ...basePayload,
+          direction: data.extendDirection || 'all',
+        };
+      case 'object-remover':
+        return {
+          ...basePayload,
+          mask_image: data.maskImageBase64,
+        };
+      case 'text-to-art':
+      case 'text-to-art-image':
+        return {
+          ...basePayload,
+          prompt: data.prompt,
+        };
+      case 'upscaler':
+        return {
+          ...basePayload,
+          scale: data.upscaleMethod || 'x2',
+        };
+      case 'ai-pattern-generator':
+        return {
+          ...basePayload,
+          prompt: data.prompt,
+        };
+      default:
+        return basePayload;
+    }
+  }
+
+  // Get user's Phot.AI operations
+  app.get("/api/photai-operations", requireAuth, async (req: Request & { user?: User }, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const storageInstance = await storage();
+      let operations = await storageInstance.getUserPhotaiOperations(req.user.id);
+      
+      // Check status for pending operations
+      for (const operation of operations) {
+        if ((operation.status === "pending" || operation.status === "processing") && operation.id) {
+          try {
+            console.log(`🔍 Checking status for operation ${operation.id}`);
+            
+            let orderId = null;
+            if (operation.errorMessage && operation.errorMessage.includes('"order_id"')) {
+              try {
+                const errorData = JSON.parse(operation.errorMessage);
+                orderId = errorData.order_id;
+              } catch (e) {
+                // Try to extract from different format
+              }
+            }
+            
+            if (orderId) {
+              console.log(`🔍 Found order_id ${orderId} for operation ${operation.id}`);
+              
+              const createdTime = new Date(operation.createdAt!).getTime();
+              const currentTime = new Date().getTime();
+              const timeDiffMinutes = (currentTime - createdTime) / (1000 * 60);
+              
+              if (timeDiffMinutes > 10) {
+                await storageInstance.updatePhotaiOperation(operation.id, {
+                  status: "failed",
+                  errorMessage: "Processing timeout - PhotAI API status checking endpoint unavailable",
+                  completedAt: new Date(),
+                });
+                console.log(`⏰ Marked operation ${operation.id} as failed due to timeout`);
+                continue;
+              }
+              
+              console.log(`📋 Operation ${operation.id} still pending - waiting for PhotAI response`);
+            }
+          } catch (error) {
+            console.error(`❌ Error checking status for operation ${operation.id}:`, error);
+          }
+        }
+      }
+      
+      // Fetch updated operations
+      operations = await storageInstance.getUserPhotaiOperations(req.user.id);
+      
+      res.json(operations);
+    } catch (error) {
+      console.error('Error fetching Phot.AI operations:', error);
+      res.status(500).json({ message: "Failed to fetch operations" });
     }
   });
 

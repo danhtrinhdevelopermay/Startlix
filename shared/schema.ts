@@ -125,6 +125,26 @@ export const objectReplacements = pgTable("object_replacements", {
   completedAt: timestamp("completed_at"),
 });
 
+// General Phot.AI operations for all tools
+export const photaiOperations = pgTable("photai_operations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  toolType: text("tool_type").notNull(), // 'background-remover', 'background-replacer', 'image-extender', etc.
+  fileName: text("file_name").notNull(),
+  prompt: text("prompt"), // Optional prompt for tools that need it
+  inputImageUrl: text("input_image_url").notNull(),
+  maskImageBase64: text("mask_image_base64"), // Optional for tools that need masks
+  backgroundPrompt: text("background_prompt"), // For background replacer
+  extendDirection: text("extend_direction"), // For image extender: 'up', 'down', 'left', 'right', 'all'
+  upscaleMethod: text("upscale_method"), // For upscaler: 'x2', 'x4', 'x8'
+  status: text("status").notNull().default("pending"), // 'pending', 'processing', 'completed', 'failed'
+  resultImageUrl: text("result_image_url"),
+  errorMessage: text("error_message"),
+  creditsUsed: integer("credits_used").notNull().default(1),
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -211,6 +231,40 @@ export const insertObjectReplacementSchema = createInsertSchema(objectReplacemen
   maskImageBase64: z.string().min(1, "Vui lòng vẽ mask trên ảnh"),
 });
 
+export const insertPhotaiOperationSchema = createInsertSchema(photaiOperations).omit({
+  id: true,
+  userId: true, // Omit userId since it will be added by server
+  status: true,
+  resultImageUrl: true,
+  errorMessage: true,
+  createdAt: true,
+  completedAt: true,
+  creditsUsed: true,
+}).extend({
+  toolType: z.enum([
+    "background-remover",
+    "background-replacer", 
+    "image-extender",
+    "object-remover",
+    "text-to-art",
+    "text-to-art-image",
+    "upscaler",
+    "ai-photo-enhancer",
+    "ai-light-fix",
+    "old-photo-restoration",
+    "color-restoration",
+    "ai-photo-coloriser",
+    "ai-pattern-generator"
+  ]),
+  fileName: z.string().min(1, "Tên file không được để trống"),
+  prompt: z.string().optional(),
+  inputImageUrl: z.string().min(1, "URL ảnh không được để trống"),
+  maskImageBase64: z.string().optional(),
+  backgroundPrompt: z.string().optional(),
+  extendDirection: z.enum(["up", "down", "left", "right", "all"]).optional(),
+  upscaleMethod: z.enum(["x2", "x4", "x8"]).optional(),
+});
+
 // API request schema for external API
 export const externalApiGenerateSchema = z.object({
   prompt: z.string().min(10, "Prompt must be at least 10 characters").max(500, "Prompt must be less than 500 characters"),
@@ -238,3 +292,5 @@ export type InsertRewardClaim = z.infer<typeof insertRewardClaimSchema>;
 export type RewardClaim = typeof rewardClaims.$inferSelect;
 export type InsertObjectReplacement = z.infer<typeof insertObjectReplacementSchema>;
 export type ObjectReplacement = typeof objectReplacements.$inferSelect;
+export type InsertPhotaiOperation = z.infer<typeof insertPhotaiOperationSchema>;
+export type PhotoaiOperation = typeof photaiOperations.$inferSelect;
