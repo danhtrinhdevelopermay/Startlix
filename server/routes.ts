@@ -1086,38 +1086,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (orderId) {
               console.log(`🔍 Found order_id ${orderId} for replacement ${replacement.id}`);
               
-              // Check status with phot.ai API
-              const statusResponse = await fetch(`${PHOTAI_API_BASE}/order/${orderId}`, {
-                method: 'GET',
-                headers: {
-                  'x-api-key': PHOTAI_API_KEY,
-                },
-              });
+              // Check status with phot.ai API - temporarily disabled due to incorrect endpoint
+              console.log(`⚠️ Status checking temporarily disabled for order ${orderId}`);
               
-              if (statusResponse.ok) {
-                const statusData = await statusResponse.json();
-                console.log(`🔍 Status check response for ${orderId}:`, statusData);
-                
-                if (statusData.status === "completed" && statusData.result_url) {
-                  // Update replacement with result
-                  await storageInstance.updateObjectReplacement(replacement.id, {
-                    status: "completed",
-                    resultImageUrl: statusData.result_url,
-                    completedAt: new Date(),
-                  });
-                  
-                  console.log(`✅ Object replacement ${replacement.id} completed with result: ${statusData.result_url}`);
-                } else if (statusData.status === "failed") {
-                  // Update replacement with error
-                  await storageInstance.updateObjectReplacement(replacement.id, {
-                    status: "failed",
-                    errorMessage: statusData.error || "Object replacement failed",
-                    completedAt: new Date(),
-                  });
-                  
-                  console.log(`❌ Object replacement ${replacement.id} failed: ${statusData.error}`);
-                }
+              // For now, mark long-pending orders as failed to unblock users
+              const createdTime = new Date(replacement.createdAt!).getTime();
+              const currentTime = new Date().getTime();
+              const timeDiffMinutes = (currentTime - createdTime) / (1000 * 60);
+              
+              if (timeDiffMinutes > 10) { // If pending for more than 10 minutes
+                await storageInstance.updateObjectReplacement(replacement.id, {
+                  status: "failed",
+                  errorMessage: "Processing timeout - PhotAI API status checking endpoint unavailable",
+                  completedAt: new Date(),
+                });
+                console.log(`⏰ Marked replacement ${replacement.id} as failed due to timeout`);
+                continue;
               }
+              
+              // Status checking temporarily disabled until we find the correct PhotAI endpoint
+              console.log(`📋 Replacement ${replacement.id} still pending - waiting for PhotAI response`);
             }
           } catch (error) {
             console.error(`❌ Error checking status for replacement ${replacement.id}:`, error);
