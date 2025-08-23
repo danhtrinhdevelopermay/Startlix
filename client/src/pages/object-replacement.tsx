@@ -19,7 +19,7 @@ import CreditBalance from "@/components/credit-balance";
 const objectReplacementSchema = z.object({
   fileName: z.string().min(1, "Tên file không được để trống"),
   prompt: z.string().min(5, "Prompt phải có ít nhất 5 ký tự").max(200, "Prompt phải có ít hơn 200 ký tự"),
-  inputImageUrl: z.string().url("URL ảnh không hợp lệ"), 
+  inputImageUrl: z.string().min(1, "URL ảnh không được để trống"), // Changed from .url() to .min(1) to allow relative URLs
   maskImageBase64: z.string().min(1, "Vui lòng vẽ mask trên ảnh"),
 });
 
@@ -292,7 +292,10 @@ export default function ObjectReplacementPage() {
       formData: data
     });
     
+    console.log('🔄 Manual validation checks...');
+    
     if (!inputImageFile) {
+      console.log('❌ Validation failed: No image file');
       toast({
         title: "❌ Thiếu ảnh",
         description: "Vui lòng tải lên ảnh gốc",
@@ -302,6 +305,7 @@ export default function ObjectReplacementPage() {
     }
     
     if (!maskDataUrl) {
+      console.log('❌ Validation failed: No mask');
       toast({
         title: "❌ Thiếu mask",
         description: "Vui lòng vẽ mask trên ảnh để chỉ định vùng cần thay thế",
@@ -311,6 +315,7 @@ export default function ObjectReplacementPage() {
     }
 
     if (!data.inputImageUrl) {
+      console.log('❌ Validation failed: No image URL');
       toast({
         title: "❌ Lỗi URL ảnh",
         description: "URL ảnh không hợp lệ. Vui lòng tải lại ảnh.",
@@ -320,9 +325,20 @@ export default function ObjectReplacementPage() {
     }
 
     if (!data.prompt || data.prompt.trim().length < 5) {
+      console.log('❌ Validation failed: Prompt too short');
       toast({
         title: "❌ Thiếu mô tả",
         description: "Vui lòng nhập mô tả chi tiết về đối tượng muốn thay thế (ít nhất 5 ký tự)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!data.maskImageBase64) {
+      console.log('❌ Validation failed: No mask base64');
+      toast({
+        title: "❌ Thiếu mask data",
+        description: "Mask chưa được tạo đúng. Vui lòng vẽ lại mask.",
         variant: "destructive",
       });
       return;
