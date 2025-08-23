@@ -340,7 +340,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="py-12 border-t border-white/10 bg-black/20 backdrop-blur-sm">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
+          <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div>
               <div className="flex items-center space-x-3 mb-4">
                 <img src={logoUrl} alt="Starlix" className="h-8 w-8" />
@@ -351,34 +351,63 @@ export default function Landing() {
               <p className="text-gray-400 leading-relaxed">
                 Nền tảng tạo video AI hàng đầu, giúp bạn biến ý tưởng thành hiện thực.
               </p>
+              <p className="text-gray-400 mt-3 text-sm">
+                Được phát triển bởi <span className="text-blue-400 font-medium">Danh Trình</span>
+              </p>
             </div>
             
             <div>
               <h4 className="text-white font-semibold mb-4">Sản phẩm</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Text-to-Video</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Image-to-Video</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">API</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
+                <li><a href="#features" className="hover:text-white transition-colors">Text-to-Video</a></li>
+                <li><a href="#features" className="hover:text-white transition-colors">Image-to-Video</a></li>
+                <li><a href="https://docs.veo3api.ai" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">API Documentation</a></li>
+                <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="text-white font-semibold mb-4">Công ty</h4>
+              <h4 className="text-white font-semibold mb-4">Liên hệ</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Về chúng tôi</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Liên hệ</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-white font-semibold mb-4">Pháp lý</h4>
-              <ul className="space-y-2 text-gray-400">
+                <li>
+                  <a 
+                    href="https://www.facebook.com/danhtrinh.official" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hover:text-white transition-colors flex items-center"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    Facebook
+                  </a>
+                </li>
+                <li>
+                  <a 
+                    href="https://www.tiktok.com/@trinz_ofc" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hover:text-white transition-colors flex items-center"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                    </svg>
+                    TikTok
+                  </a>
+                </li>
+                <li>
+                  <a 
+                    href="tel:0786831513"
+                    className="hover:text-white transition-colors flex items-center"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M7.33 2h9.34c2.94 0 5.33 2.39 5.33 5.33v9.34c0 2.94-2.39 5.33-5.33 5.33H7.33C4.39 22 2 19.61 2 16.67V7.33C2 4.39 4.39 2 7.33 2zm4.67 4.67c-2.21 0-4 1.79-4 4 0 .74.2 1.43.55 2.02L7.33 14l1.31-1.22c.59.35 1.28.55 2.02.55 2.21 0 4-1.79 4-4s-1.79-4-4-4z"/>
+                    </svg>
+                    Zalo: 0786831513
+                  </a>
+                </li>
                 <li><Link href="/terms" className="hover:text-white transition-colors">Điều khoản sử dụng</Link></li>
                 <li><Link href="/privacy" className="hover:text-white transition-colors">Chính sách bảo mật</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">Cookie Policy</a></li>
               </ul>
             </div>
           </div>
@@ -387,16 +416,18 @@ export default function Landing() {
             <p className="text-gray-400 text-sm">
               © 2024 Starlix. Tất cả quyền được bảo lưu.
             </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">
-                Facebook
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">
-                Twitter
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">
-                LinkedIn
-              </a>
+            <div className="flex space-x-6 mt-4 md:mt-0 text-sm text-gray-400">
+              <span>
+                Được hỗ trợ bởi{" "}
+                <a 
+                  href="https://veo3api.ai" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  STLix API
+                </a>
+              </span>
             </div>
           </div>
         </div>
