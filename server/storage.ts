@@ -1,7 +1,7 @@
-import { type User, type InsertUser, type VideoGeneration, type InsertVideoGeneration, type ApiKey, type InsertApiKey, type Settings, type InsertSettings, type RewardVideo, type InsertRewardVideo, type VideoWatchHistory, type InsertVideoWatchHistory, type ExternalApiKey, type InsertExternalApiKey, type RewardClaim, type InsertRewardClaim } from "@shared/schema";
+import { type User, type InsertUser, type VideoGeneration, type InsertVideoGeneration, type ApiKey, type InsertApiKey, type Settings, type InsertSettings, type RewardVideo, type InsertRewardVideo, type VideoWatchHistory, type InsertVideoWatchHistory, type ExternalApiKey, type InsertExternalApiKey, type RewardClaim, type InsertRewardClaim, type ObjectReplacement, type InsertObjectReplacement } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { users, videoGenerations, apiKeys, settings, rewardVideos, videoWatchHistory, externalApiKeys, rewardClaims } from "@shared/schema";
+import { users, videoGenerations, apiKeys, settings, rewardVideos, videoWatchHistory, externalApiKeys, rewardClaims, objectReplacements } from "@shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -55,6 +55,12 @@ export interface IStorage {
   createRewardClaim(userId: string): Promise<{ claimToken: string; bypassUrl: string }>;
   claimReward(claimToken: string): Promise<{ success: boolean; userId?: string; rewardAmount?: number }>;
   getRewardClaims(userId: string): Promise<RewardClaim[]>;
+  
+  // Object Replacement methods (phot.ai integration)
+  createObjectReplacement(replacement: InsertObjectReplacement): Promise<ObjectReplacement>;
+  updateObjectReplacement(id: string, updates: Partial<ObjectReplacement>): Promise<ObjectReplacement | undefined>;
+  getObjectReplacement(id: string): Promise<ObjectReplacement | undefined>;
+  getUserObjectReplacements(userId: string): Promise<ObjectReplacement[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -66,6 +72,7 @@ export class MemStorage implements IStorage {
   private videoWatchHistories: Map<string, VideoWatchHistory>;
   private externalApiKeys: Map<string, ExternalApiKey>;
   private rewardClaims: Map<string, RewardClaim>;
+  private objectReplacements: Map<string, ObjectReplacement>;
 
   constructor() {
     this.users = new Map();
@@ -76,6 +83,7 @@ export class MemStorage implements IStorage {
     this.videoWatchHistories = new Map();
     this.externalApiKeys = new Map();
     this.rewardClaims = new Map();
+    this.objectReplacements = new Map();
     
     // Create a default user for demo purposes
     const defaultUser: User = {
@@ -132,6 +140,11 @@ export class MemStorage implements IStorage {
       taskId,
       userId: generation.userId || null,
       imageUrl: generation.imageUrl || null,
+      maskImageUrl: generation.maskImageUrl || null,
+      strength: generation.strength || null,
+      samples: generation.samples || null,
+      steps: generation.steps || null,
+      scheduler: generation.scheduler || null,
       watermark: generation.watermark || null,
       hdGeneration: generation.hdGeneration || false,
       creditsUsed,
@@ -470,6 +483,46 @@ export class MemStorage implements IStorage {
       return bTime - aTime;
     });
   }
+
+  // Object Replacement methods (phot.ai integration)
+  async createObjectReplacement(replacement: InsertObjectReplacement): Promise<ObjectReplacement> {
+    const id = randomUUID();
+    const fullReplacement: ObjectReplacement = {
+      ...replacement,
+      id,
+      status: "pending",
+      resultImageUrl: null,
+      errorMessage: null,
+      creditsUsed: 2,
+      createdAt: new Date(),
+      completedAt: null,
+    };
+    this.objectReplacements.set(id, fullReplacement);
+    return fullReplacement;
+  }
+
+  async updateObjectReplacement(id: string, updates: Partial<ObjectReplacement>): Promise<ObjectReplacement | undefined> {
+    const replacement = this.objectReplacements.get(id);
+    if (replacement) {
+      const updatedReplacement = { ...replacement, ...updates };
+      this.objectReplacements.set(id, updatedReplacement);
+      return updatedReplacement;
+    }
+    return undefined;
+  }
+
+  async getObjectReplacement(id: string): Promise<ObjectReplacement | undefined> {
+    return this.objectReplacements.get(id);
+  }
+
+  async getUserObjectReplacements(userId: string): Promise<ObjectReplacement[]> {
+    const replacements = Array.from(this.objectReplacements.values()).filter(replacement => replacement.userId === userId);
+    return replacements.sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
+  }
 }
 
 export class DbStorage implements IStorage {
@@ -781,6 +834,31 @@ export class DbStorage implements IStorage {
 
   async getRewardClaims(userId: string): Promise<RewardClaim[]> {
     return await db.select().from(rewardClaims).where(eq(rewardClaims.userId, userId)).orderBy(desc(rewardClaims.createdAt));
+  }
+
+  // Object Replacement methods (phot.ai integration)
+  async createObjectReplacement(replacement: InsertObjectReplacement): Promise<ObjectReplacement> {
+    const fullReplacement = {
+      ...replacement,
+      status: "pending" as const,
+      creditsUsed: 2,
+    };
+    const results = await db.insert(objectReplacements).values(fullReplacement).returning();
+    return results[0];
+  }
+
+  async updateObjectReplacement(id: string, updates: Partial<ObjectReplacement>): Promise<ObjectReplacement | undefined> {
+    const results = await db.update(objectReplacements).set(updates).where(eq(objectReplacements.id, id)).returning();
+    return results[0];
+  }
+
+  async getObjectReplacement(id: string): Promise<ObjectReplacement | undefined> {
+    const results = await db.select().from(objectReplacements).where(eq(objectReplacements.id, id));
+    return results[0];
+  }
+
+  async getUserObjectReplacements(userId: string): Promise<ObjectReplacement[]> {
+    return await db.select().from(objectReplacements).where(eq(objectReplacements.userId, userId)).orderBy(desc(objectReplacements.createdAt));
   }
 }
 

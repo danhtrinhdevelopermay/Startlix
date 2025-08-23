@@ -108,6 +108,21 @@ export const rewardClaims = pgTable("reward_claims", {
   claimedAt: timestamp("claimed_at"),
 });
 
+// Object Replacement operations using phot.ai
+export const objectReplacements = pgTable("object_replacements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  fileName: text("file_name").notNull(),
+  inputImageUrl: text("input_image_url").notNull(),
+  maskImageBase64: text("mask_image_base64").notNull(),
+  status: text("status").notNull().default("pending"), // 'pending', 'processing', 'completed', 'failed'
+  resultImageUrl: text("result_image_url"),
+  errorMessage: text("error_message"),
+  creditsUsed: integer("credits_used").notNull().default(2),
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -176,6 +191,20 @@ export const insertRewardClaimSchema = createInsertSchema(rewardClaims).omit({
   claimedAt: true,
 });
 
+export const insertObjectReplacementSchema = createInsertSchema(objectReplacements).omit({
+  id: true,
+  status: true,
+  resultImageUrl: true,
+  errorMessage: true,
+  createdAt: true,
+  completedAt: true,
+  creditsUsed: true,
+}).extend({
+  fileName: z.string().min(1, "Tên file không được để trống"),
+  inputImageUrl: z.string().url("URL ảnh không hợp lệ"),
+  maskImageBase64: z.string().min(1, "Mask image không được để trống"),
+});
+
 // API request schema for external API
 export const externalApiGenerateSchema = z.object({
   prompt: z.string().min(10, "Prompt must be at least 10 characters").max(500, "Prompt must be less than 500 characters"),
@@ -201,3 +230,5 @@ export type ExternalApiKey = typeof externalApiKeys.$inferSelect;
 export type ExternalApiGenerate = z.infer<typeof externalApiGenerateSchema>;
 export type InsertRewardClaim = z.infer<typeof insertRewardClaimSchema>;
 export type RewardClaim = typeof rewardClaims.$inferSelect;
+export type InsertObjectReplacement = z.infer<typeof insertObjectReplacementSchema>;
+export type ObjectReplacement = typeof objectReplacements.$inferSelect;

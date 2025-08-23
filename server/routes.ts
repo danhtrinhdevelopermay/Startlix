@@ -4,7 +4,7 @@ import session from "express-session";
 import ConnectPgSimple from "connect-pg-simple";
 import { storage } from "./storage";
 import { db } from "./db";
-import { insertVideoGenerationSchema, insertUserSchema, insertRewardVideoSchema, insertVideoWatchHistorySchema, type User, type ExternalApiKey, insertRewardClaimSchema, type RewardClaim } from "@shared/schema";
+import { insertVideoGenerationSchema, insertUserSchema, insertRewardVideoSchema, insertVideoWatchHistorySchema, type User, type ExternalApiKey, insertRewardClaimSchema, type RewardClaim, insertObjectReplacementSchema } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
 import FormData from "form-data";
@@ -27,6 +27,8 @@ const VEO3_UPLOAD_BASE = "https://veo3apiai.redpandaai.co/api";
 const MODELSLAB_API_BASE = "https://modelslab.com/api/v6";
 const MODELSLAB_API_KEY = "YP3Eius8kY2Vnh5qq8LJzMReG9hsfi1EyJRU5XwN8uac8P2EqPPu67Sv01MA";
 const SEGMIND_API_BASE = "https://api.segmind.com/v1/topaz-video-upscale";
+const PHOTAI_API_BASE = "https://prodapi.phot.ai/external/api/v2/user_activity";
+const PHOTAI_API_KEY = "68a9325d0591f3b3f3563aba_b31009ca66406551632b_apyhitools";
 
 // Check API key credits
 async function checkApiCredits(apiKey: string): Promise<number> {
@@ -837,6 +839,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Generative Fill error:', error);
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to generate image" });
+    }
+  });
+
+  // Object Replacement API (phot.ai integration)
+  app.post("/api/object-replacement", requireAuth, async (req: Request & { user?: User }, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const storageInstance = await storage();
+      const user = req.user;
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const validatedData = insertObjectReplacementSchema.parse(req.body);
+      
+      // Credits for object replacement
+      const totalCredits = 2; // Cost for object replacement
+      
+      // Check if user has enough credits
+      if (user.credits < totalCredits) {
+        return res.status(402).json({ 
+          message: "Insufficient credits", 
+          required: totalCredits, 
+          available: user.credits 
+        });
+      }
+
+      // Create object replacement record  
+      const replacement = await storageInstance.createObjectReplacement({
+        ...validatedData,
+        userId: user.id,
+      });
+
+      // Deduct credits from user
+      await storageInstance.updateUserCredits(user.id, user.credits - totalCredits);
+
+      // Call phot.ai API
+      const photAiPayload = {
+        file_name: validatedData.fileName,
+        input_image_link: validatedData.inputImageUrl,
+        mask_image: validatedData.maskImageBase64,
+      };
+
+      console.log('🔄 Calling phot.ai Object Replacer API with payload:', {
+        file_name: photAiPayload.file_name,
+        input_image_link: photAiPayload.input_image_link,
+        mask_image: photAiPayload.mask_image.substring(0, 100) + '...' // Log only first 100 chars of base64
+      });
+
+      const response = await fetch(`${PHOTAI_API_BASE}/object-replacer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': PHOTAI_API_KEY,
+        },
+        body: JSON.stringify(photAiPayload),
+      });
+
+      const data = await response.json();
+      console.log('🔄 phot.ai API Response:', JSON.stringify(data, null, 2));
+      
+      if (!response.ok || data.error) {
+        await storageInstance.updateObjectReplacement(replacement.id, {
+          status: "failed",
+          errorMessage: data.error || data.message || 'Object replacement failed',
+        });
+        // Refund credits
+        await storageInstance.updateUserCredits(user.id, user.credits);
+        throw new Error(data.error || data.message || 'Object replacement failed');
+      }
+
+      // Update replacement with result (assuming phot.ai returns result URL)
+      const resultImageUrl = data.result_url || data.output_url || data.image_url;
+      await storageInstance.updateObjectReplacement(replacement.id, {
+        status: "completed",
+        resultImageUrl,
+        completedAt: new Date(),
+      });
+
+      res.json({ 
+        replacementId: replacement.id,
+        resultImageUrl,
+        creditsUsed: totalCredits,
+        status: "completed"
+      });
+    } catch (error) {
+      console.error('Object Replacement error:', error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to replace object" });
+    }
+  });
+
+  // Get user's object replacements
+  app.get("/api/object-replacements", requireAuth, async (req: Request & { user?: User }, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const storageInstance = await storage();
+      const replacements = await storageInstance.getUserObjectReplacements(req.user.id);
+      
+      res.json(replacements);
+    } catch (error) {
+      console.error('Error fetching object replacements:', error);
+      res.status(500).json({ message: "Failed to fetch object replacements" });
     }
   });
 
