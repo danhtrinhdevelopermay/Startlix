@@ -2,38 +2,109 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Play, Sparkles, ArrowRight, Check, Star } from "lucide-react";
+import { Play, Sparkles, ArrowRight, Check, Star, Menu, X } from "lucide-react";
+import { useState } from "react";
 import logoUrl from "@/assets/logo.png";
 
 export default function Landing() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       {/* Header */}
-      <header className="relative z-10 border-b border-white/10 backdrop-blur-xl bg-black/20">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <img src={logoUrl} alt="Starlix" className="h-10 w-10" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Starlix
-            </span>
+      <header className="relative z-50 border-b border-white/10 backdrop-blur-xl bg-black/20">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <div className="flex items-center space-x-3">
+              <img src={logoUrl} alt="Starlix" className="h-8 w-8 md:h-10 md:w-10" />
+              <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Starlix
+              </span>
+            </div>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-8">
+              <a href="#features" className="text-gray-300 hover:text-white transition-colors">Tính năng</a>
+              <a href="#pricing" className="text-gray-300 hover:text-white transition-colors">Giá cả</a>
+              <a href="#about" className="text-gray-300 hover:text-white transition-colors">Về chúng tôi</a>
+            </nav>
+
+            {/* Desktop Auth Buttons */}
+            <div className="hidden md:flex items-center space-x-4">
+              <Link href="/login">
+                <Button variant="ghost" className="text-white hover:bg-white/10">
+                  Đăng nhập
+                </Button>
+              </Link>
+              <Link href="/register">
+                <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white">
+                  Bắt đầu ngay
+                </Button>
+              </Link>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+              data-testid="button-mobile-menu"
+            >
+              {isMobileMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
+            </button>
           </div>
-          <nav className="hidden md:flex items-center space-x-8">
-            <a href="#features" className="text-gray-300 hover:text-white transition-colors">Tính năng</a>
-            <a href="#pricing" className="text-gray-300 hover:text-white transition-colors">Giá cả</a>
-            <a href="#about" className="text-gray-300 hover:text-white transition-colors">Về chúng tôi</a>
-          </nav>
-          <div className="flex items-center space-x-4">
-            <Link href="/login">
-              <Button variant="ghost" className="text-white hover:bg-white/10">
-                Đăng nhập
-              </Button>
-            </Link>
-            <Link href="/register">
-              <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white">
-                Bắt đầu ngay
-              </Button>
-            </Link>
-          </div>
+
+          {/* Mobile Menu */}
+          {isMobileMenuOpen && (
+            <div className="md:hidden mt-4 pb-4 border-t border-white/10">
+              <nav className="flex flex-col space-y-4 mt-4">
+                <a 
+                  href="#features" 
+                  className="text-gray-300 hover:text-white transition-colors py-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Tính năng
+                </a>
+                <a 
+                  href="#pricing" 
+                  className="text-gray-300 hover:text-white transition-colors py-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Giá cả
+                </a>
+                <a 
+                  href="#about" 
+                  className="text-gray-300 hover:text-white transition-colors py-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Về chúng tôi
+                </a>
+                <div className="flex flex-col space-y-3 pt-4 border-t border-white/10">
+                  <Link href="/login">
+                    <Button 
+                      variant="ghost" 
+                      className="w-full text-white hover:bg-white/10"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Đăng nhập
+                    </Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button 
+                      className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Bắt đầu ngay
+                    </Button>
+                  </Link>
+                </div>
+              </nav>
+            </div>
+          )}
         </div>
       </header>
 
