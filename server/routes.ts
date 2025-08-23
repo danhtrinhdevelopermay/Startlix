@@ -856,7 +856,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
+      console.log('🔄 Object Replacement Request:', {
+        body: req.body,
+        user: user?.username,
+        userId: user?.id
+      });
+
       const validatedData = insertObjectReplacementSchema.parse(req.body);
+      
+      console.log('✅ Validation passed:', validatedData);
       
       // Credits for object replacement
       const totalCredits = 2; // Cost for object replacement

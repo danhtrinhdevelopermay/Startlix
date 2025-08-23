@@ -194,6 +194,7 @@ export const insertRewardClaimSchema = createInsertSchema(rewardClaims).omit({
 
 export const insertObjectReplacementSchema = createInsertSchema(objectReplacements).omit({
   id: true,
+  userId: true, // Omit userId since it will be added by server
   status: true,
   resultImageUrl: true,
   errorMessage: true,
@@ -203,7 +204,7 @@ export const insertObjectReplacementSchema = createInsertSchema(objectReplacemen
 }).extend({
   fileName: z.string().min(1, "Tên file không được để trống"),
   prompt: z.string().min(5, "Prompt phải có ít nhất 5 ký tự").max(200, "Prompt phải có ít hơn 200 ký tự"),
-  inputImageUrl: z.string().url("URL ảnh không hợp lệ"),
+  inputImageUrl: z.string().min(1, "URL ảnh không được để trống"), // Changed from .url() to allow relative URLs
   maskImageBase64: z.string().min(1, "Vui lòng vẽ mask trên ảnh"),
 });
 
