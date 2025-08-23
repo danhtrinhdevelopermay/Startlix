@@ -887,76 +887,166 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Deduct credits from user
       await storageInstance.updateUserCredits(user.id, user.credits - totalCredits);
 
-      // Call phot.ai API
-      const photAiPayload = {
-        file_name: validatedData.fileName,
-        prompt: validatedData.prompt,
-        input_image_link: validatedData.inputImageUrl,
-        mask_image: validatedData.maskImageBase64,
-      };
-
-      console.log('🔄 Calling phot.ai Object Replacer API with payload:', {
-        file_name: photAiPayload.file_name,
-        input_image_link: photAiPayload.input_image_link,
-        mask_image: photAiPayload.mask_image.substring(0, 100) + '...' // Log only first 100 chars of base64
-      });
-
-      const response = await fetch(`${PHOTAI_API_BASE}/object-replacer`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': PHOTAI_API_KEY,
-        },
-        body: JSON.stringify(photAiPayload),
-      });
-
-      const data = await response.json();
-      console.log('🔄 phot.ai API Response:', JSON.stringify(data, null, 2));
+      // Get available PhotAI API keys
+      const photaiKeys = await storageInstance.getPhotAIApiKeys();
+      console.log(`🔑 Found ${photaiKeys.length} available PhotAI API keys`);
       
-      if (!response.ok || data.error) {
-        await storageInstance.updateObjectReplacement(replacement.id, {
-          status: "failed",
-          errorMessage: data.error || data.message || 'Object replacement failed',
+      if (photaiKeys.length === 0) {
+        // Fallback to hardcoded API key if no keys configured
+        console.log('⚠️ No PhotAI keys configured, using fallback key');
+        const photAiPayload = {
+          file_name: validatedData.fileName,
+          prompt: validatedData.prompt,
+          input_image_link: validatedData.inputImageUrl,
+          mask_image: validatedData.maskImageBase64,
+        };
+
+        console.log('🔄 Calling phot.ai Object Replacer API with fallback key:', {
+          file_name: photAiPayload.file_name,
+          input_image_link: photAiPayload.input_image_link,
+          mask_image: photAiPayload.mask_image.substring(0, 100) + '...'
         });
-        // Refund credits
-        await storageInstance.updateUserCredits(user.id, user.credits);
-        throw new Error(data.error || data.message || 'Object replacement failed');
+
+        const response = await fetch(`${PHOTAI_API_BASE}/object-replacer`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': PHOTAI_API_KEY,
+          },
+          body: JSON.stringify(photAiPayload),
+        });
+
+        const data = await response.json();
+        console.log('🔄 phot.ai API Response (fallback):', JSON.stringify(data, null, 2));
+        
+        if (!response.ok || data.error) {
+          await storageInstance.updateObjectReplacement(replacement.id, {
+            status: "failed",
+            errorMessage: data.error || data.message || 'Object replacement failed',
+          });
+          // Refund credits
+          await storageInstance.updateUserCredits(user.id, user.credits);
+          throw new Error(data.error || data.message || 'Object replacement failed');
+        }
+
+        // Handle response
+        if (data.status === "pending" && data.order_id) {
+          await storageInstance.updateObjectReplacement(replacement.id, {
+            status: "pending",
+            errorMessage: JSON.stringify({ order_id: data.order_id, status: data.status, apiKeyUsed: "fallback" }),
+          });
+
+          res.json({
+            replacementId: replacement.id,
+            status: "pending",
+            message: "Object replacement request submitted successfully",
+            creditsUsed: totalCredits,
+            order_id: data.order_id,
+            apiKeyUsed: "fallback"
+          });
+          return;
+        }
       }
+      
+      // Try each PhotAI API key until one works
+      let lastError = null;
+      let usedApiKey = null;
+      
+      for (const apiKeyRecord of photaiKeys) {
+        if (apiKeyRecord.creditsUsed >= apiKeyRecord.creditsLimit) {
+          console.log(`⚠️ PhotAI key "${apiKeyRecord.keyName}" has reached credit limit (${apiKeyRecord.creditsUsed}/${apiKeyRecord.creditsLimit})`);
+          continue;
+        }
+        
+        try {
+          console.log(`🔑 Trying PhotAI key "${apiKeyRecord.keyName}" (${apiKeyRecord.creditsLimit - apiKeyRecord.creditsUsed} credits available)`);
+          
+          const photAiPayload = {
+            file_name: validatedData.fileName,
+            prompt: validatedData.prompt,
+            input_image_link: validatedData.inputImageUrl,
+            mask_image: validatedData.maskImageBase64,
+          };
 
-      // Handle phot.ai response (can be immediate result or pending status)
-      if (data.status === "pending" && data.order_id) {
-        // Store order_id for status checking
-        await storageInstance.updateObjectReplacement(replacement.id, {
-          status: "pending",
-          errorMessage: JSON.stringify({ order_id: data.order_id, status: data.status }), // Temporary storage for order_id
-        });
+          console.log('🔄 Calling phot.ai Object Replacer API with payload:', {
+            file_name: photAiPayload.file_name,
+            input_image_link: photAiPayload.input_image_link,
+            mask_image: photAiPayload.mask_image.substring(0, 100) + '...',
+            apiKey: apiKeyRecord.keyName
+          });
 
-        res.json({
-          replacementId: replacement.id,
-          status: "pending",
-          message: "Object replacement request submitted successfully",
-          creditsUsed: totalCredits,
-          order_id: data.order_id
-        });
-      } else if (data.result_url || data.output_url || data.image_url) {
-        // Immediate result (less common)
-        const resultImageUrl = data.result_url || data.output_url || data.image_url;
-        await storageInstance.updateObjectReplacement(replacement.id, {
-          status: "completed",
-          resultImageUrl,
-          completedAt: new Date(),
-        });
+          const response = await fetch(`${PHOTAI_API_BASE}/object-replacer`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': apiKeyRecord.apiKey,
+            },
+            body: JSON.stringify(photAiPayload),
+          });
 
-        res.json({ 
-          replacementId: replacement.id,
-          resultImageUrl,
-          creditsUsed: totalCredits,
-          status: "completed"
-        });
-      } else {
-        // Unexpected response format
-        throw new Error('Unexpected API response format');
+          const data = await response.json();
+          console.log(`🔄 phot.ai API Response (${apiKeyRecord.keyName}):`, JSON.stringify(data, null, 2));
+          
+          if (response.ok && !data.error) {
+            // Success! Increment API key usage
+            await storageInstance.incrementExternalApiKeyUsage(apiKeyRecord.id, 1);
+            usedApiKey = apiKeyRecord;
+            
+            // Handle response
+            if (data.status === "pending" && data.order_id) {
+              await storageInstance.updateObjectReplacement(replacement.id, {
+                status: "pending",
+                errorMessage: JSON.stringify({ order_id: data.order_id, status: data.status, apiKeyUsed: apiKeyRecord.keyName }),
+              });
+
+              res.json({
+                replacementId: replacement.id,
+                status: "pending",
+                message: "Object replacement request submitted successfully",
+                creditsUsed: totalCredits,
+                order_id: data.order_id,
+                apiKeyUsed: apiKeyRecord.keyName
+              });
+              return;
+            } else if (data.result_url || data.output_url || data.image_url) {
+              // Immediate result
+              const resultImageUrl = data.result_url || data.output_url || data.image_url;
+              await storageInstance.updateObjectReplacement(replacement.id, {
+                status: "completed",
+                resultImageUrl,
+                completedAt: new Date(),
+              });
+
+              res.json({ 
+                replacementId: replacement.id,
+                resultImageUrl,
+                creditsUsed: totalCredits,
+                status: "completed",
+                apiKeyUsed: apiKeyRecord.keyName
+              });
+              return;
+            }
+          } else {
+            lastError = data.error || data.message || 'Unknown API error';
+            console.log(`❌ PhotAI key "${apiKeyRecord.keyName}" failed:`, lastError);
+            continue;
+          }
+        } catch (error) {
+          lastError = error instanceof Error ? error.message : 'Network error';
+          console.log(`❌ PhotAI key "${apiKeyRecord.keyName}" network error:`, lastError);
+          continue;
+        }
       }
+      
+      // If we get here, all API keys failed
+      await storageInstance.updateObjectReplacement(replacement.id, {
+        status: "failed",
+        errorMessage: lastError || 'All PhotAI API keys failed',
+      });
+      // Refund credits
+      await storageInstance.updateUserCredits(user.id, user.credits);
+      throw new Error(lastError || 'All PhotAI API keys failed');
+
     } catch (error) {
       console.error('Object Replacement error:', error);
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to replace object" });
@@ -1745,6 +1835,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Update external API key error:', error);
       res.status(500).json({ message: "Failed to update external API key" });
+    }
+  });
+
+  // PhotAI API Keys Management
+  app.get("/api/admin/photai-api-keys", async (req, res) => {
+    try {
+      const storageInstance = await storage();
+      // For now, use external API keys table with type filter
+      const photaiKeys = await storageInstance.getUserExternalApiKeys('admin');
+      // Filter for photai type (when we add the field later)
+      res.json(photaiKeys);
+    } catch (error) {
+      console.error('Get PhotAI API keys error:', error);
+      res.status(500).json({ message: "Failed to get PhotAI API keys" });
+    }
+  });
+
+  app.post("/api/admin/photai-api-keys", async (req, res) => {
+    try {
+      const { keyName, apiKey, creditsLimit = 100 } = req.body;
+      
+      if (!keyName || typeof keyName !== 'string') {
+        return res.status(400).json({ message: "keyName is required" });
+      }
+      if (!apiKey || typeof apiKey !== 'string') {
+        return res.status(400).json({ message: "apiKey is required" });
+      }
+      
+      // Check if PhotAI API key is valid by testing it
+      try {
+        const testResponse = await fetch(`${PHOTAI_API_BASE}/user-info`, {
+          method: 'GET',
+          headers: {
+            'x-api-key': apiKey,
+          },
+        });
+        
+        if (!testResponse.ok) {
+          return res.status(400).json({ message: "Invalid PhotAI API key" });
+        }
+      } catch (error) {
+        return res.status(400).json({ message: "Failed to validate PhotAI API key" });
+      }
+      
+      const storageInstance = await storage();
+      // Store as external API key with metadata to identify as PhotAI
+      const photaiApiKey = await storageInstance.createExternalApiKey({
+        keyName: `[PhotAI] ${keyName}`,
+        userId: null,
+        creditsLimit: Number(creditsLimit) || 100,
+        isActive: true
+      });
+      
+      // Override the generated API key with the actual PhotAI key
+      await storageInstance.updateExternalApiKey(photaiApiKey.id, {
+        apiKey: apiKey
+      });
+      
+      res.status(201).json({ ...photaiApiKey, apiKey });
+    } catch (error) {
+      console.error('Create PhotAI API key error:', error);
+      res.status(500).json({ message: "Failed to create PhotAI API key" });
+    }
+  });
+
+  app.patch("/api/admin/photai-api-keys/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { isActive, creditsLimit, keyName } = req.body;
+      
+      const updates: any = {};
+      if (typeof isActive === 'boolean') updates.isActive = isActive;
+      if (typeof creditsLimit === 'number') updates.creditsLimit = creditsLimit;
+      if (typeof keyName === 'string') updates.keyName = `[PhotAI] ${keyName}`;
+      
+      const storageInstance = await storage();
+      const updatedKey = await storageInstance.updateExternalApiKey(id, updates);
+      
+      if (!updatedKey) {
+        return res.status(404).json({ message: "PhotAI API key not found" });
+      }
+      
+      res.json(updatedKey);
+    } catch (error) {
+      console.error('Update PhotAI API key error:', error);
+      res.status(500).json({ message: "Failed to update PhotAI API key" });
+    }
+  });
+
+  app.delete("/api/admin/photai-api-keys/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const storageInstance = await storage();
+      const success = await storageInstance.deleteExternalApiKey?.(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "PhotAI API key not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Delete PhotAI API key error:', error);
+      res.status(500).json({ message: "Failed to delete PhotAI API key" });
     }
   });
 

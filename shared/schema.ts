@@ -87,6 +87,7 @@ export const externalApiKeys = pgTable("external_api_keys", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   keyName: text("key_name").notNull(),
   apiKey: text("api_key").notNull().unique(),
+  apiType: text("api_type").notNull().default("veo3"), // "veo3" or "photai"
   userId: varchar("user_id").references(() => users.id),
   isActive: boolean("is_active").notNull().default(true),
   creditsLimit: integer("credits_limit").notNull().default(100), // Monthly limit
@@ -181,6 +182,8 @@ export const insertExternalApiKeySchema = createInsertSchema(externalApiKeys).om
   lastUsed: true,
   createdAt: true,
   lastResetAt: true,
+}).extend({
+  apiType: z.enum(["veo3", "photai"]).default("veo3"),
 });
 
 export const insertRewardClaimSchema = createInsertSchema(rewardClaims).omit({

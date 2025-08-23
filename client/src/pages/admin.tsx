@@ -43,6 +43,12 @@ export default function Admin() {
     refetchInterval: 60000, // Refresh every minute
   });
 
+  // Get PhotAI API keys
+  const { data: photaiKeys = [] } = useQuery<ExternalApiKey[]>({
+    queryKey: ["/api/admin/photai-api-keys"],
+    refetchInterval: 60000, // Refresh every minute
+  });
+
   // STLix API key setting form
   const veo3Form = useForm({
     defaultValues: {
@@ -71,6 +77,15 @@ export default function Admin() {
       keyName: "",
       creditsLimit: "100",
       userId: "",
+    },
+  });
+
+  // PhotAI API key form
+  const photaiApiKeyForm = useForm({
+    defaultValues: {
+      keyName: "",
+      apiKey: "",
+      creditsLimit: "100",
     },
   });
 
@@ -229,6 +244,78 @@ export default function Admin() {
     },
   });
 
+  // Create PhotAI API key mutation
+  const createPhotaiApiKeyMutation = useMutation({
+    mutationFn: async (data: { keyName: string; apiKey: string; creditsLimit: number }) => {
+      return apiRequest("/api/admin/photai-api-keys", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/photai-api-keys"] });
+      photaiApiKeyForm.reset();
+      toast({
+        title: "✅ Thành công",
+        description: "Đã thêm PhotAI API key mới",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "❌ Lỗi",
+        description: error.message || "Không thể thêm PhotAI API key",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Toggle PhotAI API key mutation
+  const togglePhotaiApiKeyMutation = useMutation({
+    mutationFn: async (data: { id: string; isActive: boolean }) => {
+      return apiRequest("/api/admin/photai-api-keys/" + data.id, {
+        method: "PATCH",
+        body: JSON.stringify({ isActive: data.isActive }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/photai-api-keys"] });
+      toast({
+        title: "✅ Thành công",
+        description: "Đã cập nhật trạng thái PhotAI API key",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "❌ Lỗi",
+        description: error.message || "Không thể cập nhật PhotAI API key",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete PhotAI API key mutation
+  const deletePhotaiApiKeyMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("/api/admin/photai-api-keys/" + id, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/photai-api-keys"] });
+      toast({
+        title: "✅ Thành công",
+        description: "Đã xóa PhotAI API key",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "❌ Lỗi",
+        description: error.message || "Không thể xóa PhotAI API key",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmitSTLix = (data: { veo3ApiKey: string }) => {
     updateSTLixMutation.mutate(data);
   };
@@ -239,6 +326,14 @@ export default function Admin() {
 
   const onSubmitSegmindTest = (data: { videoUrl: string }) => {
     testSegmindMutation.mutate(data);
+  };
+
+  const onSubmitPhotaiApiKey = (data: { keyName: string; apiKey: string; creditsLimit: string }) => {
+    createPhotaiApiKeyMutation.mutate({
+      keyName: data.keyName,
+      apiKey: data.apiKey,
+      creditsLimit: Number(data.creditsLimit) || 100,
+    });
   };
 
   const toggleShowApiKey = (id: string) => {
@@ -1066,6 +1161,187 @@ export default function Admin() {
                 </div>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* PhotAI API Keys Management */}
+        <Card className="bg-dark-700 border-dark-600">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <KeyRegular className="w-5 h-5 text-purple-400" />
+              Quản lý PhotAI API Keys
+            </CardTitle>
+            <CardDescription>
+              Thêm và quản lý nhiều PhotAI API keys cho tính năng thay thế đối tượng. Hệ thống sẽ tự động chọn key khả dụng.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Add new PhotAI API key form */}
+            <Form {...photaiApiKeyForm}>
+              <form onSubmit={photaiApiKeyForm.handleSubmit(onSubmitPhotaiApiKey)} className="space-y-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={photaiApiKeyForm.control}
+                    name="keyName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tên Key</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="My PhotAI Key"
+                            className="bg-dark-600 border-dark-500"
+                            data-testid="input-photai-key-name"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={photaiApiKeyForm.control}
+                    name="apiKey"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>PhotAI API Key</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="68a9325d0591f3b3f3563aba_..."
+                            className="bg-dark-600 border-dark-500"
+                            data-testid="input-photai-api-key"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={photaiApiKeyForm.control}
+                    name="creditsLimit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Giới hạn Credits</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="number"
+                            placeholder="100"
+                            className="bg-dark-600 border-dark-500"
+                            data-testid="input-photai-credits-limit"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={createPhotaiApiKeyMutation.isPending}
+                  className="bg-purple-600 hover:bg-purple-700"
+                  data-testid="button-add-photai-key"
+                >
+                  {createPhotaiApiKeyMutation.isPending ? (
+                    <MD3ButtonLoading 
+                      label="Adding PhotAI Key" 
+                      data-testid="loading-add-photai-key"
+                    />
+                  ) : (
+                    <>
+                      <AddRegular className="h-4 w-4 mr-2" />
+                      Thêm PhotAI Key
+                    </>
+                  )}
+                </Button>
+              </form>
+            </Form>
+
+            {/* PhotAI API keys list */}
+            {photaiKeys.length === 0 ? (
+              <div className="text-center py-8">
+                <KeyRegular className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-400">Chưa có PhotAI API key nào</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Thêm PhotAI API key để hệ thống có thể sử dụng tính năng thay thế đối tượng
+                </p>
+              </div>
+            ) : (
+              <Table className="bg-dark-800 border-dark-600">
+                <TableHeader>
+                  <TableRow className="border-dark-600">
+                    <TableHead>Tên Key</TableHead>
+                    <TableHead>API Key</TableHead>
+                    <TableHead>Trạng thái</TableHead>
+                    <TableHead>Credits</TableHead>
+                    <TableHead>Lần cuối sử dụng</TableHead>
+                    <TableHead className="text-right">Hành động</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {photaiKeys.filter(key => key.keyName.startsWith('[PhotAI]')).map((key) => (
+                    <TableRow key={key.id} data-testid={`photai-key-${key.id}`} className="border-dark-600">
+                      <TableCell className="font-medium">
+                        {key.keyName.replace('[PhotAI] ', '')}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <code className="text-sm bg-dark-600 px-2 py-1 rounded">
+                            {showApiKey[key.id] ? key.apiKey : `${key.apiKey.slice(0, 12)}...${key.apiKey.slice(-4)}`}
+                          </code>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowApiKey({ ...showApiKey, [key.id]: !showApiKey[key.id] })}
+                            data-testid={`button-toggle-photai-key-${key.id}`}
+                          >
+                            {showApiKey[key.id] ? <EyeOffRegular className="h-4 w-4" /> : <EyeRegular className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={key.isActive ? "default" : "secondary"} className={key.isActive ? "bg-purple-600" : ""}>
+                          {key.isActive ? "Hoạt động" : "Tạm dừng"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          <div>{key.creditsUsed} / {key.creditsLimit}</div>
+                          <div className="text-gray-400">
+                            {key.creditsLimit - key.creditsUsed} còn lại
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-gray-400">
+                          {key.lastUsed ? new Date(key.lastUsed).toLocaleDateString('vi-VN') : 'Chưa sử dụng'}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Switch
+                            checked={key.isActive}
+                            onCheckedChange={(checked) => togglePhotaiApiKeyMutation.mutate({ id: key.id, isActive: checked })}
+                            disabled={togglePhotaiApiKeyMutation.isPending}
+                            data-testid={`switch-photai-${key.id}`}
+                          />
+                          <Button
+                            variant="outlined"
+                            size="sm"
+                            onClick={() => deletePhotaiApiKeyMutation.mutate(key.id)}
+                            disabled={deletePhotaiApiKeyMutation.isPending}
+                            className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                            data-testid={`button-delete-photai-${key.id}`}
+                          >
+                            <DeleteRegular className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>

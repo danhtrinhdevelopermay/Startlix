@@ -384,6 +384,17 @@ export class MemStorage implements IStorage {
     return undefined;
   }
 
+  async deleteExternalApiKey(id: string): Promise<boolean> {
+    return this.externalApiKeys.delete(id);
+  }
+
+  async getPhotAIApiKeys(): Promise<ExternalApiKey[]> {
+    return Array.from(this.externalApiKeys.values())
+      .filter(apiKey => apiKey.keyName.startsWith('[PhotAI]'))
+      .filter(apiKey => apiKey.isActive)
+      .sort((a, b) => (b.creditsLimit - b.creditsUsed) - (a.creditsLimit - a.creditsUsed)); // Sort by available credits
+  }
+
   async resetMonthlyUsage(id: string): Promise<ExternalApiKey | undefined> {
     const apiKey = this.externalApiKeys.get(id);
     if (apiKey) {
