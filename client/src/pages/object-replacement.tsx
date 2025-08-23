@@ -75,7 +75,7 @@ export default function ObjectReplacementPage() {
   const uploadImageMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
-      formData.append("image", file);
+      formData.append("file", file); // Changed from "image" to "file" to match server expectation
       const response = await fetch("/api/upload-image", {
         method: "POST",
         body: formData,
