@@ -7,7 +7,7 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  credits: integer("credits").notNull().default(1),
+  credits: integer("credits").notNull().default(10),
   deviceId: varchar("device_id", { length: 255 }), // Device fingerprint for preventing multiple accounts
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -116,7 +116,7 @@ export const rewardClaims = pgTable("reward_claims", {
   bypassUrl: text("bypass_url").notNull(), // Link vượt từ LinkBulks hoặc Link4m
   claimToken: varchar("claim_token").notNull().unique(), // Unique token để claim credit
   serviceUsed: text("service_used").notNull().default("linkbulks"), // "linkbulks" hoặc "link4m"
-  rewardAmount: integer("reward_amount").notNull().default(1), // Số credit thưởng
+  rewardAmount: integer("reward_amount").notNull().default(5), // Số credit thưởng
   isClaimed: boolean("is_claimed").notNull().default(false), // Đã claim chưa
   createdAt: timestamp("created_at").defaultNow(),
   claimedAt: timestamp("claimed_at"),

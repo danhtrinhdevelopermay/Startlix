@@ -744,7 +744,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertVideoGenerationSchema.parse(req.body);
       
       // Calculate credits needed
-      const baseCredits = validatedData.type === "image-to-video" ? 7 : 5;
+      const baseCredits = 10; // Both text-to-video and image-to-video now cost 10 credits
       const hdCredits = validatedData.hdGeneration ? 2 : 0;
       const totalCredits = baseCredits + hdCredits;
 

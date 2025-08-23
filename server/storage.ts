@@ -129,7 +129,7 @@ export class MemStorage implements IStorage {
       ...insertUser, 
       id, 
       password: hashedPassword, 
-      credits: 1,
+      credits: 10,
       createdAt: new Date()
     };
     this.users.set(id, user);
@@ -518,7 +518,7 @@ export class MemStorage implements IStorage {
       bypassUrl,
       claimToken,
       serviceUsed: serviceToUse,
-      rewardAmount: 1,
+      rewardAmount: 5,
       isClaimed: false,
       createdAt: new Date(),
       claimedAt: null,
@@ -728,7 +728,7 @@ export class DbStorage implements IStorage {
     const results = await db.insert(users).values({ 
       ...insertUser, 
       password: hashedPassword,
-      credits: 1 
+      credits: 10 
     }).returning();
     return results[0];
   }

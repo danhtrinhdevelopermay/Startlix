@@ -1024,7 +1024,7 @@ export default function VideoGenerator() {
                           {generateVideoMutation.isPending ? "Đang tạo..." : "Tạo Video"}
                         </span>
                         <span className="ml-2 px-2 py-1 bg-white/20 rounded-full fluent-caption">
-                          5 credits
+                          10 credits
                         </span>
                       </Button>
                     </form>
@@ -1236,7 +1236,7 @@ export default function VideoGenerator() {
                           {generateVideoMutation.isPending ? "Đang tạo hiệu ứng..." : "Tạo hiệu ứng cho Ảnh"}
                         </span>
                         <span className="ml-2 px-2 py-1 bg-white/20 rounded-full fluent-caption">
-                          7 credits
+                          10 credits
                         </span>
                       </Button>
                     </form>
