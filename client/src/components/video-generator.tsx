@@ -16,7 +16,7 @@ import CreditBalance from "@/components/credit-balance";
 import VideoPreview from "@/components/video-preview";
 import GenerationHistory from "@/components/generation-history";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDownRegular, ArrowUploadRegular, SparkleRegular, ImageRegular, DocumentRegular, SignOutRegular, PersonRegular, DesktopRegular, PhoneRegular, SquareRegular, FlashRegular, TrophyRegular, DismissRegular, EditRegular, CutRegular, LinkRegular, PaintBrushRegular } from "@fluentui/react-icons";
+import { ChevronDownRegular, ArrowUploadRegular, SparkleRegular, ImageRegular, DocumentRegular, SignOutRegular, PersonRegular, DesktopRegular, PhoneRegular, SquareRegular, FlashRegular, TrophyRegular, DismissRegular, EditRegular, CutRegular, LinkRegular } from "@fluentui/react-icons";
 import { useAuth, useLogout } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -42,20 +42,9 @@ const imageToVideoSchema = z.object({
   imageUrl: z.string().min(1, "Vui lòng tải lên một ảnh"),
 });
 
-const generativeFillSchema = z.object({
-  prompt: z.string().min(10, "Prompt phải có ít nhất 10 ký tự").max(500, "Prompt phải có ít hơn 500 ký tự"),
-  imageUrl: z.string().min(1, "Vui lòng tải lên ảnh gốc"),
-  maskImageUrl: z.string().min(1, "Vui lòng tải lên ảnh mask"),
-  strength: z.string().default("1.0"),
-  samples: z.number().min(1).max(4).default(1),
-  model: z.enum(["lazymixv4-inpaint", "v51_inpainting", "realistic-vision-v6.0-b1-inpaint-n"]).default("lazymixv4-inpaint"),
-  steps: z.number().min(10).max(50).default(31),
-  scheduler: z.enum(["DPMSolverMultistepScheduler", "DPM++ 2M", "Euler", "Euler a"]).default("DPMSolverMultistepScheduler"),
-});
 
 type TextToVideoForm = z.infer<typeof textToVideoSchema>;
 type ImageToVideoForm = z.infer<typeof imageToVideoSchema>;
-type GenerativeFillForm = z.infer<typeof generativeFillSchema>;
 
 // Aspect ratio options with visual elements
 const aspectRatioOptions = [
@@ -110,13 +99,11 @@ const modelOptions = [
 export default function VideoGenerator() {
   const { user } = useAuth();
   const logoutMutation = useLogout();
-  const [activeTab, setActiveTab] = useState<"text-to-video" | "image-to-video" | "generative-fill">("text-to-video");
+  const [activeTab, setActiveTab] = useState<"text-to-video" | "image-to-video">("text-to-video");
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
-  const [maskImageUrl, setMaskImageUrl] = useState<string>("");
-  const [maskImageName, setMaskImageName] = useState<string>("");
   const [aspectRatioModalOpen, setAspectRatioModalOpen] = useState(false);
   const [modelModalOpen, setModelModalOpen] = useState(false);
-  const [currentFormType, setCurrentFormType] = useState<"text" | "image" | "generative">("text");
+  const [currentFormType, setCurrentFormType] = useState<"text" | "image">("text");
   const [uploadedImageName, setUploadedImageName] = useState<string>("");
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string>("");
   const [currentTaskId, setCurrentTaskId] = useState<string>("");
@@ -146,7 +133,6 @@ export default function VideoGenerator() {
     type: "error"
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const maskFileInputRef = useRef<HTMLInputElement>(null);
 
   // Form declarations
   const textForm = useForm<TextToVideoForm>({
@@ -170,134 +156,15 @@ export default function VideoGenerator() {
     },
   });
 
-  const generativeFillForm = useForm<GenerativeFillForm>({
-    resolver: zodResolver(generativeFillSchema),
-    defaultValues: {
-      prompt: "",
-      imageUrl: "",
-      maskImageUrl: "",
-      strength: "1.0",
-      samples: 1,
-      model: "lazymixv4-inpaint",
-      steps: 31,
-      scheduler: "DPMSolverMultistepScheduler",
-    },
-  });
-  const maskCanvasRef = useRef<HTMLCanvasElement>(null);
-  const maskImageRef = useRef<HTMLImageElement>(null);
-  
-  // Mask drawing states
-  const [brushSize, setBrushSize] = useState<number>(20);
-  const [hasMaskDrawn, setHasMaskDrawn] = useState<boolean>(false);
-  const [isDrawing, setIsDrawing] = useState<boolean>(false);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Mask drawing functions
-  const initializeMaskCanvas = useCallback(() => {
-    const canvas = maskCanvasRef.current;
-    const img = maskImageRef.current;
-    if (canvas && img) {
-      const rect = img.getBoundingClientRect();
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      canvas.style.width = `${rect.width}px`;
-      canvas.style.height = `${rect.height}px`;
-      
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-      }
-    }
-  }, []);
 
-  // Helper function to get coordinates from mouse or touch events
-  const getEventCoordinates = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    const canvas = e.currentTarget;
-    const rect = canvas.getBoundingClientRect();
-    
-    let clientX: number, clientY: number;
-    
-    if ('touches' in e) {
-      // Touch event
-      if (e.touches.length > 0) {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-      } else if (e.changedTouches.length > 0) {
-        clientX = e.changedTouches[0].clientX;
-        clientY = e.changedTouches[0].clientY;
-      } else {
-        return null;
-      }
-    } else {
-      // Mouse event
-      clientX = e.clientX;
-      clientY = e.clientY;
-    }
-    
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    return {
-      x: (clientX - rect.left) * scaleX,
-      y: (clientY - rect.top) * scaleY
-    };
-  }, []);
 
-  const startDrawing = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    setIsDrawing(true);
-    draw(e);
-  }, []);
 
-  const draw = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isDrawing) return;
-    e.preventDefault();
-    
-    const canvas = maskCanvasRef.current;
-    const img = maskImageRef.current;
-    if (!canvas || !img) return;
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    const coordinates = getEventCoordinates(e);
-    if (!coordinates) return;
-    
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(coordinates.x, coordinates.y, brushSize * scaleX, 0, 2 * Math.PI);
-    ctx.fill();
-    
-    setHasMaskDrawn(true);
-  }, [isDrawing, brushSize, getEventCoordinates]);
 
-  const stopDrawing = useCallback((e?: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (e) {
-      e.preventDefault();
-    }
-    setIsDrawing(false);
-  }, []);
 
-  const clearMask = useCallback(() => {
-    const canvas = maskCanvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        setHasMaskDrawn(false);
-        setMaskImageUrl('');
-        generativeFillForm.setValue('maskImageUrl', '');
-      }
-    }
-  }, [generativeFillForm]);
 
 
   // Check STLIX Premium model status
@@ -657,7 +524,6 @@ export default function VideoGenerator() {
       setOriginalImageUrl(data.downloadUrl);
       setUploadedImageUrl(data.downloadUrl);
       imageForm.setValue("imageUrl", data.downloadUrl);
-      generativeFillForm.setValue("imageUrl", data.downloadUrl);
       toast({
         title: "Tải ảnh thành công",
         description: "Ảnh của bạn đã sẵn sàng để tạo video.",
@@ -691,113 +557,8 @@ export default function VideoGenerator() {
     },
   });
 
-  const uploadMaskImageMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      const response = await apiRequest("POST", "/api/upload-image", formData);
-      return await response.json();
-    },
-    onSuccess: (data) => {
-      setMaskImageUrl(data.downloadUrl);
-      generativeFillForm.setValue("maskImageUrl", data.downloadUrl);
-      toast({
-        title: "Tải ảnh mask thành công",
-        description: "Ảnh mask đã sẵn sàng cho tính năng Generative Fill.",
-      });
-    },
-    onError: (error) => {
-      let title = "Tải ảnh mask thất bại";
-      let description = "Không thể tải ảnh mask lên";
 
-      if (error instanceof Error) {
-        const errorMessage = error.message.toLowerCase();
-        
-        if (errorMessage.includes('500') || errorMessage.includes('server') || errorMessage.includes('overload')) {
-          title = "Máy chủ quá tải";
-          description = "Máy chủ đang xử lý quá nhiều yêu cầu. Vui lòng thử lại sau vài phút.";
-        }
-        else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-          title = "Lỗi kết nối";
-          description = "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối internet.";
-        }
-        else if (errorMessage.includes('size') || errorMessage.includes('large')) {
-          title = "File quá lớn";
-          description = "Ảnh mask quá lớn. Vui lòng chọn ảnh nhỏ hơn 10MB.";
-        }
-        else {
-          description = "Đã xảy ra lỗi khi tải ảnh mask. Vui lòng thử lại.";
-        }
-      }
 
-      showPopup(title, description, "error");
-    },
-  });
-
-  const saveMask = useCallback(async () => {
-    const canvas = maskCanvasRef.current;
-    if (!canvas) return;
-    
-    // Convert canvas to blob
-    canvas.toBlob(async (blob) => {
-      if (blob) {
-        const file = new File([blob], 'mask.png', { type: 'image/png' });
-        uploadMaskImageMutation.mutate(file);
-      }
-    }, 'image/png');
-  }, [uploadMaskImageMutation]);
-
-  // Auto-save mask after drawing with debounce
-  useEffect(() => {
-    if (hasMaskDrawn && !uploadMaskImageMutation.isPending) {
-      const timer = setTimeout(() => {
-        saveMask();
-      }, 1000); // Auto-save 1 second after finishing drawing
-      
-      return () => clearTimeout(timer);
-    }
-  }, [hasMaskDrawn, saveMask, uploadMaskImageMutation.isPending]);
-
-  const generativeFillMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", "/api/generative-fill", data);
-      return await response.json();
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/credits"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/generations"] });
-      toast({
-        title: "Generative Fill thành công!",
-        description: "Ảnh đã được xử lý và sẵn sàng để xem.",
-      });
-    },
-    onError: (error) => {
-      let title = "Generative Fill thất bại";
-      let description = "Có lỗi xảy ra khi xử lý ảnh";
-
-      if (error instanceof Error) {
-        const errorMessage = error.message.toLowerCase();
-        
-        if (errorMessage.includes('500') || errorMessage.includes('server') || errorMessage.includes('overload')) {
-          title = "Máy chủ quá tải";
-          description = "Máy chủ đang xử lý quá nhiều yêu cầu. Vui lòng thử lại sau vài phút.";
-        }
-        else if (errorMessage.includes('insufficient') || errorMessage.includes('credits') || errorMessage.includes('top up')) {
-          title = "Không đủ credits";
-          description = "Tài khoản của bạn không đủ credits. Vui lòng nạp thêm để tiếp tục.";
-        }
-        else if (errorMessage.includes('network') || errorMessage.includes('fetch') || errorMessage.includes('connection')) {
-          title = "Lỗi kết nối";
-          description = "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối internet và thử lại.";
-        }
-        else {
-          description = "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.";
-        }
-      }
-
-      showPopup(title, description, "error");
-    },
-  });
 
   const generateVideoMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -870,25 +631,6 @@ export default function VideoGenerator() {
     }
   };
 
-  const handleMaskFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith("image/")) {
-        showPopup("Định dạng file không hợp lệ", "Vui lòng tải lên file ảnh mask (PNG, JPG, GIF)", "error");
-        return;
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        showPopup("File quá lớn", "Vui lòng tải lên ảnh mask nhỏ hơn 10MB", "error");
-        return;
-      }
-      setMaskImageName(file.name);
-      uploadMaskImageMutation.mutate(file);
-    }
-    // Reset input value to allow re-uploading the same file
-    if (event.target) {
-      event.target.value = '';
-    }
-  };
 
   const handleRemoveImage = () => {
     setUploadedImageUrl("");
@@ -969,13 +711,6 @@ export default function VideoGenerator() {
     });
   };
 
-  const onGenerativeFillSubmit = (data: GenerativeFillForm) => {
-    generativeFillMutation.mutate({
-      ...data,
-      type: "generative-fill",
-      userId: user?.id || "",
-    });
-  };
 
   return (
     <div>
@@ -1101,20 +836,6 @@ export default function VideoGenerator() {
                   <div className="flex items-center justify-center space-x-1 sm:space-x-2">
                     <ImageRegular className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span className="text-xs sm:text-sm">Tạo Video</span>
-                  </div>
-                </button>
-                <button
-                  className={`flex-1 px-4 py-4 border-b-2 transition-all duration-300 fluent-title-small ${
-                    activeTab === "generative-fill"
-                      ? "fluent-glass-strong text-[var(--fluent-brand-primary)] border-[var(--fluent-brand-primary)]"
-                      : "text-[var(--fluent-neutral-foreground-3)] hover:text-[var(--fluent-neutral-foreground-1)] hover:fluent-glass-subtle border-transparent"
-                  }`}
-                  onClick={() => setActiveTab("generative-fill")}
-                  data-testid="tab-generative-fill"
-                >
-                  <div className="flex items-center justify-center space-x-1 sm:space-x-2">
-                    <PaintBrushRegular className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="text-xs sm:text-sm">AI Fill</span>
                   </div>
                 </button>
               </div>
@@ -1496,265 +1217,6 @@ export default function VideoGenerator() {
                 </div>
               )}
 
-              {/* Generative Fill Panel */}
-              {activeTab === "generative-fill" && (
-                <div className="p-6">
-                  <Form {...generativeFillForm}>
-                    <form onSubmit={generativeFillForm.handleSubmit(onGenerativeFillSubmit)} className="space-y-6">
-                      {/* Original Image Upload */}
-                      <FormField
-                        control={generativeFillForm.control}
-                        name="imageUrl"
-                        render={() => (
-                          <FormItem>
-                            <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)]">Ảnh gốc</FormLabel>
-                            <FormControl>
-                              {!uploadedImageUrl ? (
-                                <div 
-                                  className="border-2 border-dashed border-[var(--fluent-neutral-stroke-1)] rounded-[var(--fluent-border-radius-medium)] p-8 text-center hover:border-[var(--fluent-brand-primary)] transition-colors cursor-pointer fluent-glass-subtle"
-                                  onClick={() => fileInputRef.current?.click()}
-                                  data-testid="upload-area-original"
-                                >
-                                  <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    className="hidden"
-                                    accept="image/*"
-                                    onChange={handleFileUpload}
-                                    data-testid="input-original-upload"
-                                  />
-                                  <ArrowUploadRegular className="w-12 h-12 text-[var(--fluent-neutral-foreground-3)] mx-auto mb-4" />
-                                  <div className="text-sm text-[var(--fluent-neutral-foreground-2)]">
-                                    <span className="text-[var(--fluent-brand-primary)] font-medium">Nhấn để tải ảnh gốc</span>
-                                  </div>
-                                  <p className="text-xs text-[var(--fluent-neutral-foreground-3)] mt-2">PNG, JPG, GIF tối đa 10MB</p>
-                                </div>
-                              ) : (
-                                <div className="space-y-4">
-                                  <div className="relative rounded-[var(--fluent-border-radius-medium)] overflow-hidden fluent-glass-subtle">
-                                    <img 
-                                      src={uploadedImageUrl} 
-                                      alt="Uploaded" 
-                                      className="w-full h-auto max-h-64 object-contain"
-                                      data-testid="image-original-preview"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setUploadedImageUrl("");
-                                        setOriginalImageUrl("");
-                                        setUploadedImageName("");
-                                        generativeFillForm.setValue("imageUrl", "");
-                                      }}
-                                      className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-all"
-                                      data-testid="button-remove-original"
-                                    >
-                                      <DismissRegular className="w-4 h-4 text-white" />
-                                    </button>
-                                  </div>
-                                  <p className="text-sm text-[var(--fluent-neutral-foreground-2)]">
-                                    {uploadedImageName || "Ảnh gốc đã tải lên"}
-                                  </p>
-                                </div>
-                              )}
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Mask Drawing Tool */}
-                      {uploadedImageUrl && (
-                        <FormField
-                          control={generativeFillForm.control}
-                          name="maskImageUrl"
-                          render={() => (
-                            <FormItem>
-                              <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)]">Vẽ vùng cần thay đổi</FormLabel>
-                              <FormControl>
-                                <div className="space-y-4">
-                                  {/* Drawing Controls */}
-                                  <div className="flex items-center space-x-4 p-3 bg-[var(--fluent-neutral-background-2)] rounded-lg">
-                                    <div className="flex items-center space-x-2">
-                                      <label className="text-sm font-medium">Cỡ cọ:</label>
-                                      <input
-                                        type="range"
-                                        min="5"
-                                        max="50"
-                                        value={brushSize}
-                                        onChange={(e) => setBrushSize(Number(e.target.value))}
-                                        className="w-20"
-                                        data-testid="brush-size-slider"
-                                      />
-                                      <span className="text-sm w-8">{brushSize}</span>
-                                    </div>
-                                    <Button
-                                      type="button"
-                                      variant="outlined"
-                                      size="sm"
-                                      onClick={clearMask}
-                                      data-testid="button-clear-mask"
-                                    >
-                                      <DismissRegular className="w-4 h-4 mr-1" />
-                                      Xóa
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      variant="outlined"
-                                      size="sm"
-                                      onClick={saveMask}
-                                      disabled={!hasMaskDrawn}
-                                      data-testid="button-save-mask"
-                                    >
-                                      <PaintBrushRegular className="w-4 h-4 mr-1" />
-                                      Lưu mask
-                                    </Button>
-                                  </div>
-
-                                  {/* Canvas Drawing Area */}
-                                  <div className="relative rounded-[var(--fluent-border-radius-medium)] overflow-hidden fluent-glass-subtle border-2 border-[var(--fluent-neutral-stroke-1)]">
-                                    <img 
-                                      ref={maskImageRef}
-                                      src={uploadedImageUrl} 
-                                      alt="Original for masking" 
-                                      className="w-full h-auto max-h-96 object-contain"
-                                      data-testid="image-for-masking"
-                                      onLoad={initializeMaskCanvas}
-                                    />
-                                    <canvas
-                                      ref={maskCanvasRef}
-                                      className="absolute top-0 left-0 cursor-crosshair"
-                                      onMouseDown={startDrawing}
-                                      onMouseMove={draw}
-                                      onMouseUp={stopDrawing}
-                                      onMouseLeave={stopDrawing}
-                                      onTouchStart={startDrawing}
-                                      onTouchMove={draw}
-                                      onTouchEnd={stopDrawing}
-                                      data-testid="mask-canvas"
-                                      style={{ 
-                                        opacity: 0.6,
-                                        pointerEvents: uploadedImageUrl ? 'auto' : 'none',
-                                        touchAction: 'none'
-                                      }}
-                                    />
-                                  </div>
-
-                                  <p className="text-xs text-[var(--fluent-neutral-foreground-3)]">
-                                    Vẽ màu trắng lên những vùng bạn muốn thay đổi. Sử dụng chuột hoặc chạm để vẽ.
-                                    {hasMaskDrawn && !maskImageUrl && (
-                                      <span className="block mt-1 text-orange-500">
-                                        {uploadMaskImageMutation.isPending ? "Đang lưu mask..." : "Mask sẽ tự động lưu sau 1 giây"}
-                                      </span>
-                                    )}
-                                    {maskImageUrl && (
-                                      <span className="block mt-1 text-green-600">
-                                        ✓ Mask đã được lưu thành công
-                                      </span>
-                                    )}
-                                  </p>
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-
-                      {/* Prompt Field */}
-                      <FormField
-                        control={generativeFillForm.control}
-                        name="prompt"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)]">Mô tả thay đổi</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Mô tả những gì bạn muốn thay đổi trong vùng mask... (ví dụ: 'Thay thế vùng này bằng cây xanh', 'Thêm mặt trời vào bầu trời')"
-                                data-testid="input-fill-prompt"
-                                {...field}
-                              />
-                            </FormControl>
-                            <div className="flex justify-between text-xs text-[var(--fluent-neutral-foreground-3)]">
-                              <span>Mô tả cụ thể những gì bạn muốn thay đổi</span>
-                              <span data-testid="fill-prompt-length">{field.value.length}/500</span>
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Advanced Settings */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Model Selection */}
-                        <FormField
-                          control={generativeFillForm.control}
-                          name="model"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)]">Model</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value} data-testid="select-fill-model">
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Chọn model" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="lazymixv4-inpaint">Lazy Mix V4 (Khuyến nghị)</SelectItem>
-                                  <SelectItem value="v51_inpainting">V5.1 Inpainting</SelectItem>
-                                  <SelectItem value="realistic-vision-v6.0-b1-inpaint-n">Realistic Vision V6</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        {/* Strength */}
-                        <FormField
-                          control={generativeFillForm.control}
-                          name="strength"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)]">Độ mạnh</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value} data-testid="select-fill-strength">
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Chọn độ mạnh" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="0.5">0.5 - Nhẹ</SelectItem>
-                                  <SelectItem value="0.7">0.7 - Vừa phải</SelectItem>
-                                  <SelectItem value="1.0">1.0 - Mạnh (Khuyến nghị)</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {/* Submit Button */}
-                      <Button
-                        type="submit"
-                        className="w-full fluent-glass-strong fluent-shadow-medium text-white"
-                        disabled={generativeFillMutation.isPending || !uploadedImageUrl || !hasMaskDrawn}
-                        data-testid="button-generate-fill"
-                      >
-                        <div className="flex items-center justify-center space-x-2">
-                          {generativeFillMutation.isPending ? (
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <PaintBrushRegular className="w-5 h-5" />
-                          )}
-                          <span>Tạo AI Fill - 2 credits</span>
-                        </div>
-                      </Button>
-                    </form>
-                  </Form>
-                </div>
-              )}
             </div>
           </div>
 
