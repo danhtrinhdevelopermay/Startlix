@@ -1,7 +1,9 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
+import ConnectPgSimple from "connect-pg-simple";
 import { storage } from "./storage";
+import { db } from "./db";
 import { insertVideoGenerationSchema, insertUserSchema, insertRewardVideoSchema, insertVideoWatchHistorySchema, type User, type ExternalApiKey, insertRewardClaimSchema, type RewardClaim } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -315,16 +317,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Start auto refresh on server start
   startAutoRefresh();
   
-  // Session middleware
+  // Configure PostgreSQL session store for persistent sessions
+  const PgSession = ConnectPgSimple(session);
+  
+  // Session middleware with PostgreSQL store
   app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-session-secret',
+    store: new PgSession({
+      conString: process.env.DATABASE_URL,
+      tableName: 'session',
+      createTableIfMissing: true
+    }),
+    secret: process.env.SESSION_SECRET || 'your-session-secret-change-in-production',
     resave: false,
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days for better UX
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
+    },
+    name: 'sessionId' // Custom session name
   }));
   
   // Add user to request middleware
