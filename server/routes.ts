@@ -882,6 +882,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Call phot.ai API
       const photAiPayload = {
         file_name: validatedData.fileName,
+        prompt: validatedData.prompt,
         input_image_link: validatedData.inputImageUrl,
         mask_image: validatedData.maskImageBase64,
       };

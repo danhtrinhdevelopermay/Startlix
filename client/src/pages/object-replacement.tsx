@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Slider } from "@/components/ui/slider";
@@ -17,6 +18,7 @@ import CreditBalance from "@/components/credit-balance";
 
 const objectReplacementSchema = z.object({
   fileName: z.string().min(1, "Tên file không được để trống"),
+  prompt: z.string().min(5, "Prompt phải có ít nhất 5 ký tự").max(200, "Prompt phải có ít hơn 200 ký tự"),
   inputImageUrl: z.string().url("URL ảnh không hợp lệ"), 
   maskImageBase64: z.string().min(1, "Vui lòng vẽ mask trên ảnh"),
 });
@@ -27,6 +29,7 @@ interface ObjectReplacement {
   id: string;
   userId: string;
   fileName: string;
+  prompt: string;
   inputImageUrl: string;
   maskImageBase64: string;
   status: string;
@@ -57,6 +60,7 @@ export default function ObjectReplacementPage() {
     resolver: zodResolver(objectReplacementSchema),
     defaultValues: {
       fileName: "",
+      prompt: "",
       inputImageUrl: "",
       maskImageBase64: "",
     },
@@ -374,6 +378,28 @@ export default function ObjectReplacementPage() {
                         className="hidden"
                       />
                     </div>
+
+                    {/* Prompt Field */}
+                    <FormField
+                      control={form.control}
+                      name="prompt"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Mô tả đối tượng thay thế</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Ví dụ: một chiếc xe hơi màu đỏ, một chú chó golden retriever, một cái cây..."
+                              data-testid="input-prompt"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Mô tả những gì bạn muốn thay thế vào vùng đã vẽ mask (5-200 ký tự)
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     {/* Drawing Tools */}
                     {inputImagePreview && (

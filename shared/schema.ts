@@ -113,6 +113,7 @@ export const objectReplacements = pgTable("object_replacements", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
   fileName: text("file_name").notNull(),
+  prompt: text("prompt").notNull(), // Description of what to replace the masked area with
   inputImageUrl: text("input_image_url").notNull(),
   maskImageBase64: text("mask_image_base64").notNull(),
   status: text("status").notNull().default("pending"), // 'pending', 'processing', 'completed', 'failed'
@@ -201,8 +202,9 @@ export const insertObjectReplacementSchema = createInsertSchema(objectReplacemen
   creditsUsed: true,
 }).extend({
   fileName: z.string().min(1, "Tên file không được để trống"),
+  prompt: z.string().min(5, "Prompt phải có ít nhất 5 ký tự").max(200, "Prompt phải có ít hơn 200 ký tự"),
   inputImageUrl: z.string().url("URL ảnh không hợp lệ"),
-  maskImageBase64: z.string().min(1, "Mask image không được để trống"),
+  maskImageBase64: z.string().min(1, "Vui lòng vẽ mask trên ảnh"),
 });
 
 // API request schema for external API
