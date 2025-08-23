@@ -299,18 +299,6 @@ export default function VideoGenerator() {
     }
   }, [generativeFillForm]);
 
-  const saveMask = useCallback(async () => {
-    const canvas = maskCanvasRef.current;
-    if (!canvas) return;
-    
-    // Convert canvas to blob
-    canvas.toBlob(async (blob) => {
-      if (blob) {
-        const file = new File([blob], 'mask.png', { type: 'image/png' });
-        uploadMaskImageMutation.mutate(file);
-      }
-    }, 'image/png');
-  }, []);
 
   // Check STLIX Premium model status
   const { data: veo3PremiumStatus } = useQuery({
@@ -745,6 +733,30 @@ export default function VideoGenerator() {
       showPopup(title, description, "error");
     },
   });
+
+  const saveMask = useCallback(async () => {
+    const canvas = maskCanvasRef.current;
+    if (!canvas) return;
+    
+    // Convert canvas to blob
+    canvas.toBlob(async (blob) => {
+      if (blob) {
+        const file = new File([blob], 'mask.png', { type: 'image/png' });
+        uploadMaskImageMutation.mutate(file);
+      }
+    }, 'image/png');
+  }, [uploadMaskImageMutation]);
+
+  // Auto-save mask after drawing with debounce
+  useEffect(() => {
+    if (hasMaskDrawn && !uploadMaskImageMutation.isPending) {
+      const timer = setTimeout(() => {
+        saveMask();
+      }, 1000); // Auto-save 1 second after finishing drawing
+      
+      return () => clearTimeout(timer);
+    }
+  }, [hasMaskDrawn, saveMask, uploadMaskImageMutation.isPending]);
 
   const generativeFillMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -1630,6 +1642,16 @@ export default function VideoGenerator() {
 
                                   <p className="text-xs text-[var(--fluent-neutral-foreground-3)]">
                                     Vẽ màu trắng lên những vùng bạn muốn thay đổi. Sử dụng chuột hoặc chạm để vẽ.
+                                    {hasMaskDrawn && !maskImageUrl && (
+                                      <span className="block mt-1 text-orange-500">
+                                        {uploadMaskImageMutation.isPending ? "Đang lưu mask..." : "Mask sẽ tự động lưu sau 1 giây"}
+                                      </span>
+                                    )}
+                                    {maskImageUrl && (
+                                      <span className="block mt-1 text-green-600">
+                                        ✓ Mask đã được lưu thành công
+                                      </span>
+                                    )}
                                   </p>
                                 </div>
                               </FormControl>
