@@ -1846,9 +1846,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/photai-api-keys", async (req, res) => {
     try {
       const storageInstance = await storage();
-      // For now, use external API keys table with type filter
-      const photaiKeys = await storageInstance.getUserExternalApiKeys('admin');
-      // Filter for photai type (when we add the field later)
+      // Get all PhotAI API keys using the dedicated method
+      const photaiKeys = await storageInstance.getPhotAIApiKeys();
       res.json(photaiKeys);
     } catch (error) {
       console.error('Get PhotAI API keys error:', error);
