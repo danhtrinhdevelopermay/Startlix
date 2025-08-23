@@ -31,9 +31,14 @@ export const videoGenerations = pgTable("video_generations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id),
   taskId: text("task_id").notNull().unique(),
-  type: text("type").notNull(), // 'text-to-video' or 'image-to-video'
+  type: text("type").notNull(), // 'text-to-video', 'image-to-video', or 'generative-fill'
   prompt: text("prompt").notNull(),
   imageUrl: text("image_url"),
+  maskImageUrl: text("mask_image_url"), // For generative fill
+  strength: text("strength"), // For generative fill strength
+  samples: integer("samples").default(1), // Number of images to generate
+  steps: integer("steps").default(31), // Inference steps
+  scheduler: text("scheduler"), // Sampling scheduler
   aspectRatio: text("aspect_ratio").notNull().default("16:9"),
   model: text("model").notNull().default("veo3"),
   watermark: text("watermark"),
@@ -133,7 +138,13 @@ export const insertVideoGenerationSchema = createInsertSchema(videoGenerations).
 }).extend({
   prompt: z.string().min(10, "Prompt must be at least 10 characters").max(500, "Prompt must be less than 500 characters"),
   aspectRatio: z.enum(["16:9", "9:16", "1:1"]),
-  model: z.enum(["veo3", "veo3_fast"]),
+  model: z.enum(["veo3", "veo3_fast", "lazymixv4-inpaint", "v51_inpainting", "realistic-vision-v6.0-b1-inpaint-n"]),
+  // Generative Fill specific fields
+  maskImageUrl: z.string().optional(),
+  strength: z.string().optional(),
+  samples: z.number().min(1).max(4).optional(),
+  steps: z.number().min(10).max(50).optional(),
+  scheduler: z.enum(["DPMSolverMultistepScheduler", "DPM++ 2M", "Euler", "Euler a"]).optional(),
 });
 
 export const insertRewardVideoSchema = createInsertSchema(rewardVideos).omit({

@@ -24,6 +24,8 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const VEO3_API_BASE = "https://api.veo3api.ai/api/v1";
 const VEO3_UPLOAD_BASE = "https://veo3apiai.redpandaai.co/api";
+const MODELSLAB_API_BASE = "https://modelslab.com/api/v6";
+const MODELSLAB_API_KEY = "YP3Eius8kY2Vnh5qq8LJzMReG9hsfi1EyJRU5XwN8uac8P2EqPPu67Sv01MA";
 const SEGMIND_API_BASE = "https://api.segmind.com/v1/topaz-video-upscale";
 
 // Check API key credits
@@ -744,6 +746,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Generation error:', error);
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to generate video" });
+    }
+  });
+
+  // Generative Fill API
+  app.post("/api/generative-fill", requireAuth, async (req: Request & { user?: User }, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const storageInstance = await storage();
+      const user = req.user;
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const validatedData = insertVideoGenerationSchema.parse(req.body);
+      
+      // Ensure this is a generative fill request
+      if (validatedData.type !== "generative-fill") {
+        return res.status(400).json({ message: "Invalid request type" });
+      }
+
+      // Validate required fields for generative fill
+      if (!validatedData.imageUrl || !validatedData.maskImageUrl || !validatedData.prompt) {
+        return res.status(400).json({ 
+          message: "Missing required fields: imageUrl, maskImageUrl, and prompt are required for generative fill" 
+        });
+      }
+
+      // Credits for generative fill (similar to image-to-video)
+      const totalCredits = 3; // Lower cost for generative fill
+
+      // Create generation record  
+      const generation = await storageInstance.createVideoGeneration({
+        ...validatedData,
+        userId: user.id,
+      }, totalCredits);
+
+      // Call ModelsLab API
+      const modelsLabPayload = {
+        key: MODELSLAB_API_KEY,
+        prompt: validatedData.prompt,
+        init_image: validatedData.imageUrl,
+        mask_image: validatedData.maskImageUrl,
+        strength: validatedData.strength || "1.0",
+        samples: validatedData.samples || 1,
+        model_id: validatedData.model || "lazymixv4-inpaint",
+        steps: validatedData.steps || 31,
+        scheduler: validatedData.scheduler || "DPMSolverMultistepScheduler"
+      };
+
+      console.log('🎨 Calling ModelsLab Generative Fill API with payload:', JSON.stringify(modelsLabPayload, null, 2));
+
+      const response = await fetch(`${MODELSLAB_API_BASE}/images/inpaint`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(modelsLabPayload),
+      });
+
+      const data = await response.json();
+      console.log('🎨 ModelsLab API Response:', JSON.stringify(data, null, 2));
+      
+      if (data.status !== "success") {
+        await storageInstance.updateVideoGeneration(generation.id, {
+          status: "failed",
+          errorMessage: data.message || 'Generative fill failed',
+        });
+        throw new Error(data.message || 'Generative fill failed');
+      }
+
+      // Update generation with result URLs (ModelsLab returns immediate results)
+      const resultUrls = data.output || [];
+      await storageInstance.updateVideoGeneration(generation.id, {
+        status: "completed",
+        resultUrls,
+        completedAt: new Date(),
+      });
+
+      res.json({ 
+        generationId: generation.id,
+        resultUrls,
+        creditsUsed: totalCredits,
+        status: "completed"
+      });
+    } catch (error) {
+      console.error('Generative Fill error:', error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to generate image" });
     }
   });
 
