@@ -12,6 +12,9 @@ import RewardVideos from "@/pages/reward-videos";
 import GetCredit from "@/pages/get-credit";
 import NotFound from "@/pages/not-found";
 import PhotoAITools from "@/pages/photai-tools";
+import Landing from "@/pages/landing";
+import Terms from "@/pages/terms";
+import Privacy from "@/pages/privacy";
 import GradientBackground from "@/components/GradientBackground";
 import { MD3FullPageLoading } from "@/components/md3-loading-indicator";
 
@@ -46,13 +49,16 @@ function Router() {
         ) : (
           // Non-authenticated routes
           <>
+            <Route path="/" component={Landing} />
             <Route path="/login" component={Login} />
             <Route path="/register" component={Register} />
-            {/* Redirect to login for all other routes when not authenticated */}
-            <Route path="/" component={Login} />
-            <Route path="/admin" component={Login} />
-            {/* Redirect all unmatched routes to login */}
-            <Route component={Login} />
+            <Route path="/terms" component={Terms} />
+            <Route path="/privacy" component={Privacy} />
+            {/* Redirect authenticated routes to landing when not authenticated */}
+            <Route path="/admin" component={Landing} />
+            <Route path="/home" component={Landing} />
+            {/* Redirect all unmatched routes to landing */}
+            <Route component={Landing} />
           </>
         )}
       </Switch>

@@ -1,9 +1,75 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
   <head>
-    <title>Starlix - AI Video Generator</title>
+    <title>Starlix - Tạo Video AI Từ Văn Bản và Hình Ảnh | Công Nghệ AI Tiên Tiến</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Starlix - Nền tảng tạo video AI hàng đầu Việt Nam. Tạo video chuyên nghiệp từ văn bản và hình ảnh chỉ trong vài phút với công nghệ AI tiên tiến. Miễn phí thử nghiệm!" />
+    <meta name="keywords" content="tạo video AI, text to video, image to video, video AI Việt Nam, tạo video từ văn bản, AI video generator, Starlix" />
+    <meta name="author" content="Starlix Team" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="Vietnamese" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Starlix - Tạo Video AI Từ Văn Bản và Hình Ảnh" />
+    <meta property="og:description" content="Biến ý tưởng thành video chuyên nghiệp với công nghệ AI tiên tiến. Không cần kỹ năng chỉnh sửa phức tạp. Thử ngay miễn phí!" />
+    <meta property="og:url" content="https://starlix.replit.app" />
+    <meta property="og:site_name" content="Starlix" />
+    <meta property="og:image" content="https://starlix.replit.app/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="vi_VN" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Starlix - Tạo Video AI Từ Văn Bản và Hình Ảnh" />
+    <meta name="twitter:description" content="Biến ý tưởng thành video chuyên nghiệp với công nghệ AI tiên tiến. Thử ngay miễn phí!" />
+    <meta name="twitter:image" content="https://starlix.replit.app/og-image.jpg" />
+    <meta name="twitter:site" content="@starlix_ai" />
+    <meta name="twitter:creator" content="@starlix_ai" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://starlix.replit.app" />
+    
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Starlix",
+      "description": "Nền tảng tạo video AI từ văn bản và hình ảnh với công nghệ tiên tiến",
+      "url": "https://starlix.replit.app",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "VND",
+        "description": "Miễn phí thử nghiệm"
+      },
+      "creator": {
+        "@type": "Organization",
+        "name": "Starlix Team"
+      },
+      "featureList": [
+        "Tạo video từ văn bản (Text-to-Video)",
+        "Tạo video từ hình ảnh (Image-to-Video)", 
+        "Chất lượng HD/4K",
+        "Xử lý AI tiên tiến"
+      ]
+    }
+    </script>
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fira+Code:wght@300..700&family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400..700;1,400..700&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Outfit:wght@100..900&family=Oxanium:wght@200..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Space+Grotesk:wght@300..700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
