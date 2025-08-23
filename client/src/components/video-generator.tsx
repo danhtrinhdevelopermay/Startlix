@@ -147,8 +147,97 @@ export default function VideoGenerator() {
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const maskFileInputRef = useRef<HTMLInputElement>(null);
+  const maskCanvasRef = useRef<HTMLCanvasElement>(null);
+  const maskImageRef = useRef<HTMLImageElement>(null);
+  
+  // Mask drawing states
+  const [brushSize, setBrushSize] = useState<number>(20);
+  const [hasMaskDrawn, setHasMaskDrawn] = useState<boolean>(false);
+  const [isDrawing, setIsDrawing] = useState<boolean>(false);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Mask drawing functions
+  const initializeMaskCanvas = useCallback(() => {
+    const canvas = maskCanvasRef.current;
+    const img = maskImageRef.current;
+    if (canvas && img) {
+      const rect = img.getBoundingClientRect();
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.style.width = `${rect.width}px`;
+      canvas.style.height = `${rect.height}px`;
+      
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+  }, []);
+
+  const startDrawing = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    setIsDrawing(true);
+    draw(e);
+  }, []);
+
+  const draw = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    
+    const canvas = maskCanvasRef.current;
+    const img = maskImageRef.current;
+    if (!canvas || !img) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+    
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.arc(x, y, brushSize * scaleX, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    setHasMaskDrawn(true);
+  }, [isDrawing, brushSize]);
+
+  const stopDrawing = useCallback(() => {
+    setIsDrawing(false);
+  }, []);
+
+  const clearMask = useCallback(() => {
+    const canvas = maskCanvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        setHasMaskDrawn(false);
+        setMaskImageUrl('');
+        generativeFillForm.setValue('maskImageUrl', '');
+      }
+    }
+  }, [generativeFillForm]);
+
+  const saveMask = useCallback(async () => {
+    const canvas = maskCanvasRef.current;
+    if (!canvas) return;
+    
+    // Convert canvas to blob
+    canvas.toBlob(async (blob) => {
+      if (blob) {
+        const file = new File([blob], 'mask.png', { type: 'image/png' });
+        uploadMaskImageMutation.mutate(file);
+      }
+    }, 'image/png');
+  }, []);
 
   // Check STLIX Premium model status
   const { data: veo3PremiumStatus } = useQuery({
@@ -1424,66 +1513,89 @@ export default function VideoGenerator() {
                         )}
                       />
 
-                      {/* Mask Image Upload */}
-                      <FormField
-                        control={generativeFillForm.control}
-                        name="maskImageUrl"
-                        render={() => (
-                          <FormItem>
-                            <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)]">Ảnh mask</FormLabel>
-                            <FormControl>
-                              {!maskImageUrl ? (
-                                <div 
-                                  className="border-2 border-dashed border-[var(--fluent-neutral-stroke-1)] rounded-[var(--fluent-border-radius-medium)] p-8 text-center hover:border-[var(--fluent-brand-primary)] transition-colors cursor-pointer fluent-glass-subtle"
-                                  onClick={() => maskFileInputRef.current?.click()}
-                                  data-testid="upload-area-mask"
-                                >
-                                  <input
-                                    ref={maskFileInputRef}
-                                    type="file"
-                                    className="hidden"
-                                    accept="image/*"
-                                    onChange={handleMaskFileUpload}
-                                    data-testid="input-mask-upload"
-                                  />
-                                  <ArrowUploadRegular className="w-12 h-12 text-[var(--fluent-neutral-foreground-3)] mx-auto mb-4" />
-                                  <div className="text-sm text-[var(--fluent-neutral-foreground-2)]">
-                                    <span className="text-[var(--fluent-brand-primary)] font-medium">Nhấn để tải ảnh mask</span>
-                                  </div>
-                                  <p className="text-xs text-[var(--fluent-neutral-foreground-3)] mt-2">PNG, JPG, GIF tối đa 10MB</p>
-                                </div>
-                              ) : (
+                      {/* Mask Drawing Tool */}
+                      {uploadedImageUrl && (
+                        <FormField
+                          control={generativeFillForm.control}
+                          name="maskImageUrl"
+                          render={() => (
+                            <FormItem>
+                              <FormLabel className="fluent-body-medium text-[var(--fluent-neutral-foreground-1)]">Vẽ vùng cần thay đổi</FormLabel>
+                              <FormControl>
                                 <div className="space-y-4">
-                                  <div className="relative rounded-[var(--fluent-border-radius-medium)] overflow-hidden fluent-glass-subtle">
-                                    <img 
-                                      src={maskImageUrl} 
-                                      alt="Mask" 
-                                      className="w-full h-auto max-h-64 object-contain"
-                                      data-testid="image-mask-preview"
-                                    />
-                                    <button
+                                  {/* Drawing Controls */}
+                                  <div className="flex items-center space-x-4 p-3 bg-[var(--fluent-neutral-background-2)] rounded-lg">
+                                    <div className="flex items-center space-x-2">
+                                      <label className="text-sm font-medium">Cỡ cọ:</label>
+                                      <input
+                                        type="range"
+                                        min="5"
+                                        max="50"
+                                        value={brushSize}
+                                        onChange={(e) => setBrushSize(Number(e.target.value))}
+                                        className="w-20"
+                                        data-testid="brush-size-slider"
+                                      />
+                                      <span className="text-sm w-8">{brushSize}</span>
+                                    </div>
+                                    <Button
                                       type="button"
-                                      onClick={() => {
-                                        setMaskImageUrl("");
-                                        setMaskImageName("");
-                                        generativeFillForm.setValue("maskImageUrl", "");
-                                      }}
-                                      className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-all"
-                                      data-testid="button-remove-mask"
+                                      variant="outlined"
+                                      size="sm"
+                                      onClick={clearMask}
+                                      data-testid="button-clear-mask"
                                     >
-                                      <DismissRegular className="w-4 h-4 text-white" />
-                                    </button>
+                                      <DismissRegular className="w-4 h-4 mr-1" />
+                                      Xóa
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="outlined"
+                                      size="sm"
+                                      onClick={saveMask}
+                                      disabled={!hasMaskDrawn}
+                                      data-testid="button-save-mask"
+                                    >
+                                      <PaintBrushRegular className="w-4 h-4 mr-1" />
+                                      Lưu mask
+                                    </Button>
                                   </div>
-                                  <p className="text-sm text-[var(--fluent-neutral-foreground-2)]">
-                                    {maskImageName || "Ảnh mask đã tải lên"}
+
+                                  {/* Canvas Drawing Area */}
+                                  <div className="relative rounded-[var(--fluent-border-radius-medium)] overflow-hidden fluent-glass-subtle border-2 border-[var(--fluent-neutral-stroke-1)]">
+                                    <img 
+                                      ref={maskImageRef}
+                                      src={uploadedImageUrl} 
+                                      alt="Original for masking" 
+                                      className="w-full h-auto max-h-96 object-contain"
+                                      data-testid="image-for-masking"
+                                      onLoad={initializeMaskCanvas}
+                                    />
+                                    <canvas
+                                      ref={maskCanvasRef}
+                                      className="absolute top-0 left-0 cursor-crosshair"
+                                      onMouseDown={startDrawing}
+                                      onMouseMove={draw}
+                                      onMouseUp={stopDrawing}
+                                      onMouseLeave={stopDrawing}
+                                      data-testid="mask-canvas"
+                                      style={{ 
+                                        opacity: 0.6,
+                                        pointerEvents: uploadedImageUrl ? 'auto' : 'none'
+                                      }}
+                                    />
+                                  </div>
+
+                                  <p className="text-xs text-[var(--fluent-neutral-foreground-3)]">
+                                    Vẽ màu trắng lên những vùng bạn muốn thay đổi. Sử dụng chuột để vẽ.
                                   </p>
                                 </div>
-                              )}
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
 
                       {/* Prompt Field */}
                       <FormField
@@ -1563,7 +1675,7 @@ export default function VideoGenerator() {
                       <Button
                         type="submit"
                         className="w-full fluent-glass-strong fluent-shadow-medium text-white"
-                        disabled={generativeFillMutation.isPending || !uploadedImageUrl || !maskImageUrl}
+                        disabled={generativeFillMutation.isPending || !uploadedImageUrl || !hasMaskDrawn}
                         data-testid="button-generate-fill"
                       >
                         <div className="flex items-center justify-center space-x-2">
